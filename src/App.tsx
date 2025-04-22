@@ -14,6 +14,8 @@ import OnRampFiatPage from "@/pages/OnRampFiatPage";
 import OffRampFiatPage from "@/pages/OffRampFiatPage";
 import CashDappPage from "@/pages/CashDappPage";
 import AdminPage from "@/pages/AdminPage";
+import DeployPage from "@/pages/DeployPage";
+import TestingPage from "@/pages/TestingPage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/deploy" element={<DeployPage />} />
+          <Route path="/testing" element={<TestingPage />} />
           <Route path="/wrap-xmr" element={<WrapXMRPage />} />
           <Route path="/unwrap-xmr" element={<UnwrapXMRPage />} />
           <Route path="/onramp-fiat" element={<OnRampFiatPage />} />
