@@ -1,5 +1,5 @@
 
-import { Home, LogIn, LogOut, Settings, Grid2x2, ArrowRight, ArrowLeft, Code, Play } from "lucide-react";
+import { Home, LogIn, LogOut, Settings, Grid2x2, ArrowRight, ArrowLeft, Code, Play, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
@@ -7,6 +7,7 @@ const sidebarItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/deploy", label: "Deploy Contract", icon: Code },
   { to: "/testing", label: "Test Contract", icon: Play },
+  { to: "/simulation", label: "AI DAO Simulation", icon: User },
   { to: "/wrap-xmr", label: "Wrap XMR", icon: ArrowRight },
   { to: "/unwrap-xmr", label: "Unwrap XMR", icon: ArrowLeft },
   { to: "/onramp-fiat", label: "OnRamp Fiat", icon: LogIn },

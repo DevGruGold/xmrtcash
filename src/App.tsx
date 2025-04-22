@@ -16,6 +16,7 @@ import CashDappPage from "@/pages/CashDappPage";
 import AdminPage from "@/pages/AdminPage";
 import DeployPage from "@/pages/DeployPage";
 import TestingPage from "@/pages/TestingPage";
+import SimulationPage from "@/pages/SimulationPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/offramp-fiat" element={<OffRampFiatPage />} />
           <Route path="/cashdapp" element={<CashDappPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/simulation" element={<SimulationPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
