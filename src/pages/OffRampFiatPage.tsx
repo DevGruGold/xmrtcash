@@ -5,13 +5,13 @@ import OffRampFiat from "@/components/xmrt/OffRampFiat";
 
 export default function OffRampFiatPage() {
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-mocha-900 via-mocha-700 to-mocha-500">
+    <div className="flex min-h-screen bg-background">
       <MochaSidebar />
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col lg:ml-0">
         <MochaHeader />
-        <section className="flex-1 flex flex-col items-center justify-center">
+        <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
           <OffRampFiat />
-        </section>
+        </div>
       </main>
     </div>
   );

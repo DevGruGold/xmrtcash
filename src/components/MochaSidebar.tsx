@@ -20,10 +20,10 @@ export default function MochaSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="bg-card border-r border-border w-64 min-h-screen flex flex-col">
-      <div className="p-6 border-b border-border">
+    <aside className="hidden lg:flex bg-card/95 backdrop-blur-sm border-r border-border/50 w-64 min-h-screen flex-col fixed lg:relative z-20">
+      <div className="p-4 sm:p-6 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-neon">
             <DollarSign className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
@@ -33,27 +33,27 @@ export default function MochaSidebar() {
         </div>
       </div>
       
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2">
         {sidebarItems.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
             className={clsx(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
               location.pathname === to 
-                ? "bg-primary text-primary-foreground" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/30 shadow-neon" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-primary/20 border border-transparent"
             )}
           >
-            <Icon className="w-4 h-4" />
-            {label}
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{label}</span>
           </Link>
         ))}
       </nav>
       
-      <footer className="p-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">
-          Powered by XMRT Protocol
+      <footer className="p-4 border-t border-border/50">
+        <p className="text-xs text-muted-foreground text-center">
+          Powered by <span className="text-primary font-medium">XMRT Protocol</span>
         </p>
       </footer>
     </aside>
