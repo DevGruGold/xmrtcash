@@ -1,18 +1,18 @@
 
-import { Home, LogIn, LogOut, Settings, Grid2x2, ArrowRight, ArrowLeft, Code, Play, User } from "lucide-react";
+import { Home, ArrowUpDown, Send, Download, Upload, Users, Settings, BarChart3, Shield, DollarSign } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
 const sidebarItems = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/deploy", label: "Deploy Contract", icon: Code },
-  { to: "/testing", label: "Test Contract", icon: Play },
-  { to: "/simulation", label: "AI DAO Simulation", icon: User },
-  { to: "/wrap-xmr", label: "Wrap XMR", icon: ArrowRight },
-  { to: "/unwrap-xmr", label: "Unwrap XMR", icon: ArrowLeft },
-  { to: "/onramp-fiat", label: "OnRamp Fiat", icon: LogIn },
-  { to: "/offramp-fiat", label: "OffRamp Fiat", icon: LogOut },
-  { to: "/cashdapp", label: "CashDapp Panel", icon: Grid2x2 },
+  { to: "/", label: "Dashboard", icon: Home },
+  { to: "/wrap-xmr", label: "Wrap XMR", icon: Upload },
+  { to: "/unwrap-xmr", label: "Unwrap XMR", icon: Download },
+  { to: "/onramp-fiat", label: "Buy Crypto", icon: ArrowUpDown },
+  { to: "/offramp-fiat", label: "Sell Crypto", icon: Send },
+  { to: "/cashdapp", label: "Quick Pay", icon: DollarSign },
+  { to: "/simulation", label: "DAO Governance", icon: Users },
+  { to: "/deploy", label: "Deploy", icon: BarChart3 },
+  { to: "/testing", label: "Testing", icon: Shield },
   { to: "/admin", label: "Admin", icon: Settings },
 ];
 
@@ -20,27 +20,41 @@ export default function MochaSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="bg-mocha-900/60 backdrop-blur-md text-mocha-100 w-56 min-h-screen shadow-xl px-4 py-8 flex flex-col gap-8">
-      <div className="flex items-center gap-3 mb-10 ml-2">
-        <span className="text-2xl font-bold tracking-wide font-mocha">☕ XMRT-ui</span>
+    <aside className="bg-card border-r border-border w-64 min-h-screen flex flex-col">
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="font-bold text-foreground">CashDapp</h2>
+            <p className="text-xs text-muted-foreground">Monero Bridge</p>
+          </div>
+        </div>
       </div>
-      <nav className="flex-1 flex flex-col gap-2">
+      
+      <nav className="flex-1 p-4 space-y-2">
         {sidebarItems.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
             className={clsx(
-              "flex items-center gap-3 p-3 rounded-lg font-semibold hover:bg-mocha-700/60 transition duration-150",
-              location.pathname === to ? "bg-mocha-800 text-mocha-100" : "text-mocha-200"
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              location.pathname === to 
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-4 h-4" />
             {label}
           </Link>
         ))}
       </nav>
-      <footer className="mt-auto px-2 text-xs text-mocha-400 font-ui">
-        Made with <span aria-label="coffee" className="mx-1">☕</span> by XMRT
+      
+      <footer className="p-4 border-t border-border">
+        <p className="text-xs text-muted-foreground">
+          Powered by XMRT Protocol
+        </p>
       </footer>
     </aside>
   );

@@ -5,24 +5,33 @@
 
 @layer base {
   :root {
-    --background: 36 27% 98%;
-    --foreground: 30 10% 16%;
-    --card: 33 22% 94%;
-    --card-foreground: 30 10% 16%;
-    --primary: 33 20% 26%;
-    --primary-foreground: 33 54% 82%;
-    --secondary: 30 20% 84%;
-    --secondary-foreground: 30 10% 16%;
-    --border: 26 17% 73%;
-    --input: 26 17% 73%;
-    --ring: 30 10% 16%;
-    --radius: 0.5rem;
+    --background: 222 84% 5%;
+    --foreground: 210 40% 98%;
+    --card: 222 84% 6%;
+    --card-foreground: 210 40% 98%;
+    --primary: 142 69% 58%;
+    --primary-foreground: 222 84% 5%;
+    --secondary: 217 32% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 142 69% 58%;
+    --accent-foreground: 222 84% 5%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 32% 18%;
+    --input: 217 32% 18%;
+    --ring: 142 69% 58%;
+    --radius: 0.75rem;
+    --success: 142 69% 58%;
+    --warning: 38 92% 50%;
+    --error: 0 84% 60%;
   }
   body {
-    @apply bg-gradient-to-br from-mocha-900 via-mocha-700 to-mocha-500 text-foreground min-h-screen font-ui;
+    @apply bg-background text-foreground min-h-screen;
   }
   h1, h2, h3, h4 {
-    @apply font-mocha;
+    @apply font-semibold;
   }
 }
 

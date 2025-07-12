@@ -133,8 +133,8 @@ export default function SimulationPage() {
         actor: "admin",
         action: "System Initialization",
         description: "Guardian AI initialized XMRT DAO with role assignments to specialized AI personas",
-        status: "executed",
-        votes: { admin: "approve" }
+        status: "executed" as const,
+        votes: { admin: "approve" as const }
       },
       {
         id: "action-2",
@@ -142,8 +142,8 @@ export default function SimulationPage() {
         actor: "ceo",
         action: "Strategy Proposal",
         description: "Strategist AI proposes initial market entry strategy for XMRT token",
-        status: "pending",
-        votes: { ceo: "approve" }
+        status: "pending" as const,
+        votes: { ceo: "approve" as const }
       }
     ],
     // Day 2: First proposals and voting
@@ -154,8 +154,8 @@ export default function SimulationPage() {
         actor: "cfo",
         action: "Fee Structure Proposal",
         description: "Treasurer AI proposes 0.5% fee structure for wrap/unwrap operations",
-        status: "pending",
-        votes: { cfo: "approve", ceo: "approve" }
+        status: "pending" as const,
+        votes: { cfo: "approve" as const, ceo: "approve" as const }
       },
       {
         id: "action-4",
@@ -163,8 +163,8 @@ export default function SimulationPage() {
         actor: "cto",
         action: "Security Audit",
         description: "Architect AI initiates comprehensive security audit of smart contract",
-        status: "pending",
-        votes: { cto: "approve", admin: "approve" }
+        status: "pending" as const,
+        votes: { cto: "approve" as const, admin: "approve" as const }
       }
     ],
     // Day 3: Compliance and operations
@@ -175,8 +175,8 @@ export default function SimulationPage() {
         actor: "compliance",
         action: "Compliance Framework",
         description: "Regulator AI establishes compliance framework for all operations",
-        status: "pending",
-        votes: { compliance: "approve", admin: "approve", ceo: "abstain" }
+        status: "pending" as const,
+        votes: { compliance: "approve" as const, admin: "approve" as const, ceo: "abstain" as const }
       },
       {
         id: "action-6",
@@ -184,8 +184,8 @@ export default function SimulationPage() {
         actor: "cashdapp",
         action: "Fiat Integration",
         description: "Facilitator AI proposes integration with 3 new fiat on-ramp providers",
-        status: "pending",
-        votes: { cashdapp: "approve", cfo: "approve", compliance: "approve" }
+        status: "pending" as const,
+        votes: { cashdapp: "approve" as const, cfo: "approve" as const, compliance: "approve" as const }
       }
     ],
     // Day 4: Crisis management
@@ -196,8 +196,8 @@ export default function SimulationPage() {
         actor: "cto",
         action: "Vulnerability Response",
         description: "Architect AI detects minor vulnerability and proposes immediate patch",
-        status: "pending",
-        votes: { cto: "approve", admin: "approve" }
+        status: "pending" as const,
+        votes: { cto: "approve" as const, admin: "approve" as const }
       },
       {
         id: "action-8",
@@ -205,8 +205,8 @@ export default function SimulationPage() {
         actor: "admin",
         action: "Emergency Lock",
         description: "Guardian AI temporarily locks unwrap operations while patch is applied",
-        status: "executed",
-        votes: { admin: "approve", cto: "approve" }
+        status: "executed" as const,
+        votes: { admin: "approve" as const, cto: "approve" as const }
       }
     ],
     // Day 5: Resolution and improvement
@@ -217,8 +217,8 @@ export default function SimulationPage() {
         actor: "admin",
         action: "Resume Operations",
         description: "Guardian AI verifies patch and resumes normal operations",
-        status: "executed",
-        votes: { admin: "approve", cto: "approve", ceo: "approve" }
+        status: "executed" as const,
+        votes: { admin: "approve" as const, cto: "approve" as const, ceo: "approve" as const }
       },
       {
         id: "action-10",
@@ -226,8 +226,8 @@ export default function SimulationPage() {
         actor: "ceo",
         action: "Growth Strategy",
         description: "Strategist AI proposes new marketing initiatives to increase adoption",
-        status: "pending",
-        votes: { ceo: "approve", cfo: "approve" }
+        status: "pending" as const,
+        votes: { ceo: "approve" as const, cfo: "approve" as const }
       }
     ]
   ];
@@ -235,7 +235,7 @@ export default function SimulationPage() {
   // Start simulation
   const startSimulation = () => {
     setIsRunning(true);
-    setActions(simulationScenarios[0]);
+    setActions([...simulationScenarios[0]]);
     setStep(1);
     
     toast({
