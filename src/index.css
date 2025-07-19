@@ -26,19 +26,68 @@
     --success: 142 76% 65%;
     --warning: 38 92% 50%;
     --error: 0 84% 60%;
+    
+    /* Enhanced neon effects */
     --neon-glow: 0 0 20px hsl(142 76% 65% / 0.5);
     --neon-glow-strong: 0 0 30px hsl(142 76% 65% / 0.8);
+    --neon-glow-intense: 0 0 40px hsl(142 76% 65% / 1);
+    
+    /* Gradient variables */
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 65%), hsl(142 76% 55%));
+    --gradient-card: linear-gradient(135deg, hsl(222 84% 6%), hsl(217 32% 8%));
+    --gradient-border: linear-gradient(135deg, hsl(142 76% 65% / 0.3), hsl(142 76% 45% / 0.1));
   }
+  
   body {
-    @apply bg-background text-foreground min-h-screen;
+    @apply bg-background text-foreground min-h-screen antialiased;
+    background-image: 
+      radial-gradient(circle at 20% 50%, hsl(142 76% 65% / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(142 76% 65% / 0.05) 0%, transparent 50%);
   }
-  h1, h2, h3, h4 {
-    @apply font-semibold;
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
   }
+  
+  h1 { @apply text-2xl sm:text-3xl lg:text-4xl; }
+  h2 { @apply text-xl sm:text-2xl lg:text-3xl; }
+  h3 { @apply text-lg sm:text-xl lg:text-2xl; }
+  h4 { @apply text-base sm:text-lg; }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
+    background-image: var(--gradient-card);
+  }
+  
+  .neon-border {
+    @apply border border-primary/30;
+    box-shadow: var(--neon-glow);
+  }
+  
+  .neon-button {
+    @apply bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground;
+    box-shadow: var(--neon-glow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .neon-button:hover {
+    box-shadow: var(--neon-glow-strong);
+    transform: translateY(-1px);
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+  
+  .card-elevated {
+    @apply glass-card shadow-2xl hover:shadow-neon-strong;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-elevated:hover {
+    transform: translateY(-2px);
   }
 }

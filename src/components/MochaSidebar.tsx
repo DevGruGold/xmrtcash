@@ -20,14 +20,14 @@ export default function MochaSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="hidden lg:flex bg-card/95 backdrop-blur-sm border-r border-border/50 w-64 min-h-screen flex-col fixed lg:relative z-20">
-      <div className="p-4 sm:p-6 border-b border-border/50">
+    <aside className="hidden lg:flex glass-card border-r border-primary/20 w-64 min-h-screen flex-col fixed lg:relative z-20">
+      <div className="p-4 sm:p-6 border-b border-primary/20">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-neon">
+          <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-float">
             <DollarSign className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-bold text-foreground">CashDapp</h2>
+            <h2 className="font-bold gradient-text">CashDapp</h2>
             <p className="text-xs text-muted-foreground">Monero Bridge</p>
           </div>
         </div>
@@ -39,21 +39,21 @@ export default function MochaSidebar() {
             key={to}
             to={to}
             className={clsx(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 group",
               location.pathname === to 
-                ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/30 shadow-neon" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-primary/20 border border-transparent"
+                ? "neon-border bg-primary/10 text-primary shadow-neon-strong" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:shadow-glow border border-transparent hover:border-primary/20"
             )}
           >
-            <Icon className="w-4 h-4 flex-shrink-0" />
+            <Icon className="w-4 h-4 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
             <span className="truncate">{label}</span>
           </Link>
         ))}
       </nav>
       
-      <footer className="p-4 border-t border-border/50">
+      <footer className="p-4 border-t border-primary/20">
         <p className="text-xs text-muted-foreground text-center">
-          Powered by <span className="text-primary font-medium">XMRT Protocol</span>
+          Powered by <span className="gradient-text font-medium">XMRT Protocol</span>
         </p>
       </footer>
     </aside>

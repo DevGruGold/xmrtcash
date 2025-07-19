@@ -9,13 +9,13 @@ export default function MochaHeader() {
 
   return (
     <>
-      <header className="bg-card/95 backdrop-blur-sm border-b border-border/50 h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 relative z-50">
+      <header className="glass-card h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 relative z-50 border-b border-primary/20">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-neon">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-glow-pulse">
             <DollarSign className="w-3 h-3 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-foreground">CashDapp</h1>
+            <h1 className="text-lg sm:text-xl font-bold gradient-text">CashDapp</h1>
             <span className="text-xs text-muted-foreground hidden sm:block">by MobileMonero.com</span>
           </div>
         </div>
@@ -25,7 +25,7 @@ export default function MochaHeader() {
             href="https://xmrtstart.vercel.app" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground shadow-neon px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hidden sm:flex items-center"
+            className="neon-button px-3 py-1.5 rounded-lg text-sm font-medium hidden sm:flex items-center"
           >
             Start Mining
           </a>
@@ -33,7 +33,7 @@ export default function MochaHeader() {
           <Button 
             variant="outline" 
             size="sm" 
-            className="bg-primary/10 text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground shadow-neon hidden sm:flex"
+            className="neon-button hidden sm:flex"
           >
             Connect Wallet
           </Button>
