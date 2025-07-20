@@ -20,7 +20,7 @@ export default function MochaSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="hidden lg:flex glass-card border-r border-primary/20 w-64 min-h-screen flex-col fixed lg:relative z-20">
+    <aside className="hidden lg:flex glass-card border-r border-primary/20 w-64 h-full flex-col z-20">
       <div className="p-4 sm:p-6 border-b border-primary/20">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-float">
