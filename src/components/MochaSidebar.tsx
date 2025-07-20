@@ -27,8 +27,8 @@ export default function MochaSidebar() {
             <DollarSign className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-bold gradient-text">MeshMiner</h2>
-            <p className="text-xs text-muted-foreground">by XMRT</p>
+            <h2 className="font-bold gradient-text">CashDapp</h2>
+            <p className="text-xs text-muted-foreground">MobileMonero MeshMiner</p>
           </div>
         </div>
       </div>
@@ -51,10 +51,22 @@ export default function MochaSidebar() {
         ))}
       </nav>
       
-      <footer className="p-4 border-t border-primary/20">
-        <p className="text-xs text-muted-foreground text-center">
-          Powered by <span className="gradient-text font-medium">XMRT Protocol</span>
-        </p>
+      <footer className="p-4 border-t border-primary/20 space-y-3">
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">
+            Powered by <span className="gradient-text font-medium">XMRT Solutions</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Meshtastic Network Integration
+          </p>
+        </div>
+        
+        <div className="glass-card p-3 rounded-lg bg-primary/5 border border-primary/10">
+          <h4 className="text-xs font-medium text-primary mb-1">About XMRT DAO</h4>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Decentralized mesh network mining and governance platform connecting Monero privacy with Meshtastic off-grid communications.
+          </p>
+        </div>
       </footer>
     </aside>
   );
