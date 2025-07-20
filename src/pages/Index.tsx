@@ -7,13 +7,14 @@ import { ArrowUpRight, ArrowDownLeft, Send, Download, Shield, Users, Smartphone 
 
 export default function Index() {
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <MochaSidebar />
-      
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <MochaHeader />
+    <div className="min-h-screen bg-background">
+      <div className="lg:flex">
+        <MochaSidebar />
         
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+        <div className="flex-1 lg:ml-0">
+          <MochaHeader />
+          
+          <main className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 pb-20">
           {/* Balance Section */}
           <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-neon">
             <CardHeader className="pb-2 px-4 sm:px-6">
@@ -152,8 +153,9 @@ export default function Index() {
               ))}
             </CardContent>
           </Card>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
