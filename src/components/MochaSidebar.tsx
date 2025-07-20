@@ -20,7 +20,7 @@ export default function MochaSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="hidden lg:flex glass-card border-r border-primary/20 w-64 min-h-screen flex-col fixed lg:relative z-20">
+    <aside className="hidden lg:flex glass-card border-r border-primary/20 w-64 h-screen flex-col fixed lg:relative z-20">
       <div className="p-4 sm:p-6 border-b border-primary/20">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-float">
@@ -33,7 +33,7 @@ export default function MochaSidebar() {
         </div>
       </div>
       
-      <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2">
+      <nav className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1 sm:space-y-2">
         {sidebarItems.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
@@ -51,7 +51,7 @@ export default function MochaSidebar() {
         ))}
       </nav>
       
-      <footer className="p-4 border-t border-primary/20 space-y-3">
+      <footer className="flex-shrink-0 p-4 border-t border-primary/20 space-y-3">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
             Powered by <span className="gradient-text font-medium">XMRT Solutions</span>
