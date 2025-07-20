@@ -15,8 +15,8 @@ export default function MochaHeader() {
             <DollarSign className="w-3 h-3 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold gradient-text">CashDapp</h1>
-            <span className="text-xs text-muted-foreground hidden sm:block">by MobileMonero.com</span>
+            <h1 className="text-lg sm:text-xl font-bold gradient-text">MeshMiner</h1>
+            <span className="text-xs text-muted-foreground hidden sm:block">by XMRT</span>
           </div>
         </div>
         

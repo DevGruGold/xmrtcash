@@ -27,8 +27,8 @@ export default function MochaSidebar() {
             <DollarSign className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-bold gradient-text">CashDapp</h2>
-            <p className="text-xs text-muted-foreground">Monero Bridge</p>
+            <h2 className="font-bold gradient-text">MeshMiner</h2>
+            <p className="text-xs text-muted-foreground">by XMRT</p>
           </div>
         </div>
       </div>
