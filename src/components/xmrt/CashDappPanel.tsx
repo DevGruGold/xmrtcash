@@ -103,28 +103,30 @@ export default function CashDappPanel() {
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                <Bot className="w-6 h-6 text-white" />
+        <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <CardTitle className="text-xl text-foreground">XMRT-Ecosystem Eliza AI</CardTitle>
-                <p className="text-sm text-muted-foreground">Autonomous DAO Management & Intelligence System</p>
+                <CardTitle className="text-lg sm:text-xl text-foreground">XMRT-Ecosystem Eliza AI</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground">Autonomous DAO Management & Intelligence System</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                <Activity className="w-3 h-3 mr-1" />
-                GPT-4 Powered
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700 text-xs px-1 sm:px-2">
+                <Activity className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                <span className="hidden sm:inline">GPT-4 Powered</span>
+                <span className="sm:hidden">GPT-4</span>
               </Badge>
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Autonomous Mode
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700 text-xs px-1 sm:px-2">
+                <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                <span className="hidden sm:inline">Autonomous</span>
+                <span className="sm:hidden">Auto</span>
               </Badge>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                <Shield className="w-3 h-3 mr-1" />
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700 text-xs px-1 sm:px-2 hidden sm:inline-flex">
+                <Shield className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                 Multi-Chain
               </Badge>
             </div>
@@ -132,61 +134,62 @@ export default function CashDappPanel() {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
         {/* Chat Interface */}
-        <Card className="lg:col-span-2 bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader className="pb-3">
+        <Card className="xl:col-span-2 bg-card/50 backdrop-blur-sm border-border/50">
+          <CardHeader className="pb-3 px-3 sm:px-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-8 h-8">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
                   <AvatarImage src="/eliza-avatar.jpg" alt="Eliza AI" />
-                  <AvatarFallback className="bg-primary text-primary-foreground">E</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">E</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-sm">Eliza AI</h3>
-                  <p className="text-xs text-muted-foreground">Autonomous XMRT-Ecosystem DAO Assistant</p>
+                  <h3 className="font-semibold text-xs sm:text-sm">Eliza AI</h3>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Autonomous XMRT-Ecosystem DAO Assistant</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  <div className={`w-2 h-2 rounded-full mr-1 ${connectionStatus === 'connected' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                  {connectionStatus === 'connected' ? 'Connected' : 'Connecting...'}
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Badge variant="outline" className="text-xs px-1 sm:px-2">
+                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1 ${connectionStatus === 'connected' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                  <span className="hidden sm:inline">{connectionStatus === 'connected' ? 'Connected' : 'Connecting...'}</span>
+                  <span className="sm:hidden">●</span>
                 </Badge>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="text-xs">🔄 Gemini AI Active</Badge>
-              <Badge variant="secondary" className="text-xs">🤖 Autonomous Mode</Badge>
-              <Badge variant="secondary" className="text-xs">💰 Treasury Monitor</Badge>
+            <div className="flex gap-1 sm:gap-2 flex-wrap">
+              <Badge variant="secondary" className="text-xs">🔄 AI Active</Badge>
+              <Badge variant="secondary" className="text-xs">🤖 Auto</Badge>
+              <Badge variant="secondary" className="text-xs hidden sm:inline-flex">💰 Treasury Monitor</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-96 px-4">
-              <div className="space-y-4">
+            <ScrollArea className="h-64 sm:h-80 lg:h-96 px-3 sm:px-4">
+              <div className="space-y-3 sm:space-y-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`flex items-start gap-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <Avatar className="w-8 h-8 flex-shrink-0">
+                    <div className={`flex items-start gap-2 sm:gap-3 max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                      <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                         {message.type === 'eliza' ? (
                           <>
                             <AvatarImage src="/eliza-avatar.jpg" alt="Eliza AI" />
-                            <AvatarFallback className="bg-primary text-primary-foreground">E</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">E</AvatarFallback>
                           </>
                         ) : (
-                          <AvatarFallback className="bg-muted">U</AvatarFallback>
+                          <AvatarFallback className="bg-muted text-xs">U</AvatarFallback>
                         )}
                       </Avatar>
-                      <div className={`rounded-lg p-3 ${
+                      <div className={`rounded-lg p-2 sm:p-3 ${
                         message.type === 'user' 
                           ? 'bg-primary text-primary-foreground ml-auto' 
                           : 'bg-accent/20 text-foreground'
                       }`}>
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-xs sm:text-sm leading-relaxed">{message.content}</p>
                         <p className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString()}
+                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
@@ -194,19 +197,19 @@ export default function CashDappPanel() {
                 ))}
                 {isConnecting && (
                   <div className="flex justify-start">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-8 h-8">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
                         <AvatarImage src="/eliza-avatar.jpg" alt="Eliza AI" />
-                        <AvatarFallback className="bg-primary text-primary-foreground">E</AvatarFallback>
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">E</AvatarFallback>
                       </Avatar>
-                      <div className="bg-accent/20 rounded-lg p-3">
+                      <div className="bg-accent/20 rounded-lg p-2 sm:p-3">
                         <div className="flex items-center gap-2">
                           <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce"></div>
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                           </div>
-                          <span className="text-xs text-muted-foreground">Eliza is thinking...</span>
+                          <span className="text-xs text-muted-foreground">Thinking...</span>
                         </div>
                       </div>
                     </div>
@@ -215,75 +218,84 @@ export default function CashDappPanel() {
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
-            <div className="p-4 border-t border-border/50">
+            <div className="p-3 sm:p-4 border-t border-border/50">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask Eliza about governance, treasury, analytics, or any DAO operations..."
-                  className="flex-1"
+                  placeholder="Ask Eliza about DAO operations..."
+                  className="flex-1 text-sm"
                   disabled={isConnecting}
                 />
-                <Button type="submit" disabled={isConnecting || !inputMessage.trim()}>
+                <Button type="submit" disabled={isConnecting || !inputMessage.trim()} size="sm">
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                🤖 Powered by Google Gemini AI | Autonomous ElizaOS
+                🤖 Powered by Gemini AI | ElizaOS
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Features Panel */}
-        <div className="space-y-4">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2 text-green-800">
+        <div className="space-y-3 sm:space-y-4">
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-800">
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
+              <CardTitle className="text-sm flex items-center gap-2 text-green-800 dark:text-green-400">
                 <TrendingUp className="w-4 h-4" />
-                Autonomous Governance
+                <span className="hidden sm:inline">Autonomous Governance</span>
+                <span className="sm:hidden">Governance</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-green-700 mb-3">
-                AI-powered proposal analysis, voting recommendations, and autonomous execution with 94% accuracy.
+            <CardContent className="px-3 sm:px-6">
+              <p className="text-xs text-green-700 dark:text-green-300 mb-2 sm:mb-3">
+                AI-powered proposal analysis with 94% accuracy.
               </p>
-              <Button variant="outline" size="sm" className="w-full border-green-300 text-green-700 hover:bg-green-100">
-                View Analytics <ChevronRight className="w-3 h-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/50 text-xs">
+                <span className="hidden sm:inline">View Analytics</span>
+                <span className="sm:hidden">Analytics</span>
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2 text-yellow-800">
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 dark:from-yellow-950/20 dark:to-orange-950/20 dark:border-yellow-800">
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
+              <CardTitle className="text-sm flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
                 <Zap className="w-4 h-4" />
-                Treasury Management
+                <span className="hidden sm:inline">Treasury Management</span>
+                <span className="sm:hidden">Treasury</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-yellow-700 mb-3">
-                Cross-chain asset optimization, yield farming strategies, and real-time portfolio rebalancing.
+            <CardContent className="px-3 sm:px-6">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2 sm:mb-3">
+                Cross-chain optimization and real-time rebalancing.
               </p>
-              <Button variant="outline" size="sm" className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100">
-                Manage Treasury <ChevronRight className="w-3 h-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-700 dark:text-yellow-400 dark:hover:bg-yellow-950/50 text-xs">
+                <span className="hidden sm:inline">Manage Treasury</span>
+                <span className="sm:hidden">Manage</span>
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2 text-purple-800">
+          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 dark:from-purple-950/20 dark:to-violet-950/20 dark:border-purple-800">
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
+              <CardTitle className="text-sm flex items-center gap-2 text-purple-800 dark:text-purple-400">
                 <Shield className="w-4 h-4" />
-                Security Monitoring
+                <span className="hidden sm:inline">Security Monitoring</span>
+                <span className="sm:hidden">Security</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-purple-700 mb-3">
-                24/7 threat detection, emergency response protocols, and smart contract security analysis.
+            <CardContent className="px-3 sm:px-6">
+              <p className="text-xs text-purple-700 dark:text-purple-300 mb-2 sm:mb-3">
+                24/7 threat detection and emergency protocols.
               </p>
-              <Button variant="outline" size="sm" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100">
-                Security Dashboard <ChevronRight className="w-3 h-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50 text-xs">
+                <span className="hidden sm:inline">Security Dashboard</span>
+                <span className="sm:hidden">Dashboard</span>
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Button>
             </CardContent>
           </Card>

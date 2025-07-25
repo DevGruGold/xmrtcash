@@ -36,6 +36,12 @@
     --gradient-primary: linear-gradient(135deg, hsl(142 76% 65%), hsl(142 76% 55%));
     --gradient-card: linear-gradient(135deg, hsl(222 84% 6%), hsl(217 32% 8%));
     --gradient-border: linear-gradient(135deg, hsl(142 76% 65% / 0.3), hsl(142 76% 45% / 0.1));
+    
+    /* Mobile safe area variables */
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
   }
   
   body {
@@ -89,5 +95,42 @@
   
   .card-elevated:hover {
     transform: translateY(-2px);
+  }
+  
+  /* Mobile-specific utilities */
+  .pt-safe {
+    padding-top: var(--safe-area-inset-top);
+  }
+  
+  .pb-safe {
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+  
+  .pl-safe {
+    padding-left: var(--safe-area-inset-left);
+  }
+  
+  .pr-safe {
+    padding-right: var(--safe-area-inset-right);
+  }
+  
+  /* Touch-friendly sizing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile chat optimizations */
+  @media (max-width: 640px) {
+    .mobile-chat {
+      height: calc(100vh - 120px);
+    }
+    
+    .mobile-input {
+      position: sticky;
+      bottom: 0;
+      background: hsl(var(--background));
+      border-top: 1px solid hsl(var(--border));
+    }
   }
 }
