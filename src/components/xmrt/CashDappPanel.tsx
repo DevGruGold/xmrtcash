@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { generateElizaResponse } from "@/lib/gemini";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,8 +65,21 @@ export default function CashDappPanel() {
     setInputMessage("");
     setIsConnecting(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Get AI response from Gemini
+      const context = "XMRT Ecosystem CashDapp operations including XMR wrapping/unwrapping, fiat on/off-ramping, and DAO governance";
+      const aiResponse = await generateElizaResponse(inputMessage, context);
+      
+      const elizaResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'eliza',
+        content: aiResponse,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, elizaResponse]);
+    } catch (error) {
+      console.error('AI response error:', error);
+      // Fallback to static response
       const elizaResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'eliza',
@@ -73,8 +87,9 @@ export default function CashDappPanel() {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, elizaResponse]);
+    } finally {
       setIsConnecting(false);
-    }, 1500);
+    }
   };
 
   const getElizaResponse = (userInput: string): string => {
@@ -232,7 +247,7 @@ export default function CashDappPanel() {
                 </Button>
               </form>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                🤖 Powered by Gemini AI | ElizaOS
+                🤖 Powered by Gemini AI | ElizaOS {!import.meta.env.VITE_GEMINI_API_KEY && '(API key required)'}
               </p>
             </div>
           </CardContent>
