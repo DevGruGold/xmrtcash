@@ -16,6 +16,8 @@ import AdminPage from "@/pages/AdminPage";
 import DeployPage from "@/pages/DeployPage";
 import TestingPage from "@/pages/TestingPage";
 import SimulationPage from "@/pages/SimulationPage";
+import AutonomousPage from "@/pages/AutonomousPage";
+import MeshnetPage from "@/pages/MeshnetPage";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/cashdapp" element={<CashDappPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/simulation" element={<SimulationPage />} />
+          <Route path="/autonomous" element={<AutonomousPage />} />
+          <Route path="/meshnet" element={<MeshnetPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
