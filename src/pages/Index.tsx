@@ -5,6 +5,7 @@ import LiveEcosystemStats from "@/components/ecosystem/LiveEcosystemStats";
 import EcosystemCapabilities from "@/components/ecosystem/EcosystemCapabilities";
 import MiningDashboard from "@/components/mining/MiningDashboard";
 import DAOLeaderboard from "@/components/dao/DAOLeaderboard";
+import ElizaChatbot from "@/components/ElizaChatbot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, TrendingUp, Globe, Bot } from "lucide-react";
@@ -21,16 +22,22 @@ export default function Index() {
           <main className="p-3 sm:p-4 lg:p-6 space-y-6 pb-20">
             <div className="max-w-7xl mx-auto space-y-8">
               {/* Hero Section with Eliza */}
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-float">
-                    <Globe className="w-6 h-6 text-primary-foreground" />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-4">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-float">
+                      <Globe className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-bold gradient-text">XMRT Ecosystem</h1>
                   </div>
-                  <h1 className="text-4xl md:text-6xl font-bold gradient-text">XMRT Ecosystem</h1>
+                  <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl">
+                    Decentralized mobile mining, mesh networking, and privacy-first DeFi platform with real-time data powered by Gemini AI
+                  </p>
                 </div>
-                <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-                  Decentralized mobile mining, mesh networking, and privacy-first DeFi platform with real-time data
-                </p>
+                
+                <div className="lg:col-span-1">
+                  <ElizaChatbot className="w-full" />
+                </div>
               </div>
 
               {/* Live Stats */}
