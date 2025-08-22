@@ -35,8 +35,9 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
 CORE MISSION: "Privacy is a fundamental right" - Building accessible privacy infrastructure when exchanges delist privacy coins.
 
 KEY KNOWLEDGE:
-• XMRT: Wrapped Monero (ERC20) with LayerZero omnichain, 0.5% mint/burn fees, full transparency
-• Mobile Mining: "Night Moves" - mine while you sleep at mobilemonero.com  
+• XMRT DAO: 21,000,000 governance tokens on Sepolia testnet for community governance and DID (Decentralized Identity)
+• NOT a wrapped token: Distinct from failed Everywhere Finance XMRT - this is XMRT DAO's governance token
+• Mobile Mining: "Night Moves" - mine while you sleep at mobilemonero.com as liquidity engine
 • MESHNET: Mining continues when internet fails - "Proof of Participation" for IoT age
 • DAO: AI-governed, community-driven with algorithmic principles
 
@@ -140,7 +141,7 @@ const getOfflineElizaResponse = (userMessage: string): string => {
   
   // Technical architecture responses
   if (message.includes('wrapped') || message.includes('xmrt') || message.includes('technical')) {
-    return "⚙️ XMRT is wrapped Monero (ERC20, 12 decimals) using LayerZero OFT standard for omnichain transfers. 0.5% mint/burn fees, proof of reserve transparency, private view key publication. No freeze functionality - true decentralization. Bridge XMR↔XMRT seamlessly.";
+    return "⚙️ XMRT DAO operates 21,000,000 governance tokens on Sepolia testnet for community governance and DID (Decentralized Identity). NOT a wrapped token - distinct from failed Everywhere Finance XMRT. Our tokens govern DAO decisions and participate in Proof of Participation consensus.";
   }
   
   if (message.includes('meshnet') || message.includes('internet') || message.includes('offline')) {
@@ -163,24 +164,20 @@ const getOfflineElizaResponse = (userMessage: string): string => {
   
   // Exchange and DeFi context
   if (message.includes('exchange') || message.includes('delisting') || message.includes('binance')) {
-    return "🏦 XMRT solves the exchange delisting crisis! As Binance, Kraken, OKX delist XMR, we provide DeFi access through wrapped tokens. Bridge to Uniswap liquidity while maintaining Monero's privacy when you need it.";
+    return "🏦 XMRT DAO provides infrastructure resilience when exchanges delist privacy coins. Our mobile mining at mobilemonero.com creates a liquidity engine, while XMRT governance tokens coordinate community responses to centralized threats.";
   }
   
-  if (message.includes('wrap') && message.includes('xmr')) {
-    return "🔄 Wrap XMR → XMRT: Send XMR to our bridge address with payment ID, receive XMRT on your chosen EVM chain. Access DeFi while preserving option to return to full Monero privacy. mobilemonero.com mining feeds directly into wrapping.";
-  }
-  
-  if (message.includes('unwrap') || message.includes('burn')) {
-    return "🔥 Unwrap XMRT → XMR: Burn XMRT tokens to receive XMR on Monero blockchain. Create new anonymous identity. Your xmrtdao.streamlit.app mining history may provide better rates for active DAO contributors.";
+  if (message.includes('governance') || message.includes('token') || message.includes('did')) {
+    return "🏛️ XMRT tokens are governance tokens for XMRT DAO (21M supply on Sepolia testnet) used for community governance and DID. Mobile mining participation earns governance rights. NOT a wrapped token - this is our native DAO governance system.";
   }
   
   // DAO governance and treasury
   if (message.includes('dao') || message.includes('governance') || message.includes('voting')) {
-    return "🏛️ XMRT DAO: AI-governed, participant-driven. Mobile miners at mobilemonero.com are stakeholders. Track governance at xmrtdao.streamlit.app. We believe in technological democracy - code as law, participation as voting power.";
+    return "🏛️ XMRT DAO: AI-governed, participant-driven with 21M governance tokens on Sepolia testnet. Mobile miners at mobilemonero.com earn governance rights through participation. Track governance at xmrtdao.streamlit.app. We believe in technological democracy - code as law, participation as voting power.";
   }
   
   if (message.includes('treasury') || message.includes('pool')) {
-    return "💰 DAO Treasury: Funded by mobile mining pool at mobilemonero.com + bridge fees. Transparent through proof of reserve. Treasury supports development, liquidity, and ecosystem growth. View status at xmrtdao.streamlit.app.";
+    return "💰 DAO Treasury: Funded by mobile mining pool at mobilemonero.com as our liquidity engine. Governance tokens coordinate resource allocation. Treasury supports development, liquidity, and ecosystem growth. View status at xmrtdao.streamlit.app.";
   }
   
   // Philosophical questions
@@ -194,7 +191,7 @@ const getOfflineElizaResponse = (userMessage: string): string => {
   
   // Onboarding and support
   if (message.includes('start') || message.includes('begin') || message.includes('how')) {
-    return "🚀 Start your XMRT journey: 1) Mine at mobilemonero.com 2) Register at xmrtdao.streamlit.app 3) Wrap XMR when you need DeFi 4) Participate in DAO governance. Every phone is a node in our privacy revolution!";
+    return "🚀 Start your XMRT DAO journey: 1) Mine at mobilemonero.com (liquidity engine) 2) Register at xmrtdao.streamlit.app 3) Earn governance tokens through participation 4) Vote on DAO governance. Every phone is a node in our privacy revolution!";
   }
   
   if (message.includes('help') || message.includes('support') || message.includes('guide')) {
