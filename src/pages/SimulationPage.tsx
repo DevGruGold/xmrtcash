@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MochaSidebar from "@/components/MochaSidebar";
 import MochaHeader from "@/components/MochaHeader";
@@ -9,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { 
   Settings, User, Database, Shield, ArrowRight, 
-  LogIn, LogOut, Code
+  LogIn, Code
 } from "lucide-react";
 
 // AI persona types and data
@@ -341,247 +340,230 @@ export default function SimulationPage() {
   }, [isRunning, step, speed]);
   
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-mocha-900 via-mocha-700 to-mocha-500">
-      <MochaSidebar />
-      <main className="flex-1 flex flex-col">
-        <MochaHeader />
-        <section className="flex-1 p-4 overflow-auto">
-          <div className="w-full max-w-7xl mx-auto">
-            {/* Simulation header */}
-            <div className="bg-mocha-100/40 rounded-xl shadow-xl p-6 backdrop-blur-lg mb-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold font-mocha text-mocha-800">XMRT DAO AI Simulation</h2>
-                  <p className="text-mocha-600">
-                    Simulating autonomous governance through specialized AI personas
-                  </p>
+    <div className="min-h-screen bg-background">
+      <div className="lg:flex">
+        <MochaSidebar />
+        
+        <div className="flex-1 lg:ml-0">
+          <MochaHeader />
+          
+          <main className="p-3 sm:p-4 lg:p-6 space-y-6 pb-20">
+            <div className="max-w-7xl mx-auto">
+              {/* Simulation header */}
+              <Card className="glass-card p-6 mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold gradient-text">XMRT DAO AI Simulation</h2>
+                    <p className="text-muted-foreground">
+                      Simulating autonomous governance through specialized AI personas
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select 
+                      value={speed} 
+                      onChange={(e) => setSpeed(Number(e.target.value))}
+                      className="bg-card border border-border rounded px-3 py-1 text-sm text-foreground"
+                    >
+                      <option value="1000">Fast (1s)</option>
+                      <option value="2000">Medium (2s)</option>
+                      <option value="5000">Slow (5s)</option>
+                    </select>
+                    
+                    {!isRunning ? (
+                      <Button 
+                        onClick={startSimulation} 
+                        disabled={isRunning}
+                        className="neon-button"
+                      >
+                        {actions.length > 0 ? "Continue" : "Start Simulation"}
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={stopSimulation}
+                        variant="destructive"
+                      >
+                        Pause
+                      </Button>
+                    )}
+                    
+                    <Button 
+                      onClick={resetSimulation}
+                      variant="outline"
+                    >
+                      Reset
+                    </Button>
+                    
+                    {!isRunning && step < simulationScenarios.length && (
+                      <Button 
+                        onClick={advanceDay}
+                        className="neon-button"
+                      >
+                        Next Day
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <select 
-                    value={speed} 
-                    onChange={(e) => setSpeed(Number(e.target.value))}
-                    className="bg-mocha-100/80 border border-mocha-300 rounded px-3 py-1 text-sm"
-                  >
-                    <option value="1000">Fast (1s)</option>
-                    <option value="2000">Medium (2s)</option>
-                    <option value="5000">Slow (5s)</option>
-                  </select>
-                  
-                  {!isRunning ? (
-                    <Button 
-                      onClick={startSimulation} 
-                      disabled={isRunning}
-                      className="bg-mocha-700 text-mocha-100 hover:bg-mocha-800"
+                
+                {/* Day progress indicator */}
+                {actions.length > 0 && (
+                  <div className="mt-4 flex items-center">
+                    <div className="text-foreground font-semibold mr-3">
+                      Day: {step} / {simulationScenarios.length}
+                    </div>
+                    <div className="flex-1 bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${(step / simulationScenarios.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </Card>
+              
+              {/* AI Personas */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-foreground mb-3">DAO Governance AIs</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {personas.map((persona) => (
+                    <Card 
+                      key={persona.id} 
+                      className="glass-card p-4 hover:shadow-neon-strong transition-all duration-300"
                     >
-                      {actions.length > 0 ? "Continue" : "Start Simulation"}
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={stopSimulation}
-                      variant="destructive"
-                    >
-                      Pause
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    onClick={resetSimulation}
-                    variant="outline"
-                  >
-                    Reset
-                  </Button>
-                  
-                  {!isRunning && step < simulationScenarios.length && (
-                    <Button 
-                      onClick={advanceDay}
-                      className="bg-mocha-500 text-mocha-100 hover:bg-mocha-600"
-                    >
-                      Next Day
-                    </Button>
-                  )}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="bg-primary/10 text-primary border border-primary/20">
+                          <div className="h-10 w-10 rounded-full flex items-center justify-center">
+                            {persona.icon}
+                          </div>
+                        </Avatar>
+                        <div>
+                          <h4 className="font-bold text-foreground">{persona.name}</h4>
+                          <Badge variant="outline" className="font-normal">
+                            {persona.role}
+                          </Badge>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">{persona.description}</p>
+                      <div className="mt-3">
+                        <h5 className="text-xs font-semibold mb-1 text-foreground">Decision Criteria:</h5>
+                        <ul className="text-xs text-muted-foreground">
+                          {persona.decisionCriteria.map((criteria, idx) => (
+                            <li key={idx} className="flex items-center gap-1">
+                              <span className="h-1 w-1 rounded-full bg-primary"></span>
+                              {criteria}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               </div>
               
-              {/* Day progress indicator */}
-              {actions.length > 0 && (
-                <div className="mt-4 flex items-center">
-                  <div className="text-mocha-700 font-semibold mr-3">
-                    Day: {step} / {simulationScenarios.length}
-                  </div>
-                  <div className="flex-1 bg-mocha-200 rounded-full h-2">
-                    <div 
-                      className="bg-mocha-700 h-2 rounded-full"
-                      style={{ width: `${(step / simulationScenarios.length) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* AI Personas */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold font-mocha text-mocha-800 mb-3">DAO Governance AIs</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {personas.map((persona) => (
-                  <Card 
-                    key={persona.id} 
-                    className={`p-4 border ${persona.color.split(' ')[0]} bg-white/90`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className={persona.color}>
-                        <div className="h-10 w-10 rounded-full flex items-center justify-center">
-                          {persona.icon}
-                        </div>
-                      </Avatar>
-                      <div>
-                        <h4 className="font-bold">{persona.name}</h4>
-                        <Badge variant="outline" className="font-normal">
-                          {persona.role}
-                        </Badge>
-                      </div>
-                    </div>
-                    <p className="text-sm text-mocha-600 mt-2">{persona.description}</p>
-                    <div className="mt-3">
-                      <h5 className="text-xs font-semibold mb-1">Decision Criteria:</h5>
-                      <ul className="text-xs text-mocha-600">
-                        {persona.decisionCriteria.map((criteria, idx) => (
-                          <li key={idx} className="flex items-center gap-1">
-                            <span className="h-1 w-1 rounded-full bg-mocha-400"></span>
-                            {criteria}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-            
-            {/* DAO Activity Feed */}
-            {actions.length > 0 ? (
-              <div>
-                <h3 className="text-xl font-semibold font-mocha text-mocha-800 mb-3">DAO Activity</h3>
-                <div className="bg-mocha-100/40 rounded-xl shadow-lg backdrop-blur-lg p-4">
-                  <div className="space-y-4">
-                    {actions.map((action) => {
-                      const actor = personas.find(p => p.id === action.actor);
-                      
-                      return (
-                        <div key={action.id} className="bg-white rounded-lg border border-mocha-200 p-4 shadow-sm">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <Avatar className={actor?.color || ""}>
-                                <div className="h-8 w-8 rounded-full flex items-center justify-center">
-                                  {actor?.icon}
-                                </div>
-                              </Avatar>
-                              <div>
-                                <h4 className="font-semibold">{action.action}</h4>
-                                <div className="flex items-center gap-2 text-sm text-mocha-600">
-                                  <span>{actor?.name} ({actor?.role})</span>
-                                  <span>•</span>
-                                  <span>{action.timestamp.toLocaleTimeString()}</span>
+              {/* DAO Activity Feed */}
+              {actions.length > 0 ? (
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-3">DAO Activity</h3>
+                  <Card className="glass-card p-4">
+                    <div className="space-y-4">
+                      {actions.map((action) => {
+                        const actor = personas.find(p => p.id === action.actor);
+                        
+                        return (
+                          <Card key={action.id} className="glass-card p-4 border border-border/50">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="bg-primary/10 text-primary border border-primary/20">
+                                  <div className="h-8 w-8 rounded-full flex items-center justify-center">
+                                    {actor?.icon}
+                                  </div>
+                                </Avatar>
+                                <div>
+                                  <h4 className="font-semibold text-foreground">{action.action}</h4>
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{actor?.name} ({actor?.role})</span>
+                                    <span>•</span>
+                                    <span>{action.timestamp.toLocaleTimeString()}</span>
+                                  </div>
                                 </div>
                               </div>
+                              <Badge
+                                className={
+                                  action.status === "executed" ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400" :
+                                  action.status === "rejected" ? "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400" :
+                                  "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                }
+                              >
+                                {action.status}
+                              </Badge>
                             </div>
-                            <Badge
-                              className={
-                                action.status === "executed" ? "bg-green-100 text-green-800 border-green-300" :
-                                action.status === "rejected" ? "bg-red-100 text-red-800 border-red-300" :
-                                "bg-amber-100 text-amber-800 border-amber-300"
-                              }
-                            >
-                              {action.status.charAt(0).toUpperCase() + action.status.slice(1)}
-                            </Badge>
-                          </div>
-                          
-                          <p className="mt-2 text-mocha-700">{action.description}</p>
-                          
-                          {/* Votes */}
-                          <div className="mt-3">
-                            <h5 className="text-sm font-semibold">Votes:</h5>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              {Object.entries(action.votes).map(([personaId, vote]) => {
-                                const voter = personas.find(p => p.id === personaId);
-                                return (
-                                  <Badge
-                                    key={personaId}
-                                    variant="outline"
-                                    className={
-                                      vote === "approve" ? "bg-green-50 border-green-200" :
-                                      vote === "reject" ? "bg-red-50 border-red-200" :
-                                      "bg-gray-50 border-gray-200"
-                                    }
-                                  >
-                                    {voter?.name}: {vote}
-                                  </Badge>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          
-                          {/* Voting buttons - only for pending actions */}
-                          {action.status === "pending" && !isRunning && (
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              {personas.map(persona => {
-                                // Skip if already voted
-                                if (action.votes[persona.id]) return null;
-                                
-                                return (
-                                  <div key={persona.id} className="flex items-center gap-1">
-                                    <span className="text-xs">{persona.name}:</span>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 px-2 text-xs bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
-                                      onClick={() => handleVote(action.id, persona.id, "approve")}
-                                    >
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 px-2 text-xs bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
-                                      onClick={() => handleVote(action.id, persona.id, "reject")}
-                                    >
-                                      Reject
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 px-2 text-xs"
-                                      onClick={() => handleVote(action.id, persona.id, "abstain")}
-                                    >
-                                      Abstain
-                                    </Button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                            
+                            <p className="mt-3 text-sm text-muted-foreground pl-11">{action.description}</p>
+                            
+                            {/* Voting interface */}
+                            {action.status === "pending" && (
+                              <div className="mt-4 pl-11">
+                                <div className="flex flex-wrap gap-2">
+                                  {personas.map((persona) => {
+                                    const currentVote = action.votes[persona.id];
+                                    
+                                    return (
+                                      <div key={persona.id} className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">{persona.name}:</span>
+                                        <div className="flex gap-1">
+                                          <Button
+                                            size="sm"
+                                            variant={currentVote === "approve" ? "default" : "outline"}
+                                            onClick={() => handleVote(action.id, persona.id, "approve")}
+                                            className="h-6 px-2 text-xs"
+                                          >
+                                            ✓
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant={currentVote === "reject" ? "destructive" : "outline"}
+                                            onClick={() => handleVote(action.id, persona.id, "reject")}
+                                            className="h-6 px-2 text-xs"
+                                          >
+                                            ✗
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant={currentVote === "abstain" ? "secondary" : "outline"}
+                                            onClick={() => handleVote(action.id, persona.id, "abstain")}
+                                            className="h-6 px-2 text-xs"
+                                          >
+                                            ~
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </Card>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-mocha-100/40 rounded-xl shadow-xl p-8 backdrop-blur-lg text-center">
-                <h3 className="text-xl font-semibold font-mocha text-mocha-800 mb-3">Simulation Ready</h3>
-                <p className="text-mocha-600 mb-6">
-                  Click "Start Simulation" to see how an AI-governed DAO would operate the XMRT token ecosystem
-                </p>
-                <Button 
-                  onClick={startSimulation}
-                  className="bg-mocha-700 text-mocha-100 hover:bg-mocha-800"
-                >
-                  Start Simulation
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+              ) : (
+                <Card className="glass-card text-center py-12">
+                  <LogIn className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No DAO Activity Yet</h3>
+                  <p className="text-muted-foreground mb-4">Start the simulation to see autonomous AI governance in action</p>
+                  <Button 
+                    onClick={startSimulation}
+                    className="neon-button"
+                  >
+                    Begin Simulation
+                  </Button>
+                </Card>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
