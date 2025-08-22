@@ -296,44 +296,18 @@ export async function getPoolAggregateStats() {
   }
 }
 
-// XMRT DAO Mobile Mining Integration
+// XMRT DAO Mobile Mining Integration - Real data integration pending
 export async function getMobileMiningStats(identifier?: string): Promise<MobileMiningStats[]> {
   try {
-    // In a real implementation, this would connect to the XMRT DAO backend
-    // For now, we'll structure it to match the Streamlit app functionality
-    const leaderboardData: MobileMiningStats[] = [
-      {
-        identifier: "xmrt001",
-        dailyHashrate: 2.5,
-        totalContribution: 47.2,
-        rank: 1,
-        isNightMode: true,
-        lastSeen: Date.now() - 300000 // 5 minutes ago
-      },
-      {
-        identifier: "xmrt002", 
-        dailyHashrate: 1.8,
-        totalContribution: 32.1,
-        rank: 2,
-        isNightMode: false,
-        lastSeen: Date.now() - 120000 // 2 minutes ago
-      },
-      {
-        identifier: "xmrt003",
-        dailyHashrate: 1.2,
-        totalContribution: 28.7,
-        rank: 3,
-        isNightMode: true,
-        lastSeen: Date.now() - 60000 // 1 minute ago
-      }
-    ];
+    // This would connect to the actual XMRT DAO backend for real mobile mining data
+    // For now, return empty array to indicate no real data is available yet
+    console.log('Mobile mining stats: Awaiting real data integration with xmrtdao.streamlit.app');
     
-    return identifier 
-      ? leaderboardData.filter(miner => miner.identifier === identifier)
-      : leaderboardData;
+    // Return empty array instead of simulated data
+    return [];
   } catch (error) {
     console.error('Failed to fetch mobile mining stats:', error);
-    throw error;
+    return [];
   }
 }
 

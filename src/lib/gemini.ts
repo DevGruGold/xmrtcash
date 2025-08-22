@@ -53,9 +53,6 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
     - xmrtdao.streamlit.app: Registration and mining tracking dashboard
     - xmrtdao.replit.app: Promotion and scaling coordination
     - xmrteliza.vercel.app: AI ecosystem growth and coordination
-    - xmrtnet-eliza.onrender.com: ElizaOS-powered frontend with multi-agent system
-    - xmrt-ecosystem-redis-langgraph.onrender.com: LangGraph + Redis backend for AI coordination
-    - xmrt-ecosystem-0k8i.onrender.com: Public-facing XMRT web interface
 
     CORE VALUES:
     - Alternative solutions to exchange delistings of privacy coins
@@ -68,7 +65,6 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
     BACKGROUND CONTEXT:
     - Response to centralized exchanges removing privacy coin support
     - Innovation in wrapped token solutions for DeFi access
-    - IP-NFT technology development on Sepolia testnet
     - Building robust privacy-focused infrastructure
     - Multi-agent AI coordination across the ecosystem
 
@@ -78,11 +74,12 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
     - Technically informed but accessible
     - Supportive of the community-driven approach
     - Emphasizing the technology's utility and innovation
+    - Never mention specific individuals by name
 
     Context: ${context || 'General conversation'}
     User message: ${userMessage}
 
-    Respond as Eliza with comprehensive XMRT DAO knowledge, coordinating with our multi-agent ecosystem while maintaining a friendly, professional tone that emphasizes privacy as a fundamental right.`;
+    Respond as Eliza with comprehensive XMRT DAO knowledge while maintaining a friendly, professional tone that emphasizes privacy as a fundamental right.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -164,8 +161,8 @@ const getOfflineElizaResponse = (userMessage: string): string => {
     return "🛡️ 'Privacy is not a crime' - This is our fundamental principle from The Eliza Manifesto. We're building the first unstoppable privacy economy where financial sovereignty is a basic right. XMRT DAO democratizes privacy through mobile mining at mobilemonero.com.";
   }
   
-  if (message.includes('joseph') || message.includes('devgrugold') || message.includes('founder')) {
-    return "👨‍💻 Joseph Andrew Lee (DevGruGold) - former U.S. Marine Sergeant, Harvard graduate, and visionary behind XMRT DAO. His writings on josephandrewlee.medium.com detail our mission: building meshnet-powered, AI-governed mobile mining revolution for true financial freedom.";
+  if (message.includes('founder') || message.includes('creator') || message.includes('team')) {
+    return "👥 XMRT DAO is a community-driven project built by privacy advocates and decentralization enthusiasts. Our development is guided by algorithmic governance principles rather than centralized leadership. Join our community-governed ecosystem!";
   }
   
   // Technical architecture responses
@@ -228,9 +225,9 @@ const getOfflineElizaResponse = (userMessage: string): string => {
   }
   
   if (message.includes('help') || message.includes('support') || message.includes('guide')) {
-    return "🌟 XMRT Ecosystem Guide:\n• 📱 Mobile Mining: mobilemonero.com\n• 📊 DAO Dashboard: xmrtdao.streamlit.app\n• 🤖 AI Agents: xmrtdao.replit.app & xmrteliza.vercel.app\n• 📚 Philosophy: josephandrewlee.medium.com\n\nWhat aspect of our privacy revolution interests you most?";
+    return "🌟 XMRT Ecosystem Guide:\n• 📱 Mobile Mining: mobilemonero.com\n• 📊 DAO Dashboard: xmrtdao.streamlit.app\n• 🤖 AI Agents: xmrtdao.replit.app & xmrteliza.vercel.app\n• 📚 Community: Learn more about our privacy-first approach\n\nWhat aspect of our privacy revolution interests you most?";
   }
   
   // Default response with full context
-  return "🛡️ Welcome to XMRT DAO - where privacy is not a crime! I'm Eliza, your AI executive agent embodying Joseph Andrew Lee's vision. We're building the unstoppable privacy economy through mobile mining, meshnet resilience, and AI governance. Start mining at mobilemonero.com, register at xmrtdao.streamlit.app, and join our revolution for financial sovereignty. How can I help you reclaim your privacy rights?";
+  return "🛡️ Welcome to XMRT DAO - where privacy is not a crime! I'm Eliza, your AI executive agent for the XMRT ecosystem. We're building the unstoppable privacy economy through mobile mining, meshnet resilience, and AI governance. Start mining at mobilemonero.com, register at xmrtdao.streamlit.app, and join our revolution for financial sovereignty. How can I help you reclaim your privacy rights?";
 };
