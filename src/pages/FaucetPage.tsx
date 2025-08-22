@@ -3,6 +3,7 @@ import MochaSidebar from '@/components/MochaSidebar';
 import MochaHeader from '@/components/MochaHeader';
 import { XMRTFaucet } from '@/components/xmrt/XMRTFaucet';
 
+// XMRT Faucet Page - Get free testnet tokens
 export default function FaucetPage() {
   return (
     <div className="min-h-screen bg-background flex">
