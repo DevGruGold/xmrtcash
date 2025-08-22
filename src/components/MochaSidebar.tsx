@@ -4,15 +4,15 @@ import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
 const sidebarItems = [
-  { to: "/", label: "Dashboard", icon: Home },
+  { to: "/", label: "Ecosystem", icon: Home },
   { to: "/wrap-xmr", label: "Wrap XMR", icon: Upload },
   { to: "/unwrap-xmr", label: "Unwrap XMR", icon: Download },
   { to: "/onramp-fiat", label: "Buy Crypto", icon: ArrowUpDown },
   { to: "/offramp-fiat", label: "Sell Crypto", icon: Send },
   { to: "/cashdapp", label: "Quick Pay", icon: DollarSign },
   { to: "/simulation", label: "DAO Governance", icon: Users },
-  { to: "/deploy", label: "Deploy", icon: BarChart3 },
-  { to: "/testing", label: "Testing", icon: Shield },
+  { to: "/autonomous", label: "AI Agents", icon: BarChart3 },
+  { to: "/meshnet", label: "Mesh Network", icon: Shield },
   { to: "/admin", label: "Admin", icon: Settings },
 ];
 

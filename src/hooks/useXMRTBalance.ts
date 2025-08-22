@@ -1,95 +1,86 @@
 import { useState, useEffect } from 'react';
 
 export interface WalletBalance {
-  xmr: {
-    balance: number;
-    usd: number;
-  };
-  xmrt: {
-    balance: number;
-    usd: number;
-  };
-  btc: {
-    balance: number;
-    usd: number;
-  };
+  xmr: number;
+  xmrt: number;
+  btc: number;
+  xmrUsd: number;
+  xmrtUsd: number;
+  btcUsd: number;
   totalUsd: number;
   lastUpdated: Date;
 }
 
 export interface MiningStats {
   dailyXMRT: number;
-  totalMined: number;
-  hashrate: number;
+  totalXMRT: number;
+  hashrate: string;
   isActive: boolean;
-  meshnetStatus: 'connected' | 'disconnected' | 'syncing';
+  meshnetConnected: boolean;
   nightModeActive: boolean;
 }
 
 export function useXMRTBalance() {
   const [balance, setBalance] = useState<WalletBalance>({
-    xmr: { balance: 0.00000000, usd: 0.00 },
-    xmrt: { balance: 847.32, usd: 423.66 },
-    btc: { balance: 0.00000000, usd: 0.00 },
-    totalUsd: 423.66,
+    xmr: 2.45,
+    xmrt: 147.8,
+    btc: 0.023,
+    xmrUsd: 367.5,
+    xmrtUsd: 2217.0,
+    btcUsd: 1456.7,
+    totalUsd: 4041.2,
     lastUpdated: new Date()
   });
 
   const [miningStats, setMiningStats] = useState<MiningStats>({
-    dailyXMRT: 12.45,
-    totalMined: 2847.32,
-    hashrate: 847.32,
+    dailyXMRT: 12.4,
+    totalXMRT: 1247.8,
+    hashrate: "847.2 KH/s",
     isActive: true,
-    meshnetStatus: 'connected',
+    meshnetConnected: true,
     nightModeActive: false
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Simulate real-time balance updates
+  // Simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
-      if (miningStats.isActive) {
-        setBalance(prev => ({
-          ...prev,
-          xmrt: {
-            ...prev.xmrt,
-            balance: prev.xmrt.balance + Math.random() * 0.01
-          },
-          lastUpdated: new Date()
-        }));
+      setBalance(prev => ({
+        ...prev,
+        xmrt: prev.xmrt + (Math.random() * 0.1 - 0.05),
+        xmrtUsd: prev.xmrtUsd + (Math.random() * 5 - 2.5),
+        totalUsd: prev.totalUsd + (Math.random() * 10 - 5),
+        lastUpdated: new Date()
+      }));
 
-        setMiningStats(prev => ({
-          ...prev,
-          dailyXMRT: prev.dailyXMRT + Math.random() * 0.001,
-          totalMined: prev.totalMined + Math.random() * 0.001,
-          hashrate: prev.hashrate + (Math.random() - 0.5) * 50
-        }));
-      }
+      setMiningStats(prev => ({
+        ...prev,
+        dailyXMRT: prev.dailyXMRT + (Math.random() * 0.02 - 0.01),
+        totalXMRT: prev.totalXMRT + (Math.random() * 0.05),
+        hashrate: `${(Math.random() * 100 + 800).toFixed(1)} KH/s`
+      }));
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [miningStats.isActive]);
+  }, []);
 
   const refreshBalance = async () => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      // Simulate API call to fetch balance
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock balance update
       setBalance(prev => ({
         ...prev,
-        xmrt: {
-          balance: prev.xmrt.balance + Math.random() * 10,
-          usd: (prev.xmrt.balance + Math.random() * 10) * 0.5
-        },
+        xmr: Math.random() * 5 + 1,
+        xmrt: Math.random() * 200 + 100,
+        btc: Math.random() * 0.1 + 0.01,
         lastUpdated: new Date()
       }));
-
     } catch (err) {
       setError('Failed to refresh balance');
     } finally {
@@ -108,38 +99,33 @@ export function useXMRTBalance() {
     setMiningStats(prev => ({
       ...prev,
       nightModeActive: !prev.nightModeActive,
-      hashrate: prev.nightModeActive ? prev.hashrate * 1.5 : prev.hashrate * 0.7
+      hashrate: prev.nightModeActive 
+        ? `${(Math.random() * 100 + 800).toFixed(1)} KH/s`
+        : `${(Math.random() * 50 + 400).toFixed(1)} KH/s`
     }));
   };
 
   const sendXMRT = async (amount: number, address: string) => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      if (amount > balance.xmrt.balance) {
+      if (amount > balance.xmrt) {
         throw new Error('Insufficient balance');
       }
-
+      
       // Simulate transaction
       await new Promise(resolve => setTimeout(resolve, 2000));
-
+      
       setBalance(prev => ({
         ...prev,
-        xmrt: {
-          ...prev.xmrt,
-          balance: prev.xmrt.balance - amount
-        },
+        xmrt: prev.xmrt - amount,
+        xmrtUsd: prev.xmrtUsd - (amount * 15),
+        totalUsd: prev.totalUsd - (amount * 15),
         lastUpdated: new Date()
       }));
-
-      return {
-        txid: '0x' + Math.random().toString(16).substr(2, 64),
-        amount,
-        address,
-        timestamp: new Date()
-      };
-
+      
+      return { success: true, txHash: `0x${Math.random().toString(16).slice(2)}` };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Transaction failed');
       throw err;
@@ -151,39 +137,37 @@ export function useXMRTBalance() {
   const bridgeXMR = async (amount: number, direction: 'xmr-to-xmrt' | 'xmrt-to-xmr') => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      const fromBalance = direction === 'xmr-to-xmrt' ? balance.xmr.balance : balance.xmrt.balance;
-      if (amount > fromBalance) {
-        throw new Error('Insufficient balance');
+      const fee = amount * 0.001; // 0.1% fee
+      
+      if (direction === 'xmr-to-xmrt' && amount > balance.xmr) {
+        throw new Error('Insufficient XMR balance');
       }
-
+      if (direction === 'xmrt-to-xmr' && amount > balance.xmrt) {
+        throw new Error('Insufficient XMRT balance');
+      }
+      
       // Simulate bridge transaction
       await new Promise(resolve => setTimeout(resolve, 3000));
-
+      
       if (direction === 'xmr-to-xmrt') {
         setBalance(prev => ({
           ...prev,
-          xmr: { ...prev.xmr, balance: prev.xmr.balance - amount },
-          xmrt: { ...prev.xmrt, balance: prev.xmrt.balance + amount * 0.999 }, // 0.1% fee
+          xmr: prev.xmr - amount,
+          xmrt: prev.xmrt + (amount - fee),
           lastUpdated: new Date()
         }));
       } else {
         setBalance(prev => ({
           ...prev,
-          xmrt: { ...prev.xmrt, balance: prev.xmrt.balance - amount },
-          xmr: { ...prev.xmr, balance: prev.xmr.balance + amount * 0.999 },
+          xmrt: prev.xmrt - amount,
+          xmr: prev.xmr + (amount - fee),
           lastUpdated: new Date()
         }));
       }
-
-      return {
-        txid: '0x' + Math.random().toString(16).substr(2, 64),
-        amount,
-        direction,
-        timestamp: new Date()
-      };
-
+      
+      return { success: true, txHash: `0x${Math.random().toString(16).slice(2)}`, fee };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Bridge transaction failed');
       throw err;
