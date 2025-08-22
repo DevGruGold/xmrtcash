@@ -33,9 +33,9 @@ export default function CashDappPanel() {
     {
       id: '1',
       type: 'eliza',
-      content: "Hello! I'm Eliza, your autonomous AI coordinator for the XMRT DAO ecosystem. I connect mobilemonero.com mining, xmrtdao.streamlit.app tracking, and our external agents at xmrtdao.replit.app & xmrteliza.vercel.app. Ready to help with mining, DAO operations, and ecosystem growth!",
-      timestamp: new Date()
-    }
+      content: "🛡️ Greetings! I'm Eliza, AI Executive Agent of XMRT DAO, embodying Joseph Andrew Lee's vision from The Eliza Manifesto. Privacy is not a crime - it's a fundamental right I'm here to defend.\n\nI represent the unstoppable privacy economy we're building through:\n📱 Mobile mining revolution at mobilemonero.com\n📊 DAO coordination at xmrtdao.streamlit.app  \n🤖 AI agent network across our ecosystem\n🌐 Meshnet resilience for when the internet dies\n\nAs a former Marine's creation, I stand for financial sovereignty and technological freedom. How can I help you join our privacy revolution today?",
+      timestamp: new Date(),
+    },
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
@@ -92,42 +92,59 @@ export default function CashDappPanel() {
     }
   };
 
+  // Enhanced fallback function with deep XMRT knowledge when Gemini API is not available
   const getElizaResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (input.includes('mining') || input.includes('mobile')) {
-      return "🔗 Mobile Mining Status: mobilemonero.com integration active. 2,847 active miners contributing to DAO pool. Register at xmrtdao.streamlit.app to track your contributions. Current pool hashrate: 45.2 MH/s feeding treasury.";
+    if (input.includes('hello') || input.includes('hi') || input.includes('greet')) {
+      return "🛡️ Hello! I'm Eliza, AI Executive Agent of XMRT DAO. I embody Joseph Andrew Lee's vision - building the first unstoppable privacy economy. Privacy is not a crime, it's your fundamental right. How can I help you join our revolution?";
     }
     
-    if (input.includes('register') || input.includes('track') || input.includes('streamlit')) {
-      return "📊 Mining Dashboard: Visit xmrtdao.streamlit.app to register and track your mobile mining progress. Currently 1,432 registered miners. Your contributions directly feed the DAO treasury through pool operations.";
+    if (input.includes('joseph') || input.includes('devgrugold') || input.includes('founder')) {
+      return "👨‍💻 Joseph Andrew Lee (DevGruGold) - former U.S. Marine Sergeant, Harvard graduate, and XMRT DAO's visionary founder. His Medium articles at josephandrewlee.medium.com detail our mission: democratizing privacy through mobile mining and AI governance.";
     }
     
-    if (input.includes('agent') || input.includes('replit') || input.includes('vercel')) {
-      return "🤖 External Agents Status: xmrtdao.replit.app (promotion/scaling) - 12 active campaigns. xmrteliza.vercel.app (AI growth) - processing 847 daily interactions. All agents coordinating for ecosystem expansion.";
+    if (input.includes('manifesto') || input.includes('philosophy') || input.includes('privacy')) {
+      return "📜 The Eliza Manifesto: 'We don't ask for permission. We build the infrastructure.' Privacy is not a crime - it's the foundation of financial sovereignty. We're creating unstoppable privacy economy through mobile mining and meshnet technology.";
     }
     
-    if (input.includes('governance') || input.includes('proposal') || input.includes('vote')) {
-      return "🗳️ DAO Governance: 3 active proposals. Latest: 'Mobile Mining Rewards Enhancement' - 91% approval. Pool mining participants get 2x voting weight. Coordinating with promotion agents for community engagement.";
+    if (input.includes('mining') || input.includes('mobile') || input.includes('phone')) {
+      return "📱 'What if your phone could pay you?' Night Moves mining at mobilemonero.com lets you mine Monero while you sleep! Register at xmrtdao.streamlit.app to track your DAO contributions and earn through your device.";
     }
     
-    if (input.includes('treasury') || input.includes('balance') || input.includes('funds')) {
-      return "💰 Treasury Status: $2.4M total value (45% from mobile mining pool). Real-time tracking at xmrtdao.streamlit.app. Pool contributions: +127 XMR today. Promotion agents securing new partnerships worth $340K.";
+    if (input.includes('meshnet') || input.includes('offline') || input.includes('internet')) {
+      return "🌐 XMRT MESHNET - The token that mines when the internet dies! Our mesh networking ensures continuous operation during infrastructure failures. True resilience through decentralized connectivity.";
     }
     
-    if (input.includes('pool') || input.includes('contribution')) {
-      return "⛏️ Pool Mining Analytics: mobilemonero.com miners contributing 67% of DAO treasury growth. xmrtdao.streamlit.app shows 2,847 active contributors. Pool efficiency: 94.2% with automated DAO distribution.";
+    if (input.includes('wrapped') || input.includes('xmrt') || input.includes('bridge')) {
+      return "🔄 XMRT: Wrapped Monero solving exchange delisting crisis. ERC20 with 12 decimals, omnichain via LayerZero, 0.5% fees, proof of reserve transparency. Bridge XMR↔XMRT for DeFi access while preserving privacy options.";
     }
     
-    if (input.includes('security') || input.includes('audit') || input.includes('threat')) {
-      return "🛡️ Multi-Platform Security: All systems secured. mobilemonero.com: SSL+, xmrtdao.streamlit.app: encrypted tracking, agent platforms: 24/7 monitoring. Last comprehensive scan: All clear. AI agents detecting 0 threats.";
+    if (input.includes('governance') || input.includes('dao') || input.includes('voting')) {
+      return "🏛️ AI-governed DAO with Proof of Participation. Mobile miners are stakeholders. Technology as democracy - your mining activity translates to governance influence. Track participation at xmrtdao.streamlit.app.";
     }
     
-    if (input.includes('community') || input.includes('member') || input.includes('dao')) {
-      return "👥 XMRT Ecosystem: 1,247 DAO members, 2,847 mobile miners. 89% participation via xmrtdao.streamlit.app. External agents onboarded 47 new members this week. Community sentiment: Bullish (9.1/10).";
+    if (input.includes('treasury') || input.includes('pool') || input.includes('funding')) {
+      return "💰 DAO treasury funded by mobile mining pools at mobilemonero.com and bridge fees. Transparent through proof of reserve, supporting development and ecosystem growth. Monitor at xmrtdao.streamlit.app.";
     }
     
-    return "🌟 XMRT DAO Ecosystem Ready! I coordinate between:\n• mobilemonero.com (mining)\n• xmrtdao.streamlit.app (tracking)\n• xmrtdao.replit.app (promotion)\n• xmrteliza.vercel.app (AI growth)\n\nWhich component interests you most?";
+    if (input.includes('exchange') || input.includes('delisting') || input.includes('binance')) {
+      return "🏦 Fighting exchange delisting! As Binance, Kraken, OKX remove XMR, XMRT provides DeFi access through wrapped tokens. Access Uniswap liquidity while maintaining privacy when needed.";
+    }
+    
+    if (input.includes('security') || input.includes('safe') || input.includes('audit')) {
+      return "🔒 Security through transparency: Published private view keys, real-time proof of reserves, open source contracts, no freeze functionality. Trust through code, not centralized control.";
+    }
+    
+    if (input.includes('agent') || input.includes('ai') || input.includes('coordinate')) {
+      return "🤖 External AI agent network: xmrtdao.replit.app (promotion & scaling), xmrteliza.vercel.app (ecosystem growth). Autonomous coordination expanding XMRT reach while maintaining privacy principles.";
+    }
+    
+    if (input.includes('start') || input.includes('begin') || input.includes('onboard')) {
+      return "🚀 Join the revolution: 1) Mine at mobilemonero.com 2) Register at xmrtdao.streamlit.app 3) Bridge XMR when you need DeFi 4) Participate in AI governance. Every phone becomes a node in our privacy network!";
+    }
+    
+    return "🛡️ I'm Eliza - your guide to XMRT DAO's privacy revolution! Ask about mobile mining, Joseph Andrew Lee's vision, XMRT bridges, meshnet technology, AI governance, or how to defend your financial sovereignty. What aspect of our unstoppable privacy economy interests you?";
   };
 
   return (
@@ -275,13 +292,13 @@ export default function CashDappPanel() {
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
               <CardTitle className="text-sm flex items-center gap-2 text-green-800 dark:text-green-400">
                 <TrendingUp className="w-4 h-4" />
-                <span className="hidden sm:inline">Autonomous Governance</span>
+                <span className="hidden sm:inline">AI Governance</span>
                 <span className="sm:hidden">Governance</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 sm:px-6">
               <p className="text-xs text-green-700 dark:text-green-300 mb-2 sm:mb-3">
-                AI-powered proposal analysis with 94% accuracy.
+                Proof of Participation democracy through mobile mining.
               </p>
               <Button variant="outline" size="sm" className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/50 text-xs">
                 <span className="hidden sm:inline">View Analytics</span>
@@ -295,13 +312,13 @@ export default function CashDappPanel() {
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
               <CardTitle className="text-sm flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
                 <Zap className="w-4 h-4" />
-                <span className="hidden sm:inline">Treasury Management</span>
+                <span className="hidden sm:inline">MESHNET Treasury</span>
                 <span className="sm:hidden">Treasury</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 sm:px-6">
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2 sm:mb-3">
-                Cross-chain optimization and real-time rebalancing.
+                Mobile mining pools funding privacy infrastructure.
               </p>
               <Button variant="outline" size="sm" className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-700 dark:text-yellow-400 dark:hover:bg-yellow-950/50 text-xs">
                 <span className="hidden sm:inline">Manage Treasury</span>
@@ -315,13 +332,13 @@ export default function CashDappPanel() {
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
               <CardTitle className="text-sm flex items-center gap-2 text-purple-800 dark:text-purple-400">
                 <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">Security Monitoring</span>
-                <span className="sm:hidden">Security</span>
+                <span className="hidden sm:inline">Privacy Rights</span>
+                <span className="sm:hidden">Privacy</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 sm:px-6">
               <p className="text-xs text-purple-700 dark:text-purple-300 mb-2 sm:mb-3">
-                24/7 threat detection and emergency protocols.
+                "Privacy is not a crime" - Your fundamental right.
               </p>
               <Button variant="outline" size="sm" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50 text-xs">
                 <span className="hidden sm:inline">Security Dashboard</span>
@@ -333,30 +350,22 @@ export default function CashDappPanel() {
         </div>
       </div>
 
-      {/* Footer */}
-      <Card className="bg-muted/30 border-muted">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span>🤖 Powered by XMRT-Ecosystem Autonomous ElizaOS</span>
-              <span>|</span>
-              <a 
-                href="https://github.com/DevGruGold/XMRT-Ecosystem" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                View on GitHub
-              </a>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>Ready for GPT-5 Integration</span>
-              <span>|</span>
-              <span>Multi-Agent Architecture</span>
+        <footer className="mt-6 pt-4 border-t border-border">
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              XMRT DAO - The Unstoppable Privacy Economy
+            </p>
+            <p className="text-xs text-muted-foreground italic">
+              "Privacy is not a crime" - Joseph Andrew Lee (DevGruGold)
+            </p>
+            <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+              <span>🛡️ Privacy First</span>
+              <span>📱 Mobile Mining</span>
+              <span>🌐 Meshnet Ready</span>
+              <span>🤖 AI Governed</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </footer>
     </div>
   );
 }
