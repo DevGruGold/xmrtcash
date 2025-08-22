@@ -69,10 +69,13 @@ export interface TreasuryStats {
   dailyFees: number;
 }
 
-// SupportXMR Pool API integration - Real mining pool data
+// SupportXMR Pool API integration via Supabase Edge Function proxy
 export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
   try {
-    const response = await fetch('https://supportxmr.com/api/pool/stats');
+    const response = await fetch('https://jygaxgukrvshvjsorzhi.supabase.co/functions/v1/supportxmr-proxy/pool/stats');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     
     return {
@@ -92,10 +95,13 @@ export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
   }
 }
 
-// SupportXMR Miner API integration - Real miner data
+// SupportXMR Miner API integration via Supabase Edge Function proxy
 export async function getSupportXMRMinerStats(address: string): Promise<SupportXMRMinerStats> {
   try {
-    const response = await fetch(`https://supportxmr.com/api/miner/${address}/stats`);
+    const response = await fetch(`https://jygaxgukrvshvjsorzhi.supabase.co/functions/v1/supportxmr-proxy/miner/${address}/stats`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     
     return {
