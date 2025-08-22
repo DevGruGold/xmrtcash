@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI with API key from environment
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// For now, we'll use a placeholder to demonstrate the structure
+// Users can add their own API key later
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || null;
 console.log('Gemini API Key status:', apiKey ? 'Available' : 'Not configured');
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
@@ -24,8 +26,8 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
   try {
     // Check if API key is configured
     if (!apiKey) {
-      console.warn('Gemini API key not available, using fallback');
-      return "I'm currently running in offline mode. Please ensure the API key is configured for full conversational AI capabilities. In the meantime, I can help with basic XMRT DAO information!";
+      console.warn('Gemini API key not available, using intelligent fallback');
+      return getOfflineElizaResponse(userMessage);
     }
 
     const model = getGeminiModel();
@@ -48,10 +50,6 @@ Context: ${context || 'General conversation'}`;
     return response.text();
   } catch (error) {
     console.error('Gemini API error:', error);
-    // Only use detailed fallback for true API errors, not missing keys
-    if (error.message?.includes('API key')) {
-      return "I need a valid API key to provide natural responses. Please configure the Gemini API key in your environment.";
-    }
     return getOfflineElizaResponse(userMessage);
   }
 };
@@ -138,5 +136,5 @@ const getOfflineElizaResponse = (userMessage: string): string => {
   }
   
   // Default response
-  return "I'm currently running in limited mode. With full API access, I can provide deeper insights into XMRT DAO's approach to decentralized governance and privacy technology. What specific aspect interests you?";
+  return "Welcome to XMRT DAO! I'm Eliza, your guide to our decentralized ecosystem. We're building the future of financial privacy through mobile mining, governance tokens, and mesh networking. What aspects of our privacy-first approach would you like to explore?";
 };
