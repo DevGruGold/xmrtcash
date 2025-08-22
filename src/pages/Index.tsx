@@ -5,12 +5,15 @@ import BusinessPerformance from "@/components/dashboard/BusinessPerformance";
 import ActiveProposals from "@/components/dashboard/ActiveProposals";
 import MiningDashboard from "@/components/mining/MiningDashboard";
 import LiveActivityFeed from "@/components/ecosystem/LiveActivityFeed";
-import FloatingChatWidget from "@/components/FloatingChatWidget";
+import HeroSection from "@/components/hero/HeroSection";
 
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       <ModernHeader />
+      
+      {/* Hero Section with Integrated Chatbot */}
+      <HeroSection />
       
       <main className="container max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Main Dashboard Grid */}
@@ -53,9 +56,6 @@ export default function Index() {
           <ActiveProposals />
         </div>
       </main>
-
-      {/* Floating Chat Widget */}
-      <FloatingChatWidget />
     </div>
   );
 }
