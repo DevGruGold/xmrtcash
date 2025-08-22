@@ -1,4 +1,5 @@
 import { getGeminiModel } from './gemini';
+import { supabase } from '@/integrations/supabase/client';
 
 // Get API key from environment
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -74,11 +75,11 @@ export interface TreasuryStats {
 // SupportXMR Pool API integration via Supabase Edge Function proxy
 export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
   try {
-    const response = await fetch('https://jygaxgukrvshvjsorzhi.supabase.co/functions/v1/supportxmr-proxy/pool/stats');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
+    const { data, error } = await supabase.functions.invoke('supportxmr-proxy', {
+      body: { path: '/pool/stats' }
+    });
+    
+    if (error) throw error;
     
     return {
       hashRate: data.pool_statistics?.hashRate || 0,
@@ -111,11 +112,11 @@ export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
 // SupportXMR Miner API integration via Supabase Edge Function proxy
 export async function getSupportXMRMinerStats(address: string): Promise<SupportXMRMinerStats> {
   try {
-    const response = await fetch(`https://jygaxgukrvshvjsorzhi.supabase.co/functions/v1/supportxmr-proxy/miner/${address}/stats`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
+    const { data, error } = await supabase.functions.invoke('supportxmr-proxy', {
+      body: { path: `/miner/${address}/stats` }
+    });
+    
+    if (error) throw error;
     
     return {
       hash: data.hash || 0,

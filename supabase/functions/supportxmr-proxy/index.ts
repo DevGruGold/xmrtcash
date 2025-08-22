@@ -13,8 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const path = url.pathname.replace('/functions/v1/supportxmr-proxy', '');
+    const { path } = await req.json();
+    
+    console.log(`Request body path: ${path}`);
     
     // Map paths to SupportXMR API endpoints
     let apiUrl: string;
