@@ -1,5 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { generateElizaResponse } from "@/lib/gemini";
 import { Button } from "@/components/ui/button";
@@ -19,15 +20,31 @@ import {
   Activity,
   ChevronRight,
   Sparkles,
-  Network
+  Network,
+  Radio,
+  Globe
 } from "lucide-react";
 import AgentSelector from "@/components/agents/AgentSelector";
 import { useMultiAgentChat, ChatMessage } from "@/hooks/useMultiAgentChat";
 import { Agent, getAllAgents } from "@/lib/multi-agent-coordinator";
+import { autonomousCycleManager } from "@/lib/autonomous-cycles";
+import { meshNetworkManager } from "@/lib/meshnet-integration";
 
 export default function CashDappPanel() {
+  const navigate = useNavigate();
   const [inputMessage, setInputMessage] = useState("");
   const [showAgentSelector, setShowAgentSelector] = useState(false);
+  const [autonomousStats, setAutonomousStats] = useState({
+    activeAgents: 0,
+    totalCycles: 0,
+    successRate: 0
+  });
+  const [meshStats, setMeshStats] = useState({
+    onlineNodes: 0,
+    totalNodes: 0,
+    networkStatus: 'offline' as 'online' | 'offline' | 'degraded',
+    recentMessages: 0
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Initialize multi-agent chat with default agent
@@ -42,7 +59,7 @@ export default function CashDappPanel() {
     setMessages
   } = useMultiAgentChat(defaultAgent);
 
-  // Initialize with welcome message if no messages
+  // Initialize with welcome message and real-time data updates
   useEffect(() => {
     if (messages.length === 0) {
       const welcomeMessage: ChatMessage = {
@@ -55,6 +72,41 @@ export default function CashDappPanel() {
       };
       setMessages([welcomeMessage]);
     }
+
+    // Update autonomous agents stats
+    const updateStats = () => {
+      const agents = autonomousCycleManager.getAllAgents();
+      const activeAgents = agents.filter(a => a.status === 'active' || a.status === 'cycling').length;
+      const totalCycles = agents.reduce((sum, agent) => sum + agent.cycleStats.totalCycles, 0);
+      const successfulCycles = agents.reduce((sum, agent) => sum + agent.cycleStats.successfulCycles, 0);
+      const successRate = totalCycles > 0 ? Math.round((successfulCycles / totalCycles) * 100) : 0;
+
+      setAutonomousStats({
+        activeAgents,
+        totalCycles,
+        successRate
+      });
+
+      // Update mesh network stats
+      const networks = meshNetworkManager.getNetworks();
+      const primaryNetwork = networks.find(n => n.id === 'xmrt-primary');
+      if (primaryNetwork) {
+        const networkStats = meshNetworkManager.getNetworkStats('xmrt-primary');
+        if (networkStats) {
+          setMeshStats({
+            onlineNodes: networkStats.onlineNodes,
+            totalNodes: networkStats.totalNodes,
+            networkStatus: primaryNetwork.status,
+            recentMessages: networkStats.recentMessages
+          });
+        }
+      }
+    };
+
+    updateStats();
+    const interval = setInterval(updateStats, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
   }, [messages.length, setMessages]);
 
   const scrollToBottom = () => {
@@ -148,17 +200,21 @@ export default function CashDappPanel() {
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700 text-xs px-1 sm:px-2">
                 <Activity className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                <span className="hidden sm:inline">GPT-4 Powered</span>
-                <span className="sm:hidden">GPT-4</span>
+                <span className="hidden sm:inline">{autonomousStats.activeAgents} Active Agents</span>
+                <span className="sm:hidden">{autonomousStats.activeAgents} Agents</span>
               </Badge>
               <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700 text-xs px-1 sm:px-2">
                 <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                <span className="hidden sm:inline">Autonomous</span>
-                <span className="sm:hidden">Auto</span>
+                <span className="hidden sm:inline">{autonomousStats.successRate}% Success</span>
+                <span className="sm:hidden">{autonomousStats.successRate}%</span>
               </Badge>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700 text-xs px-1 sm:px-2 hidden sm:inline-flex">
-                <Shield className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                Multi-Chain
+              <Badge variant="secondary" className={`text-xs px-1 sm:px-2 hidden sm:inline-flex ${
+                meshStats.networkStatus === 'online' 
+                  ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700'
+                  : 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+              }`}>
+                <Radio className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                MESHNET {meshStats.networkStatus.toUpperCase()}
               </Badge>
             </div>
           </div>
@@ -200,9 +256,9 @@ export default function CashDappPanel() {
               </div>
             </div>
             <div className="flex gap-1 sm:gap-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs">🔄 Multi-Agent</Badge>
+              <Badge variant="secondary" className="text-xs">🔄 {autonomousStats.totalCycles} Total Cycles</Badge>
               <Badge variant="secondary" className="text-xs">🤖 {currentAgent?.specializations[0]?.replace('_', ' ') || 'General'}</Badge>
-              <Badge variant="secondary" className="text-xs hidden sm:inline-flex">🌐 Network: {availableAgents.length} agents</Badge>
+              <Badge variant="secondary" className="text-xs hidden sm:inline-flex">🌐 {meshStats.onlineNodes}/{meshStats.totalNodes} Mesh Nodes</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -299,11 +355,11 @@ export default function CashDappPanel() {
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                🤖 Multi-Agent Network | {availableAgents.length} AI agents | 
-                Current: {currentAgent?.name || 'Eliza Core'}
-                {!import.meta.env.VITE_GEMINI_API_KEY && ' (API key required for enhanced features)'}
-              </p>
+              <div className="text-xs text-muted-foreground mt-2 text-center space-y-1">
+                <p>🤖 {autonomousStats.activeAgents} Active Agents | {autonomousStats.totalCycles} Cycles | {autonomousStats.successRate}% Success Rate</p>
+                <p>🌐 MESHNET: {meshStats.onlineNodes}/{meshStats.totalNodes} nodes online | {meshStats.recentMessages} recent messages</p>
+                <p>Current: {currentAgent?.name || 'Eliza Core'} | {autonomousCycleManager.isSystemRunning() ? '🟢 Live' : '🔴 Paused'}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -322,7 +378,12 @@ export default function CashDappPanel() {
               <p className="text-xs text-green-700 dark:text-green-300 mb-2 sm:mb-3">
                 Proof of Participation democracy through mobile mining.
               </p>
-              <Button variant="outline" size="sm" className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/50 text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/50 text-xs"
+                onClick={() => navigate('/autonomous')}
+              >
                 <span className="hidden sm:inline">View Analytics</span>
                 <span className="sm:hidden">Analytics</span>
                 <ChevronRight className="w-3 h-3 ml-1" />
@@ -342,7 +403,12 @@ export default function CashDappPanel() {
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2 sm:mb-3">
                 Mobile mining pools funding privacy infrastructure.
               </p>
-              <Button variant="outline" size="sm" className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-700 dark:text-yellow-400 dark:hover:bg-yellow-950/50 text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-700 dark:text-yellow-400 dark:hover:bg-yellow-950/50 text-xs"
+                onClick={() => navigate('/admin')}
+              >
                 <span className="hidden sm:inline">Manage Treasury</span>
                 <span className="sm:hidden">Manage</span>
                 <ChevronRight className="w-3 h-3 ml-1" />
@@ -362,7 +428,12 @@ export default function CashDappPanel() {
               <p className="text-xs text-purple-700 dark:text-purple-300 mb-2 sm:mb-3">
                 "Privacy is not a crime" - Your fundamental right.
               </p>
-              <Button variant="outline" size="sm" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50 text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full border-purple-300 text-purple-700 hover:bg-purple-100 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950/50 text-xs"
+                onClick={() => navigate('/meshnet')}
+              >
                 <span className="hidden sm:inline">Security Dashboard</span>
                 <span className="sm:hidden">Dashboard</span>
                 <ChevronRight className="w-3 h-3 ml-1" />
@@ -383,8 +454,8 @@ export default function CashDappPanel() {
             <div className="flex justify-center gap-4 text-xs text-muted-foreground">
               <span>🛡️ Privacy First</span>
               <span>📱 Mobile Mining</span>
-              <span>🌐 Meshnet Ready</span>
-              <span>🤖 AI Governed</span>
+              <span>🌐 {meshStats.networkStatus === 'online' ? 'Meshnet Live' : 'Meshnet Ready'}</span>
+              <span>🤖 {autonomousStats.activeAgents} AI Agents</span>
             </div>
           </div>
         </footer>
