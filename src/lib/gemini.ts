@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI with API key from environment
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+console.log('Gemini API Key status:', apiKey ? 'Available' : 'Not configured');
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export const getGeminiModel = () => {
