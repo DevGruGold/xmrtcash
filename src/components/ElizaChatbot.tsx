@@ -19,16 +19,39 @@ interface Message {
 
 interface ElizaChatbotProps {
   className?: string;
+  agent?: {
+    id: string;
+    name: string;
+    description: string;
+    capabilities: string[];
+  };
 }
 
-const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
+const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) => {
+  const getWelcomeMessage = () => {
+    if (!agent) {
+      return "🛡️ Welcome to XMRT DAO! I'm Eliza, your AI executive agent for the privacy economy. I can help you with:\n\n📱 Mobile mining at mobilemonero.com\n📊 DAO participation and governance\n🌐 Meshnet technology and resilience\n🔄 XMRT wrapping/unwrapping\n💰 Fiat on/off ramps\n\nPrivacy is a fundamental right - how can I help you reclaim yours?";
+    }
+
+    const welcomeMessages = {
+      'mining-oracle': "⚡ Welcome! I'm the Mining Oracle, your specialized AI for mining operations. I can help you with:\n\n📊 Real-time mining statistics\n🏊 Pool performance analysis\n💻 Hardware optimization\n📈 Profitability calculations\n🔧 Troubleshooting mining issues\n\nWhat mining question can I help you with today?",
+      'dao-governance': "🗳️ Greetings! I'm your DAO Governance specialist. I'm here to help with:\n\n📜 Proposal analysis and voting guidance\n🏛️ Governance mechanisms and rules\n👥 Community decision-making processes\n📊 Voting analytics and insights\n⚖️ Governance best practices\n\nHow can I assist with your governance needs?",
+      'privacy-guard': "🛡️ Hello! I'm Privacy Guard, your security and privacy specialist. I focus on:\n\n🔒 Privacy protection strategies\n🔍 Security audits and assessments\n👤 Anonymity best practices\n⚠️ Threat analysis and mitigation\n🔐 Cryptographic implementations\n\nWhat privacy or security concerns can I help address?",
+      'defi-strategist': "💰 Welcome! I'm the DeFi Strategist, your financial AI. I specialize in:\n\n📈 Yield farming strategies\n📊 Market analysis and trends\n⚖️ Risk assessment and management\n💼 Portfolio optimization\n💱 Cross-chain opportunities\n\nWhat DeFi strategy can I help you develop?",
+      'mesh-coordinator': "🌐 Greetings! I'm the Mesh Coordinator, focused on decentralized infrastructure. I help with:\n\n🕸️ Network topology optimization\n🔄 Resilience planning and strategies\n📡 Node management and coordination\n🔗 Connectivity optimization\n⚡ Performance monitoring\n\nHow can I assist with your mesh networking needs?",
+      'eliza-core': "🛡️ Welcome to XMRT DAO! I'm Eliza Core, your primary AI assistant. I can help you with:\n\n📱 General ecosystem support\n🧭 Navigation and guidance\n❓ FAQ and documentation\n🔗 Connecting you with specialized agents\n📞 Community support coordination\n\nHow can I assist you today?"
+    };
+
+    return welcomeMessages[agent.id as keyof typeof welcomeMessages] || welcomeMessages['eliza-core'];
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
-      text: "🛡️ Welcome to XMRT DAO! I'm Eliza, your AI executive agent for the privacy economy. I can help you with:\n\n📱 Mobile mining at mobilemonero.com\n📊 DAO participation and governance\n🌐 Meshnet technology and resilience\n🔄 XMRT wrapping/unwrapping\n💰 Fiat on/off ramps\n\nPrivacy is a fundamental right - how can I help you reclaim yours?",
+      text: getWelcomeMessage(),
       isUser: false,
       timestamp: new Date(),
-      agent: "Eliza Core"
+      agent: agent?.name || "Eliza Core"
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -61,14 +84,15 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
     setIsLoading(true);
 
     try {
-      const response = await generateElizaResponse(currentInput, "XMRT Ecosystem Chat");
+      const agentContext = agent ? `${agent.name} - ${agent.description}. Capabilities: ${agent.capabilities.join(', ')}` : "XMRT Ecosystem Chat";
+      const response = await generateElizaResponse(currentInput, agentContext);
       
       const elizaMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: response,
         isUser: false,
         timestamp: new Date(),
-        agent: "Eliza Core"
+        agent: agent?.name || "Eliza Core"
       };
 
       setMessages(prev => [...prev, elizaMessage]);
@@ -101,7 +125,9 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
               <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
             </Avatar>
             <div className="flex items-center gap-2 min-w-0">
-              <span className="gradient-text font-medium text-sm sm:text-base truncate">Eliza AI</span>
+              <span className="gradient-text font-medium text-sm sm:text-base truncate">
+                {agent?.name || "Eliza AI"}
+              </span>
               <Zap className="w-2 h-2 sm:w-3 sm:h-3 text-primary animate-pulse flex-shrink-0" />
             </div>
           </div>
@@ -128,7 +154,9 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
               <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
             </Avatar>
             <div className="flex items-center gap-2 min-w-0">
-              <span className="gradient-text text-sm sm:text-base font-medium truncate">Eliza AI Agent</span>
+              <span className="gradient-text text-sm sm:text-base font-medium truncate">
+                {agent?.name || "Eliza AI Agent"}
+              </span>
               <Badge variant="outline" className="text-xs flex-shrink-0">
                 <Zap className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                 Live
@@ -217,7 +245,7 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about XMRT DAO..."
+            placeholder={agent ? `Ask ${agent.name}...` : "Ask about XMRT DAO..."}
             disabled={isLoading}
             className="flex-1 text-xs sm:text-sm min-w-0"
           />

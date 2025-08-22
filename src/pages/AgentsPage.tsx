@@ -1,4 +1,6 @@
+import { useState } from "react";
 import ModernHeader from "@/components/ModernHeader";
+import AgentChat from "@/components/AgentChat";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -96,6 +98,20 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function AgentsPage() {
+  const [selectedAgent, setSelectedAgent] = useState<typeof agents[0] | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const handleChatClick = (agent: typeof agents[0]) => {
+    if (agent.status === 'online') {
+      setSelectedAgent(agent);
+      setIsChatOpen(true);
+    }
+  };
+
+  const handleChatClose = () => {
+    setIsChatOpen(false);
+    setSelectedAgent(null);
+  };
   return (
     <div className="min-h-screen bg-background">
       <ModernHeader />
@@ -156,7 +172,12 @@ export default function AgentsPage() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" className="flex-1" disabled={agent.status !== 'online'}>
+                    <Button 
+                      size="sm" 
+                      className="flex-1" 
+                      disabled={agent.status !== 'online'}
+                      onClick={() => handleChatClick(agent)}
+                    >
                       <MessageCircle className="w-3 h-3 mr-1" />
                       Chat
                     </Button>
@@ -213,6 +234,15 @@ export default function AgentsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Agent Chat Dialog */}
+        {selectedAgent && (
+          <AgentChat
+            agent={selectedAgent}
+            isOpen={isChatOpen}
+            onClose={handleChatClose}
+          />
+        )}
       </main>
     </div>
   );
