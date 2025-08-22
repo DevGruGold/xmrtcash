@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Users, Zap, DollarSign, Network, Shield } from "lucide-react";
-import { getP2PoolStats, getMoneroPrice, getTreasuryStats, getPoolAggregateStats } from '@/lib/real-data-api';
+import { getSupportXMRPoolStats, getP2PoolStats, getMoneroPrice, getTreasuryStats, getPoolAggregateStats } from '@/lib/real-data-api';
 
 interface EcosystemStats {
   poolHashrate: string;
@@ -34,21 +34,26 @@ export default function LiveEcosystemStats() {
     const loadRealEcosystemData = async () => {
       try {
         setIsLoading(true);
-        const [poolData, treasuryData, aggregateData] = await Promise.all([
+        const [supportXMRData, poolData, treasuryData, aggregateData] = await Promise.all([
+          getSupportXMRPoolStats(),
           getP2PoolStats(),
           getTreasuryStats(),
           getPoolAggregateStats()
         ]);
 
+        // Combine real data from both pools
+        const totalHashrate = supportXMRData.hashRate + poolData.poolHashrate;
+        const totalMiners = supportXMRData.miners + poolData.miners;
+
         setEcosystemStats({
-          poolHashrate: `${(poolData.poolHashrate / 1000000).toFixed(1)} MH/s`,
-          totalMiners: poolData.miners,
+          poolHashrate: `${(totalHashrate / 1000000).toFixed(1)} MH/s`,
+          totalMiners: totalMiners,
           treasuryBalance: treasuryData.treasuryBalance,
           operationsBalance: treasuryData.operationsBalance,
           treasuryPercentage: treasuryData.treasuryPercentage,
-          networkNodes: Math.floor(poolData.miners * 0.35), // Estimate based on miners
+          networkNodes: Math.floor(totalMiners * 0.35), // Estimate based on miners
           securityLevel: Math.min(100, 95 + (poolData.effort / 100) * 5), // Security based on mining efficiency
-          dailyTransactions: poolData.blocks24h * 1847 // Estimate transactions per block
+          dailyTransactions: (supportXMRData.totalBlocksFound + poolData.blocks24h) * 847 // Estimate transactions per block
         });
       } catch (error) {
         console.error('Failed to load ecosystem data:', error);

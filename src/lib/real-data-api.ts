@@ -10,6 +10,40 @@ export interface MoneroNetworkStats {
   lastBlockTime: number;
 }
 
+export interface SupportXMRPoolStats {
+  hashRate: number;
+  miners: number;
+  totalHashes: number;
+  lastBlockFoundTime: number;
+  lastBlockFound: number;
+  totalBlocksFound: number;
+  totalMinersPaid: number;
+  totalPayments: number;
+  roundHashes: number;
+}
+
+export interface SupportXMRMinerStats {
+  hash: number;
+  identifier: string;
+  lastHash: number;
+  totalHashes: number;
+  validShares: number;
+  invalidShares: number;
+  expiry: number;
+  amtPaid: number;
+  amtDue: number;
+  txnCount: number;
+}
+
+export interface MobileMiningStats {
+  identifier: string;
+  dailyHashrate: number;
+  totalContribution: number;
+  rank: number;
+  isNightMode: boolean;
+  lastSeen: number;
+}
+
 export interface MoneroPriceData {
   xmr: {
     usd: number;
@@ -33,6 +67,53 @@ export interface TreasuryStats {
   operationsBalance: number;
   treasuryPercentage: number;
   dailyFees: number;
+}
+
+// SupportXMR Pool API integration - Real mining pool data
+export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
+  try {
+    const response = await fetch('https://supportxmr.com/api/pool/stats');
+    const data = await response.json();
+    
+    return {
+      hashRate: data.pool_statistics.hashRate,
+      miners: data.pool_statistics.miners,
+      totalHashes: data.pool_statistics.totalHashes,
+      lastBlockFoundTime: data.pool_statistics.lastBlockFoundTime,
+      lastBlockFound: data.pool_statistics.lastBlockFound,
+      totalBlocksFound: data.pool_statistics.totalBlocksFound,
+      totalMinersPaid: data.pool_statistics.totalMinersPaid,
+      totalPayments: data.pool_statistics.totalPayments,
+      roundHashes: data.pool_statistics.roundHashes
+    };
+  } catch (error) {
+    console.error('Failed to fetch SupportXMR pool stats:', error);
+    throw error;
+  }
+}
+
+// SupportXMR Miner API integration - Real miner data
+export async function getSupportXMRMinerStats(address: string): Promise<SupportXMRMinerStats> {
+  try {
+    const response = await fetch(`https://supportxmr.com/api/miner/${address}/stats`);
+    const data = await response.json();
+    
+    return {
+      hash: data.hash,
+      identifier: data.identifier,
+      lastHash: data.lastHash,
+      totalHashes: data.totalHashes,
+      validShares: data.validShares,
+      invalidShares: data.invalidShares,
+      expiry: data.expiry,
+      amtPaid: data.amtPaid,
+      amtDue: data.amtDue,
+      txnCount: data.txnCount
+    };
+  } catch (error) {
+    console.error('Failed to fetch SupportXMR miner stats:', error);
+    throw error;
+  }
 }
 
 // P2Pool Observer API integration
@@ -126,24 +207,95 @@ export async function getTreasuryStats(): Promise<TreasuryStats> {
 // Real mining pool data aggregator
 export async function getPoolAggregateStats() {
   try {
-    const [p2poolStats, priceData, networkStats] = await Promise.all([
+    const [supportXMRStats, p2poolStats, priceData, networkStats] = await Promise.all([
+      getSupportXMRPoolStats(),
       getP2PoolStats(),
       getMoneroPrice(),
       getMoneroNetworkStats()
     ]);
     
     return {
-      totalPoolHashrate: p2poolStats.poolHashrate,
-      totalMiners: p2poolStats.miners,
+      totalPoolHashrate: supportXMRStats.hashRate + p2poolStats.poolHashrate,
+      totalMiners: supportXMRStats.miners + p2poolStats.miners,
       networkHashrate: networkStats.networkHashrate,
       xmrPrice: priceData.xmr.usd,
       priceChange24h: priceData.xmr.change24h,
       difficulty: networkStats.difficulty,
       blockHeight: networkStats.height,
-      blocksFound24h: p2poolStats.blocks24h
+      blocksFound24h: p2poolStats.blocks24h,
+      supportXMRHashrate: supportXMRStats.hashRate,
+      supportXMRMiners: supportXMRStats.miners,
+      supportXMRTotalBlocks: supportXMRStats.totalBlocksFound,
+      supportXMRTotalPayments: supportXMRStats.totalPayments
     };
   } catch (error) {
     console.error('Failed to fetch aggregate stats:', error);
+    throw error;
+  }
+}
+
+// XMRT DAO Mobile Mining Integration
+export async function getMobileMiningStats(identifier?: string): Promise<MobileMiningStats[]> {
+  try {
+    // In a real implementation, this would connect to the XMRT DAO backend
+    // For now, we'll structure it to match the Streamlit app functionality
+    const leaderboardData: MobileMiningStats[] = [
+      {
+        identifier: "xmrt001",
+        dailyHashrate: 2.5,
+        totalContribution: 47.2,
+        rank: 1,
+        isNightMode: true,
+        lastSeen: Date.now() - 300000 // 5 minutes ago
+      },
+      {
+        identifier: "xmrt002", 
+        dailyHashrate: 1.8,
+        totalContribution: 32.1,
+        rank: 2,
+        isNightMode: false,
+        lastSeen: Date.now() - 120000 // 2 minutes ago
+      },
+      {
+        identifier: "xmrt003",
+        dailyHashrate: 1.2,
+        totalContribution: 28.7,
+        rank: 3,
+        isNightMode: true,
+        lastSeen: Date.now() - 60000 // 1 minute ago
+      }
+    ];
+    
+    return identifier 
+      ? leaderboardData.filter(miner => miner.identifier === identifier)
+      : leaderboardData;
+  } catch (error) {
+    console.error('Failed to fetch mobile mining stats:', error);
+    throw error;
+  }
+}
+
+// Get real XMRT wallet mining data
+export async function getXMRTWalletMining(address: string = "46UxNfuGM2E3UwmZWWJicaRpCRwqwW4byQkaTHKX8yPCVlhp91qAfvEFjpWUGJJUyTXqzSqxzDQtNLfZbsp2DX2qCGCSmq") {
+  try {
+    const [supportXMRMiner, supportXMRPool, priceData] = await Promise.all([
+      getSupportXMRMinerStats(address),
+      getSupportXMRPoolStats(),
+      getMoneroPrice()
+    ]);
+    
+    return {
+      minerStats: supportXMRMiner,
+      poolStats: supportXMRPool,
+      currentHashrate: supportXMRMiner.hash,
+      totalHashes: supportXMRMiner.totalHashes,
+      amountPaid: supportXMRMiner.amtPaid,
+      amountDue: supportXMRMiner.amtDue,
+      xmrPrice: priceData.xmr.usd,
+      poolContribution: supportXMRPool.hashRate > 0 ? (supportXMRMiner.hash / supportXMRPool.hashRate) * 100 : 0
+    };
+  } catch (error) {
+    console.error('Failed to fetch XMRT wallet mining data:', error);
     throw error;
   }
 }
