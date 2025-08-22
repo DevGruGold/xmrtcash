@@ -1,15 +1,12 @@
 
 import MochaSidebar from "@/components/MochaSidebar";
 import MochaHeader from "@/components/MochaHeader";
-import LiveEcosystemStats from "@/components/ecosystem/LiveEcosystemStats";
 import EcosystemCapabilities from "@/components/ecosystem/EcosystemCapabilities";
 import MiningDashboard from "@/components/mining/MiningDashboard";
 import WorkerLeaderboard from "@/components/mining/WorkerLeaderboard";
 import DAOLeaderboard from "@/components/dao/DAOLeaderboard";
 import ElizaChatbot from "@/components/ElizaChatbot";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Activity, TrendingUp, Globe, Bot } from "lucide-react";
+import { Globe } from "lucide-react";
 
 export default function Index() {
   return (
@@ -39,12 +36,6 @@ export default function Index() {
                 <div className="lg:col-span-1">
                   <ElizaChatbot className="w-full" />
                 </div>
-              </div>
-
-              {/* Live Stats */}
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-foreground">Live Ecosystem Statistics</h2>
-                <LiveEcosystemStats />
               </div>
 
               {/* Mining Dashboard Section */}
@@ -82,32 +73,6 @@ export default function Index() {
 
               {/* Capabilities */}
               <EcosystemCapabilities />
-
-              {/* Network Health */}
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-foreground">
-                    <Activity className="w-5 h-5 text-primary" />
-                    Network Health Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-primary mb-2">99.8%</div>
-                      <div className="text-sm text-muted-foreground">Network Uptime</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-green-400 mb-2">847.2 KH/s</div>
-                      <div className="text-sm text-muted-foreground">Total Hashrate</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-400 mb-2">89</div>
-                      <div className="text-sm text-muted-foreground">Mesh Nodes Online</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </main>
         </div>
