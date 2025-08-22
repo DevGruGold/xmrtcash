@@ -3,6 +3,7 @@ import { Bell, Settings, User, DollarSign, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Web3Button } from "@/components/ui/web3-button";
 
 export default function MochaHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -15,8 +16,8 @@ export default function MochaHeader() {
             <DollarSign className="w-3 h-3 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold gradient-text">CashDapp</h1>
-            <span className="text-xs text-muted-foreground hidden sm:block">MobileMonero MeshMiner</span>
+            <h1 className="text-lg sm:text-xl font-bold gradient-text">XMRT DAO</h1>
+            <span className="text-xs text-muted-foreground hidden sm:block">Privacy Economy Ecosystem</span>
           </div>
         </div>
         
@@ -30,13 +31,7 @@ export default function MochaHeader() {
             Start Mining
           </a>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="neon-button hidden sm:flex"
-          >
-            Connect Wallet
-          </Button>
+          <Web3Button />
           
           <div className="hidden sm:flex items-center gap-2">
             <button className="p-2 hover:bg-muted rounded-lg transition-colors">
@@ -77,13 +72,7 @@ export default function MochaHeader() {
               Start Mining
             </a>
             
-            <Button 
-              variant="outline" 
-              className="w-full bg-primary/10 text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground shadow-neon"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Connect Wallet
-            </Button>
+            <Web3Button />
             
             <div className="grid grid-cols-3 gap-4 pt-4">
               <button 

@@ -1,5 +1,5 @@
 
-import { Home, ArrowUpDown, Send, Download, Upload, Shield } from "lucide-react";
+import { Home, ArrowUpDown, Send, Download, Upload, Shield, Droplets } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
@@ -10,6 +10,7 @@ const sidebarItems = [
   { to: "/onramp-fiat", label: "Buy Crypto", icon: ArrowUpDown },
   { to: "/offramp-fiat", label: "Sell Crypto", icon: Send },
   { to: "/meshnet", label: "Mesh Network", icon: Shield },
+  { to: "/faucet", label: "XMRT Faucet", icon: Droplets },
 ];
 
 export default function MochaSidebar() {
