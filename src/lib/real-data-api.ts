@@ -81,16 +81,19 @@ export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
     
     if (error) throw error;
     
+    console.log('SupportXMR API Response:', JSON.stringify(data, null, 2));
+    
+    // SupportXMR API structure - based on actual API response
     return {
-      hashRate: data.pool_statistics?.hashRate || 0,
-      miners: data.pool_statistics?.miners || 0,
-      totalHashes: data.pool_statistics?.totalHashes || 0,
-      lastBlockFoundTime: data.pool_statistics?.lastBlockFoundTime || Date.now(),
-      lastBlockFound: data.pool_statistics?.lastBlockFound || 0,
-      totalBlocksFound: data.pool_statistics?.totalBlocksFound || 0,
-      totalMinersPaid: data.pool_statistics?.totalMinersPaid || 0,
-      totalPayments: data.pool_statistics?.totalPayments || 0,
-      roundHashes: data.pool_statistics?.roundHashes || 0
+      hashRate: data.pool?.hashrate || data.hashrate || 0,
+      miners: data.pool?.miners || data.miners || 0,
+      totalHashes: data.pool?.totalHashes || data.totalHashes || 0,
+      lastBlockFoundTime: data.pool?.lastBlockFoundTime || data.lastBlockFoundTime || Date.now(),
+      lastBlockFound: data.pool?.lastBlockFound || data.lastBlockFound || 0,
+      totalBlocksFound: data.pool?.totalBlocksFound || data.totalBlocksFound || 0,
+      totalMinersPaid: data.pool?.totalMinersPaid || data.totalMinersPaid || 0,
+      totalPayments: data.pool?.totalPayments || data.totalPayments || 0,
+      roundHashes: data.pool?.roundHashes || data.roundHashes || 0
     };
   } catch (error) {
     console.error('Failed to fetch SupportXMR pool stats via proxy:', error);
@@ -312,8 +315,8 @@ export async function getMobileMiningStats(identifier?: string): Promise<MobileM
   }
 }
 
-// Get real XMRT wallet mining data
-export async function getXMRTWalletMining(address: string = "46UxNfuGM2E3UwmZWWJicaRpCRwqwW4byQkaTHKX8yPCVlhp91qAfvEFjpWUGJJUyTXqzSqxzDQtNLfZbsp2DX2qCGCSmq") {
+// Get real XMRT wallet mining data - CORRECTED WALLET ADDRESS
+export async function getXMRTWalletMining(address: string = "46UxNFuGM2E3UwmZWWJicaRPoRwqwW4byQkaTHkX8yPcVihp91qAVtSFipWUGJJUyTXgzSqxzDQtNLf2bsp2DX2qCCgC5mg") {
   try {
     const [supportXMRMiner, supportXMRPool, priceData] = await Promise.all([
       getSupportXMRMinerStats(address),

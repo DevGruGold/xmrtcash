@@ -66,6 +66,7 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log(`Successfully proxied data from ${apiUrl}`);
+    console.log(`Response data structure:`, JSON.stringify(data, null, 2));
 
     return new Response(JSON.stringify(data), {
       headers: { 

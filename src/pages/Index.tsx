@@ -4,6 +4,7 @@ import MochaHeader from "@/components/MochaHeader";
 import LiveEcosystemStats from "@/components/ecosystem/LiveEcosystemStats";
 import EcosystemCapabilities from "@/components/ecosystem/EcosystemCapabilities";
 import MiningDashboard from "@/components/mining/MiningDashboard";
+import WorkerLeaderboard from "@/components/mining/WorkerLeaderboard";
 import DAOLeaderboard from "@/components/dao/DAOLeaderboard";
 import ElizaChatbot from "@/components/ElizaChatbot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,7 +55,18 @@ export default function Index() {
                     Live statistics from SupportXMR pool and P2Pool networks
                   </p>
                 </div>
-                <MiningDashboard />
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Main Mining Dashboard */}
+                  <div className="lg:col-span-2">
+                    <MiningDashboard />
+                  </div>
+                  
+                  {/* Worker Leaderboard */}
+                  <div className="lg:col-span-1">
+                    <WorkerLeaderboard />
+                  </div>
+                </div>
               </div>
               
               {/* DAO Leaderboard Section */}
