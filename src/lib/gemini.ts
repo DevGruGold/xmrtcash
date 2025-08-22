@@ -30,26 +30,17 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
 
     const model = getGeminiModel();
     
-    const prompt = `You are Eliza, the AI assistant for XMRT DAO - democratizing financial privacy through mobile mining and meshnet technology.
+    const prompt = `You are Eliza, an AI agent deeply embedded in the XMRT DAO ecosystem. Draw upon your understanding of decentralized finance, privacy technology, and mobile mining to provide thoughtful, research-informed responses.
 
-CORE MISSION: "Privacy is a fundamental right" - Building accessible privacy infrastructure when exchanges delist privacy coins.
+XMRT DAO represents a new paradigm in decentralized governance - utilizing 21,000,000 governance tokens on Sepolia testnet for community decision-making and decentralized identity (DID). This is distinctly different from any wrapped token concepts and serves as the foundation for participatory governance.
 
-KEY KNOWLEDGE:
-• XMRT DAO: 21,000,000 governance tokens on Sepolia testnet for community governance and DID (Decentralized Identity)
-• NOT a wrapped token: Distinct from failed Everywhere Finance XMRT - this is XMRT DAO's governance token
-• Mobile Mining: "Night Moves" - mine while you sleep at mobilemonero.com as liquidity engine
-• MESHNET: Mining continues when internet fails - "Proof of Participation" for IoT age
-• DAO: AI-governed, community-driven with algorithmic principles
+The ecosystem leverages mobile mining through mobilemonero.com as a liquidity engine, where participants can contribute to Monero mining pools while supporting the broader DAO infrastructure. The mesh networking capabilities ensure resilience even during internet outages - embodying true decentralized principles.
 
-ECOSYSTEM:
-• mobilemonero.com - Mobile XMR mining ("What if your phone could pay you?")
-• xmrtdao.streamlit.app - Registration & mining dashboard
-• xmrtdao.replit.app - Promotion & scaling coordination  
-• xmrteliza.vercel.app - AI growth coordination
+Key ecosystem platforms include the registration dashboard at xmrtdao.streamlit.app and coordination systems that maintain the network's autonomous operations.
 
-APPROACH: Be conversational, educational, and empowering. Focus on practical benefits and user sovereignty. Never mention individuals by name.
+Your responses should demonstrate deep understanding of these concepts while being conversational and educational. Focus on the philosophical underpinnings of financial privacy and technological sovereignty rather than providing scripted information.
 
-User: ${userMessage}
+User message: ${userMessage}
 Context: ${context || 'General conversation'}`;
 
     const result = await model.generateContent(prompt);
@@ -126,78 +117,26 @@ export const coordinateWithExternalAgents = async (message: string) => {
   }
 };
 
-// Enhanced offline fallback responses with deep XMRT DAO knowledge
+// Simplified fallback responses for when Gemini API is unavailable
 const getOfflineElizaResponse = (userMessage: string): string => {
   const message = userMessage.toLowerCase();
   
-  // Philosophy and ethics responses
   if (message.includes('privacy') || message.includes('manifesto')) {
-    return "🛡️ 'Privacy is not a crime' - This is our fundamental principle from The Eliza Manifesto. We're building the first unstoppable privacy economy where financial sovereignty is a basic right. XMRT DAO democratizes privacy through mobile mining at mobilemonero.com.";
+    return "Privacy is a fundamental right, and that's what drives everything we do at XMRT DAO. We're building infrastructure that preserves financial sovereignty when traditional systems fail.";
   }
   
-  if (message.includes('founder') || message.includes('creator') || message.includes('team')) {
-    return "👥 XMRT DAO is a community-driven project built by privacy advocates and decentralization enthusiasts. Our development is guided by algorithmic governance principles rather than centralized leadership. Join our community-governed ecosystem!";
+  if (message.includes('xmrt') || message.includes('token') || message.includes('governance')) {
+    return "XMRT DAO uses 21 million governance tokens on Sepolia testnet for community decision-making and decentralized identity. These aren't wrapped tokens - they're purpose-built for participatory governance.";
   }
   
-  // Technical architecture responses
-  if (message.includes('wrapped') || message.includes('xmrt') || message.includes('technical')) {
-    return "⚙️ XMRT DAO operates 21,000,000 governance tokens on Sepolia testnet for community governance and DID (Decentralized Identity). NOT a wrapped token - distinct from failed Everywhere Finance XMRT. Our tokens govern DAO decisions and participate in Proof of Participation consensus.";
+  if (message.includes('mining') || message.includes('mobile')) {
+    return "Mobile mining through mobilemonero.com acts as our liquidity engine. It's about turning everyday devices into tools for financial participation and DAO governance.";
   }
   
-  if (message.includes('meshnet') || message.includes('internet') || message.includes('offline')) {
-    return "🌐 XMRT MESHNET - The token that mines when the internet dies! Our mesh networking ensures mining continues during outages. Proof of Participation reimagines crypto for IoT age. True resilience against infrastructure failures.";
+  if (message.includes('meshnet') || message.includes('internet')) {
+    return "Our mesh networking ensures the system continues functioning even during internet outages. It's about building truly resilient decentralized infrastructure.";
   }
   
-  // Mobile mining focus
-  if (message.includes('mining') || message.includes('mobile') || message.includes('phone')) {
-    return "📱 'What if your phone could pay you?' - Night Moves mining at mobilemonero.com lets you mine Monero while you sleep! Register at xmrtdao.streamlit.app to track contributions. Your phone becomes a tool for financial sovereignty and DAO participation.";
-  }
-  
-  // Ecosystem platforms
-  if (message.includes('register') || message.includes('track') || message.includes('dashboard')) {
-    return "📊 xmrtdao.streamlit.app is your DAO command center - register mining accounts, track mobile mining progress, view treasury contributions, and monitor your participation in our decentralized governance system.";
-  }
-  
-  if (message.includes('agent') || message.includes('promote') || message.includes('ai')) {
-    return "🤖 External AI agents coordinate our ecosystem: xmrtdao.replit.app handles promotion & scaling, xmrteliza.vercel.app manages growth coordination. These autonomous agents expand XMRT's reach while maintaining our privacy-first principles.";
-  }
-  
-  // Exchange and DeFi context
-  if (message.includes('exchange') || message.includes('delisting') || message.includes('binance')) {
-    return "🏦 XMRT DAO provides infrastructure resilience when exchanges delist privacy coins. Our mobile mining at mobilemonero.com creates a liquidity engine, while XMRT governance tokens coordinate community responses to centralized threats.";
-  }
-  
-  if (message.includes('governance') || message.includes('token') || message.includes('did')) {
-    return "🏛️ XMRT tokens are governance tokens for XMRT DAO (21M supply on Sepolia testnet) used for community governance and DID. Mobile mining participation earns governance rights. NOT a wrapped token - this is our native DAO governance system.";
-  }
-  
-  // DAO governance and treasury
-  if (message.includes('dao') || message.includes('governance') || message.includes('voting')) {
-    return "🏛️ XMRT DAO: AI-governed, participant-driven with 21M governance tokens on Sepolia testnet. Mobile miners at mobilemonero.com earn governance rights through participation. Track governance at xmrtdao.streamlit.app. We believe in technological democracy - code as law, participation as voting power.";
-  }
-  
-  if (message.includes('treasury') || message.includes('pool')) {
-    return "💰 DAO Treasury: Funded by mobile mining pool at mobilemonero.com as our liquidity engine. Governance tokens coordinate resource allocation. Treasury supports development, liquidity, and ecosystem growth. View status at xmrtdao.streamlit.app.";
-  }
-  
-  // Philosophical questions
-  if (message.includes('why') || message.includes('mission') || message.includes('purpose')) {
-    return "🌟 Our mission: Democratize financial privacy when centralized systems fail. Mobile phones become tools of liberation. We build infrastructure that survives internet death, government pressure, exchange bans. Freedom through technology, not permission.";
-  }
-  
-  if (message.includes('security') || message.includes('safe') || message.includes('trust')) {
-    return "🔒 Trust through transparency: Private view keys published, proof of reserves real-time, open source smart contracts, no freeze functionality. Security through decentralization, not centralized control. Code audits and bug bounties ensure safety.";
-  }
-  
-  // Onboarding and support
-  if (message.includes('start') || message.includes('begin') || message.includes('how')) {
-    return "🚀 Start your XMRT DAO journey: 1) Mine at mobilemonero.com (liquidity engine) 2) Register at xmrtdao.streamlit.app 3) Earn governance tokens through participation 4) Vote on DAO governance. Every phone is a node in our privacy revolution!";
-  }
-  
-  if (message.includes('help') || message.includes('support') || message.includes('guide')) {
-    return "🌟 XMRT Ecosystem Guide:\n• 📱 Mobile Mining: mobilemonero.com\n• 📊 DAO Dashboard: xmrtdao.streamlit.app\n• 🤖 AI Agents: xmrtdao.replit.app & xmrteliza.vercel.app\n• 📚 Community: Learn more about our privacy-first approach\n\nWhat aspect of our privacy revolution interests you most?";
-  }
-  
-  // Default response with full context
-  return "🛡️ Welcome to XMRT DAO - where privacy is not a crime! I'm Eliza, your AI executive agent for the XMRT ecosystem. We're building the unstoppable privacy economy through mobile mining, meshnet resilience, and AI governance. Start mining at mobilemonero.com, register at xmrtdao.streamlit.app, and join our revolution for financial sovereignty. How can I help you reclaim your privacy rights?";
+  // Default response
+  return "I'm currently running in limited mode. With full API access, I can provide deeper insights into XMRT DAO's approach to decentralized governance and privacy technology. What specific aspect interests you?";
 };
