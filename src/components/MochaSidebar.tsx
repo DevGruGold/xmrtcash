@@ -1,19 +1,15 @@
 
-import { Home, ArrowUpDown, Send, Download, Upload, Users, Settings, BarChart3, Shield, DollarSign } from "lucide-react";
+import { Home, ArrowUpDown, Send, Download, Upload, Shield } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
 const sidebarItems = [
-  { to: "/", label: "Ecosystem", icon: Home },
+  { to: "/", label: "Ecosystem Dashboard", icon: Home },
   { to: "/wrap-xmr", label: "Wrap XMR", icon: Upload },
   { to: "/unwrap-xmr", label: "Unwrap XMR", icon: Download },
   { to: "/onramp-fiat", label: "Buy Crypto", icon: ArrowUpDown },
   { to: "/offramp-fiat", label: "Sell Crypto", icon: Send },
-  { to: "/cashdapp", label: "Quick Pay", icon: DollarSign },
-  { to: "/simulation", label: "DAO Governance", icon: Users },
-  { to: "/autonomous", label: "AI Agents", icon: BarChart3 },
   { to: "/meshnet", label: "Mesh Network", icon: Shield },
-  { to: "/admin", label: "Admin", icon: Settings },
 ];
 
 export default function MochaSidebar() {
@@ -25,11 +21,11 @@ export default function MochaSidebar() {
         <div className="p-4 sm:p-6 border-b border-primary/20">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center shadow-neon animate-float">
-              <DollarSign className="w-5 h-5 text-primary-foreground" />
+              <Shield className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="font-bold gradient-text">CashDapp</h2>
-              <p className="text-xs text-muted-foreground">MobileMonero MeshMiner</p>
+              <h2 className="font-bold gradient-text">XMRT DAO</h2>
+              <p className="text-xs text-muted-foreground">Privacy Economy Ecosystem</p>
             </div>
           </div>
         </div>
@@ -65,7 +61,7 @@ export default function MochaSidebar() {
           <div className="glass-card p-3 rounded-lg bg-primary/5 border border-primary/10">
             <h4 className="text-xs font-medium text-primary mb-1">About XMRT DAO</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Decentralized mesh network mining and governance platform connecting Monero privacy with Meshtastic off-grid communications.
+              Decentralized privacy-focused mining ecosystem connecting Monero with meshnet resilience and mobile mining capabilities.
             </p>
           </div>
         </footer>
