@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Web3Provider } from "@/contexts/Web3Context";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ChatPage from "./pages/ChatPage";
+import AgentsPage from "./pages/AgentsPage";
+import LicensePage from "./pages/LicensePage";
 
 // Core XMRT functionality pages
 import WrapXMRPage from "@/pages/WrapXMRPage";
@@ -27,6 +30,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/agents" element={<AgentsPage />} />
+            <Route path="/license" element={<LicensePage />} />
             <Route path="/wrap-xmr" element={<WrapXMRPage />} />
             <Route path="/unwrap-xmr" element={<UnwrapXMRPage />} />
             <Route path="/onramp-fiat" element={<OnRampFiatPage />} />

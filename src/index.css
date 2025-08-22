@@ -151,6 +151,7 @@
     min-height: 44px;
     min-width: 44px;
   }
+}
   
 /* Mobile chat optimizations */
 @media (max-width: 640px) {
