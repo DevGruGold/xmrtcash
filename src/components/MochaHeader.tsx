@@ -22,7 +22,7 @@ export default function MochaHeader() {
         
         <div className="flex items-center gap-2 sm:gap-3">
           <a 
-            href="https://xmrtstart.vercel.app" 
+            href="https://mobilemonero.com" 
             target="_blank" 
             rel="noopener noreferrer"
             className="neon-button px-3 py-1.5 rounded-lg text-sm font-medium hidden sm:flex items-center"
@@ -68,7 +68,7 @@ export default function MochaHeader() {
         <div className="sm:hidden fixed inset-0 top-14 bg-background/95 backdrop-blur-sm z-40">
           <nav className="p-4 space-y-4">
             <a 
-              href="https://xmrtstart.vercel.app" 
+              href="https://mobilemonero.com" 
               target="_blank" 
               rel="noopener noreferrer"
               className="block w-full bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground shadow-neon px-4 py-3 rounded-lg text-center font-medium transition-all duration-200"
