@@ -59,7 +59,12 @@ export default function HeroSection() {
                   Connect Wallet
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <Button size="lg" variant="outline" className="border-primary/30">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-primary/30"
+                  onClick={() => window.open('https://xmrt.vercel.app', '_blank')}
+                >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Learn More
                 </Button>

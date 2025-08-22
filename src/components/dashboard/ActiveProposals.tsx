@@ -72,26 +72,26 @@ export default function ActiveProposals() {
         {proposals.map((proposal) => (
           <div
             key={proposal.id}
-            className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors border border-border/40"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors border border-border/40 gap-4"
           >
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-start gap-4 flex-1 min-w-0">
               {/* Status Indicator */}
-              <div className={`w-3 h-3 rounded-full ${proposal.statusColor}`}></div>
+              <div className={`w-3 h-3 rounded-full ${proposal.statusColor} mt-1 flex-shrink-0`}></div>
               
               {/* Proposal Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm mb-1">#{proposal.id}</h3>
-                    <h4 className="font-semibold mb-2">{proposal.title}</h4>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <h4 className="font-semibold mb-2 text-sm sm:text-base break-words">{proposal.title}</h4>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3" />
+                        <Users className="w-3 h-3 flex-shrink-0" />
                         <span>Votes: {proposal.votes.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Brain className="w-3 h-3" />
-                        <span>AI Recommendation:</span>
+                        <Brain className="w-3 h-3 flex-shrink-0" />
+                        <span>AI:</span>
                         <span className={getRecommendationColor(proposal.aiRecommendation)}>
                           {proposal.aiRecommendation}
                         </span>
@@ -104,7 +104,7 @@ export default function ActiveProposals() {
                   </div>
                   
                   {/* Status Badge */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 self-start">
                     {getStatusBadge(proposal.status)}
                   </div>
                 </div>
