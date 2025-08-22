@@ -24,6 +24,67 @@ const corsHeaders = {
 let receivedActivities: EcosystemActivity[] = [];
 let ecosystemState: EcosystemState = {};
 
+// Initialize with some demo activities
+const initializeDemoActivities = () => {
+  const demoActivities: EcosystemActivity[] = [
+    {
+      source_system: "supportxmr",
+      event_type: "mining_update",
+      data: {
+        total_hashrate: "1.2 GH/s",
+        active_miners: 4828,
+        wallet_hashrate: "0 KH/s", // Inactive wallet
+        blocks_found: 3
+      },
+      timestamp: new Date().toISOString(),
+      event_id: `demo_mining_${Date.now()}`,
+      received_at: new Date().toISOString()
+    },
+    {
+      source_system: "meshnet",
+      event_type: "meshnet_update",
+      data: {
+        active_nodes: 25,
+        network_coverage: "expanding",
+        new_connections: 3
+      },
+      timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+      event_id: `demo_meshnet_${Date.now() - 300000}`,
+      received_at: new Date(Date.now() - 300000).toISOString()
+    },
+    {
+      source_system: "agent_system",
+      event_type: "agent_discussion",
+      data: {
+        agent_name: "Eliza",
+        message: "Analyzing current market trends and optimizing DAO strategy...",
+        topic: "market_analysis"
+      },
+      timestamp: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
+      event_id: `demo_agent_${Date.now() - 600000}`,
+      received_at: new Date(Date.now() - 600000).toISOString()
+    },
+    {
+      source_system: "growth_tracker",
+      event_type: "growth_update",
+      data: {
+        overall_health: "excellent",
+        motivation: "increasing",
+        metrics_updated: true
+      },
+      timestamp: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
+      event_id: `demo_growth_${Date.now() - 900000}`,
+      received_at: new Date(Date.now() - 900000).toISOString()
+    }
+  ];
+  
+  receivedActivities = demoActivities;
+  console.log(`🚀 Initialized with ${demoActivities.length} demo activities`);
+};
+
+// Initialize demo data on startup
+initializeDemoActivities();
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -31,7 +92,42 @@ serve(async (req) => {
   }
 
   const url = new URL(req.url);
-  const path = url.pathname;
+  let path = url.pathname;
+  
+  console.log(`🔍 Incoming request: ${req.method} ${path}`);
+  
+  // Handle POST requests with path in body (for supabase.functions.invoke calls)
+  if (req.method === 'POST' && req.headers.get('content-type')?.includes('application/json')) {
+    try {
+      const bodyText = await req.text();
+      const body = JSON.parse(bodyText);
+      console.log(`📦 Request body:`, body);
+      
+      if (body.path) {
+        path = body.path.split('?')[0]; // Remove query params from path
+        console.log(`🔄 Updated path from body: ${path}`);
+        
+        // Set query params from the path if they exist
+        if (body.path.includes('?')) {
+          const queryString = body.path.split('?')[1];
+          const searchParams = new URLSearchParams(queryString);
+          // Update url with query params for later use
+          url.search = queryString;
+          console.log(`🔍 Query params: ${queryString}`);
+        }
+      }
+      
+      // Re-create request with updated body if needed
+      req = new Request(req.url, {
+        method: req.method,
+        headers: req.headers,
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      console.log(`❌ Error parsing body:`, e);
+      // If not JSON or no path in body, continue with original path
+    }
+  }
 
   try {
     // Webhook receiver endpoint
@@ -108,8 +204,8 @@ serve(async (req) => {
       });
     }
 
-    // Get ecosystem activities
-    if (path === '/ecosystem/activities' && req.method === 'GET') {
+    // Get ecosystem activities (handle both GET and POST with body.path)
+    if (path === '/ecosystem/activities') {
       const eventType = url.searchParams.get('event_type');
       const sourceSystem = url.searchParams.get('source_system');
       const limit = parseInt(url.searchParams.get('limit') || '50');
@@ -137,8 +233,8 @@ serve(async (req) => {
       });
     }
 
-    // Get ecosystem status
-    if (path === '/ecosystem/status' && req.method === 'GET') {
+    // Get ecosystem status (handle both GET and POST with body.path)
+    if (path === '/ecosystem/status') {
       const status = {
         webhook_active: true,
         received_activities_count: receivedActivities.length,
@@ -155,10 +251,14 @@ serve(async (req) => {
       });
     }
 
-    // Activity feed for frontend
-    if (path === '/activity/feed' && req.method === 'GET') {
+    // Activity feed for frontend (handle both GET and POST with body.path)
+    if (path === '/activity/feed') {
+      console.log(`✅ Activity feed endpoint matched! Processing request...`);
+      
       const limit = parseInt(url.searchParams.get('limit') || '20');
       const recentActivities = receivedActivities.slice(-limit);
+
+      console.log(`📊 Returning ${recentActivities.length} activities (limit: ${limit})`);
 
       // Format activities for display
       const formattedActivities = recentActivities.map(activity => ({

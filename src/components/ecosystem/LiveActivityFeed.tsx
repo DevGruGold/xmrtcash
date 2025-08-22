@@ -47,51 +47,12 @@ export default function LiveActivityFeed({ className }: LiveActivityFeedProps) {
 
       if (error) throw error;
 
-      if (data?.activities) {
+      if (data?.success && data?.activities) {
         setActivities(data.activities);
         setIsLive(true);
+        console.log(`✅ Loaded ${data.activities.length} activities from ecosystem webhook`);
       } else {
-        // If no webhook activities, create some demo activities
-        const demoActivities: ActivityItem[] = [
-          {
-            id: 'demo_1',
-            title: '⛏️ SupportXMR Pool Update',
-            description: 'Pool hashrate: 1.2 GH/s, Active miners: 4,800',
-            source: 'supportxmr',
-            timestamp: new Date().toISOString(),
-            type: 'mining_update',
-            data: { hashrate: '1.2 GH/s', miners: 4800 }
-          },
-          {
-            id: 'demo_2',
-            title: '📡 MESHNET Status',
-            description: 'Network coverage expanded, 25 new nodes online',
-            source: 'meshnet',
-            timestamp: new Date(Date.now() - 300000).toISOString(),
-            type: 'meshnet_update',
-            data: { nodes: 25, coverage: 'expanded' }
-          },
-          {
-            id: 'demo_3',
-            title: '💬 Agent Discussion',
-            description: 'Eliza: Analyzing market trends for optimal strategy...',
-            source: 'agent_system',
-            timestamp: new Date(Date.now() - 600000).toISOString(),
-            type: 'agent_discussion',
-            data: { agent: 'Eliza', message: 'Market analysis complete' }
-          },
-          {
-            id: 'demo_4',
-            title: '📈 Growth Metrics',
-            description: 'Overall ecosystem health: Excellent, motivation increased',
-            source: 'growth_tracker',
-            timestamp: new Date(Date.now() - 900000).toISOString(),
-            type: 'growth_update',
-            data: { health: 'excellent', motivation: 'increased' }
-          }
-        ];
-        setActivities(demoActivities);
-        setIsLive(false);
+        throw new Error('Invalid response format');
       }
       
       setError(null);
