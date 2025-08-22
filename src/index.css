@@ -65,6 +65,12 @@
   .glass-card {
     @apply bg-card/80 backdrop-blur-md border border-border/50;
     background-image: var(--gradient-card);
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card:hover {
+    @apply bg-card/90 border-border/70;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
   }
   
   .neon-border {
@@ -95,6 +101,32 @@
   
   .card-elevated:hover {
     transform: translateY(-2px);
+  }
+  
+  /* Modern dashboard styling */
+  .dashboard-metric {
+    @apply p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all duration-200;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .dashboard-metric:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .status-indicator {
+    @apply w-3 h-3 rounded-full animate-pulse;
+  }
+
+  /* Activity item styling */
+  .activity-item {
+    @apply flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all duration-200;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .activity-item:hover {
+    transform: translateX(2px);
+    border-color: rgba(255, 255, 255, 0.1);
   }
   
   /* Mobile-specific utilities */
@@ -141,6 +173,24 @@
     hyphens: auto;
     max-width: 100%;
   }
+  
+  /* Better mobile dashboard cards */
+  .glass-card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile-first responsive grid */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
 }
 
 /* Prevent horizontal overflow */
@@ -151,5 +201,4 @@
 
 .word-wrap {
   word-wrap: break-word;
-}
 }
