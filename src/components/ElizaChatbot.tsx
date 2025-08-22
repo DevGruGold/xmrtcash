@@ -93,25 +93,25 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
 
   if (isMinimized) {
     return (
-      <Card className={`glass-card w-80 h-16 ${className}`}>
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
+      <Card className={`glass-card w-full max-w-xs sm:max-w-sm h-14 sm:h-16 ${className}`}>
+        <CardContent className="p-3 sm:p-4 flex items-center justify-between h-full">
+          <div className="flex items-center gap-2 min-w-0">
+            <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
               <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
-              <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+              <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
             </Avatar>
-            <div className="flex items-center gap-2">
-              <span className="gradient-text font-medium">Eliza AI</span>
-              <Zap className="w-3 h-3 text-primary animate-pulse" />
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="gradient-text font-medium text-sm sm:text-base truncate">Eliza AI</span>
+              <Zap className="w-2 h-2 sm:w-3 sm:h-3 text-primary animate-pulse flex-shrink-0" />
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsMinimized(false)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex-shrink-0"
           >
-            <Maximize2 className="w-4 h-4" />
+            <Maximize2 className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
         </CardContent>
       </Card>
@@ -119,18 +119,18 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
   }
 
   return (
-    <Card className={`glass-card w-full max-w-2xl h-[600px] flex flex-col ${className}`}>
-      <CardHeader className="flex-shrink-0 pb-3">
+    <Card className={`glass-card w-full max-w-md sm:max-w-lg lg:max-w-2xl h-[500px] sm:h-[600px] flex flex-col ${className}`}>
+      <CardHeader className="flex-shrink-0 pb-3 px-3 sm:px-6">
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
+          <div className="flex items-center gap-2 min-w-0">
+            <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
               <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
-              <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+              <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
             </Avatar>
-            <div className="flex items-center gap-2">
-              <span className="gradient-text">Eliza AI Executive Agent</span>
-              <Badge variant="outline" className="text-xs">
-                <Zap className="w-3 h-3 mr-1" />
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="gradient-text text-sm sm:text-base font-medium truncate">Eliza AI Agent</span>
+              <Badge variant="outline" className="text-xs flex-shrink-0">
+                <Zap className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                 Live
               </Badge>
             </div>
@@ -139,51 +139,51 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
             variant="ghost"
             size="sm"
             onClick={() => setIsMinimized(true)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex-shrink-0"
           >
-            <Minimize2 className="w-4 h-4" />
+            <Minimize2 className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col p-4 pt-0">
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4">
+      <CardContent className="flex-1 flex flex-col p-3 sm:p-4 pt-0 min-h-0">
+        <ScrollArea className="flex-1 w-full pr-2 sm:pr-4">
+          <div className="space-y-3 sm:space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                className={`flex gap-2 sm:gap-3 ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}
               >
-                <Avatar className="w-8 h-8 flex-shrink-0">
+                <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                   {message.isUser ? (
                     <>
-                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                      <AvatarFallback><User className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
                     </>
                   ) : (
                     <>
                       <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
-                      <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                      <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
                     </>
                   )}
                 </Avatar>
                 
-                <div className={`flex-1 max-w-[85%] ${message.isUser ? 'text-right' : 'text-left'}`}>
+                <div className={`flex-1 min-w-0 ${message.isUser ? 'text-right' : 'text-left'}`}>
                   <div
-                    className={`inline-block p-3 rounded-lg text-sm ${
+                    className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm max-w-full overflow-hidden ${
                       message.isUser
                         ? 'bg-primary text-primary-foreground ml-auto'
                         : 'bg-muted/50 text-foreground border border-border/50'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{message.text}</p>
+                    <p className="whitespace-pre-wrap break-words word-wrap overflow-wrap-anywhere">{message.text}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
                     {!message.isUser && message.agent && (
-                      <Badge variant="outline" className="text-xs px-1 py-0">
+                      <Badge variant="outline" className="text-xs px-1 py-0 flex-shrink-0">
                         {message.agent}
                       </Badge>
                     )}
-                    <span>
+                    <span className="flex-shrink-0">
                       {message.timestamp.toLocaleTimeString([], { 
                         hour: '2-digit', 
                         minute: '2-digit' 
@@ -195,15 +195,15 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
             ))}
             
             {isLoading && (
-              <div className="flex gap-3">
-                <Avatar className="w-8 h-8">
+              <div className="flex gap-2 sm:gap-3">
+                <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                   <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
-                  <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                  <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
                 </Avatar>
-                <div className="bg-muted/50 p-3 rounded-lg border border-border/50">
+                <div className="bg-muted/50 p-2 sm:p-3 rounded-lg border border-border/50">
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Eliza is thinking...</span>
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-primary flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-muted-foreground">Eliza is thinking...</span>
                   </div>
                 </div>
               </div>
@@ -212,25 +212,25 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "" }) => {
           <div ref={messagesEndRef} />
         </ScrollArea>
         
-        <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+        <div className="flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about XMRT DAO, mobile mining, privacy tech, or meshnet..."
+            placeholder="Ask about XMRT DAO..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm min-w-0"
           />
           <Button 
             onClick={handleSendMessage}
             disabled={isLoading || !inputMessage.trim()}
             size="icon"
-            className="neon-button flex-shrink-0"
+            className="neon-button flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10"
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-3 h-3 sm:w-4 sm:h-4" />
             )}
           </Button>
         </div>

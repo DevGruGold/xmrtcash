@@ -120,17 +120,36 @@
     min-width: 44px;
   }
   
-  /* Mobile chat optimizations */
-  @media (max-width: 640px) {
-    .mobile-chat {
-      height: calc(100vh - 120px);
-    }
-    
-    .mobile-input {
-      position: sticky;
-      bottom: 0;
-      background: hsl(var(--background));
-      border-top: 1px solid hsl(var(--border));
-    }
+/* Mobile chat optimizations */
+@media (max-width: 640px) {
+  .mobile-chat {
+    height: calc(100vh - 160px);
+    min-height: 400px;
   }
+  
+  .mobile-input {
+    position: sticky;
+    bottom: 0;
+    background: hsl(var(--background));
+    border-top: 1px solid hsl(var(--border));
+  }
+  
+  /* Ensure text wrapping in chat bubbles */
+  .chat-message {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+  }
+}
+
+/* Prevent horizontal overflow */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.word-wrap {
+  word-wrap: break-word;
+}
 }
