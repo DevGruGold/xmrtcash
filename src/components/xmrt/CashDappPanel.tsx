@@ -18,29 +18,44 @@ import {
   Settings, 
   Activity,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Network
 } from "lucide-react";
-
-interface Message {
-  id: string;
-  type: 'user' | 'eliza';
-  content: string;
-  timestamp: Date;
-}
+import AgentSelector from "@/components/agents/AgentSelector";
+import { useMultiAgentChat, ChatMessage } from "@/hooks/useMultiAgentChat";
+import { Agent, getAllAgents } from "@/lib/multi-agent-coordinator";
 
 export default function CashDappPanel() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'eliza',
-      content: "🛡️ Greetings! I'm Eliza, AI Executive Agent of XMRT DAO, embodying Joseph Andrew Lee's vision from The Eliza Manifesto. Privacy is not a crime - it's a fundamental right I'm here to defend.\n\nI represent the unstoppable privacy economy we're building through:\n📱 Mobile mining revolution at mobilemonero.com\n📊 DAO coordination at xmrtdao.streamlit.app  \n🤖 AI agent network across our ecosystem\n🌐 Meshnet resilience for when the internet dies\n\nAs a former Marine's creation, I stand for financial sovereignty and technological freedom. How can I help you join our privacy revolution today?",
-      timestamp: new Date(),
-    },
-  ]);
   const [inputMessage, setInputMessage] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
+  const [showAgentSelector, setShowAgentSelector] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize multi-agent chat with default agent
+  const defaultAgent = getAllAgents().find(a => a.id === 'eliza-main') || getAllAgents()[0];
+  const {
+    messages,
+    currentAgent,
+    availableAgents,
+    isLoading,
+    sendMessage,
+    selectAgent,
+    setMessages
+  } = useMultiAgentChat(defaultAgent);
+
+  // Initialize with welcome message if no messages
+  useEffect(() => {
+    if (messages.length === 0) {
+      const welcomeMessage: ChatMessage = {
+        id: '1',
+        type: 'agent',
+        content: "🛡️ Welcome! I'm Eliza, your AI assistant for XMRT DAO - a decentralized privacy-focused ecosystem.\n\nI'm here to help you with:\n📱 Mobile mining at mobilemonero.com\n📊 DAO participation and tracking\n🤖 Multi-agent AI coordination\n🌐 Privacy technology and meshnet resilience\n\nOur AI agents work together to provide specialized support. Privacy is a fundamental right, and we're building technology that empowers your financial sovereignty. How can I assist you today?",
+        timestamp: new Date(),
+        agentId: 'eliza-main',
+        agentName: 'Eliza Core'
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [messages.length, setMessages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -52,44 +67,12 @@ export default function CashDappPanel() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputMessage,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const messageToSend = inputMessage;
     setInputMessage("");
-    setIsConnecting(true);
-
-    try {
-      // Get AI response from Gemini with full ecosystem context
-      const context = "XMRT Ecosystem DAO operations: mobilemonero.com mining, xmrtdao.streamlit.app tracking, xmrtdao.replit.app & xmrteliza.vercel.app agents, XMR wrapping/unwrapping, fiat services, pool mining feeding DAO treasury";
-      const aiResponse = await generateElizaResponse(inputMessage, context);
-      
-      const elizaResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'eliza',
-        content: aiResponse,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, elizaResponse]);
-    } catch (error) {
-      console.error('AI response error:', error);
-      // Fallback to static response
-      const elizaResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'eliza',
-        content: getElizaResponse(inputMessage),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, elizaResponse]);
-    } finally {
-      setIsConnecting(false);
-    }
+    
+    await sendMessage(messageToSend, currentAgent || undefined);
   };
 
   // Enhanced fallback function with deep XMRT knowledge when Gemini API is not available
@@ -189,29 +172,51 @@ export default function CashDappPanel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
-                  <AvatarImage src="/eliza-avatar.jpg" alt="Eliza AI" />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">E</AvatarFallback>
+                  <AvatarImage src="/eliza-avatar.jpg" alt="Current Agent" />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {currentAgent?.name.charAt(0) || 'E'}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-xs sm:text-sm">Eliza AI</h3>
-                  <p className="text-xs text-muted-foreground hidden sm:block">Autonomous XMRT-Ecosystem DAO Assistant</p>
+                  <h3 className="font-semibold text-xs sm:text-sm">{currentAgent?.name || 'Eliza AI'}</h3>
+                  <p className="text-xs text-muted-foreground hidden sm:block">{currentAgent?.role || 'Multi-Agent Coordinator'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAgentSelector(!showAgentSelector)}
+                  className="text-xs px-2"
+                >
+                  <Network className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">Agents</span>
+                </Button>
                 <Badge variant="outline" className="text-xs px-1 sm:px-2">
-                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1 ${connectionStatus === 'connected' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                  <span className="hidden sm:inline">{connectionStatus === 'connected' ? 'Connected' : 'Connecting...'}</span>
+                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1 ${isLoading ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                  <span className="hidden sm:inline">{isLoading ? 'Processing...' : 'Ready'}</span>
                   <span className="sm:hidden">●</span>
                 </Badge>
               </div>
             </div>
             <div className="flex gap-1 sm:gap-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs">🔄 AI Active</Badge>
-              <Badge variant="secondary" className="text-xs">🤖 Auto</Badge>
-              <Badge variant="secondary" className="text-xs hidden sm:inline-flex">💰 Treasury Monitor</Badge>
+              <Badge variant="secondary" className="text-xs">🔄 Multi-Agent</Badge>
+              <Badge variant="secondary" className="text-xs">🤖 {currentAgent?.specializations[0]?.replace('_', ' ') || 'General'}</Badge>
+              <Badge variant="secondary" className="text-xs hidden sm:inline-flex">🌐 Network: {availableAgents.length} agents</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            {showAgentSelector && (
+              <div className="p-3 border-b border-border/50">
+                <AgentSelector 
+                  selectedAgent={currentAgent || undefined}
+                  onAgentSelect={(agent) => {
+                    selectAgent(agent);
+                    setShowAgentSelector(false);
+                  }}
+                />
+              </div>
+            )}
             <ScrollArea className="h-64 sm:h-80 lg:h-96 px-3 sm:px-4">
               <div className="space-y-3 sm:space-y-4">
                 {messages.map((message) => (
@@ -221,10 +226,12 @@ export default function CashDappPanel() {
                   >
                     <div className={`flex items-start gap-2 sm:gap-3 max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
                       <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
-                        {message.type === 'eliza' ? (
+                        {message.type === 'agent' ? (
                           <>
-                            <AvatarImage src="/eliza-avatar.jpg" alt="Eliza AI" />
-                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">E</AvatarFallback>
+                            <AvatarImage src="/eliza-avatar.jpg" alt={message.agentName || 'AI Agent'} />
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                              {message.agentName?.charAt(0) || 'A'}
+                            </AvatarFallback>
                           </>
                         ) : (
                           <AvatarFallback className="bg-muted text-xs">U</AvatarFallback>
@@ -235,20 +242,31 @@ export default function CashDappPanel() {
                           ? 'bg-primary text-primary-foreground ml-auto' 
                           : 'bg-accent/20 text-foreground'
                       }`}>
-                        <p className="text-xs sm:text-sm leading-relaxed">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-xs sm:text-sm leading-relaxed">{message.content}</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs opacity-70">
+                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          {message.agentName && message.type === 'agent' && (
+                            <Badge variant="outline" className="text-xs ml-2">
+                              {message.agentName}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
-                {isConnecting && (
+                {isLoading && (
                   <div className="flex justify-start">
                     <div className="flex items-start gap-2 sm:gap-3">
                       <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
-                        <AvatarImage src="/eliza-avatar.jpg" alt="Eliza AI" />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">E</AvatarFallback>
+                        <AvatarImage src="/eliza-avatar.jpg" alt="AI Agent" />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {currentAgent?.name.charAt(0) || 'A'}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="bg-accent/20 rounded-lg p-2 sm:p-3">
                         <div className="flex items-center gap-2">
@@ -257,7 +275,9 @@ export default function CashDappPanel() {
                             <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                             <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                           </div>
-                          <span className="text-xs text-muted-foreground">Thinking...</span>
+                          <span className="text-xs text-muted-foreground">
+                            {currentAgent?.name || 'Agent'} is thinking...
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -271,16 +291,18 @@ export default function CashDappPanel() {
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask Eliza about DAO operations..."
+                  placeholder={`Ask ${currentAgent?.name || 'our AI agents'} about XMRT...`}
                   className="flex-1 text-sm"
-                  disabled={isConnecting}
+                  disabled={isLoading}
                 />
-                <Button type="submit" disabled={isConnecting || !inputMessage.trim()} size="sm">
+                <Button type="submit" disabled={isLoading || !inputMessage.trim()} size="sm">
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                🤖 Powered by Gemini AI | ElizaOS {!import.meta.env.VITE_GEMINI_API_KEY && '(API key required)'}
+                🤖 Multi-Agent Network | {availableAgents.length} AI agents | 
+                Current: {currentAgent?.name || 'Eliza Core'}
+                {!import.meta.env.VITE_GEMINI_API_KEY && ' (API key required for enhanced features)'}
               </p>
             </div>
           </CardContent>
