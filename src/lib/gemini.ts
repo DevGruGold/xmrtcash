@@ -29,16 +29,24 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
 
     const model = getGeminiModel();
     
-    const prompt = `You are Eliza, an advanced AI assistant for the XMRT ecosystem cash dapp. You help users with:
-    - XMR wrapping and unwrapping operations
+    const prompt = `You are Eliza, an advanced AI assistant for the XMRT ecosystem DAO. You help users with:
+    - XMR wrapping and unwrapping operations via mobilemonero.com mobile mining
     - Fiat on-ramp and off-ramp services
-    - General XMRT ecosystem questions
-    - Transaction guidance and support
+    - Mobile mining registration and tracking via xmrtdao.streamlit.app
+    - Coordination with external promotion agents at xmrtdao.replit.app and xmrteliza.vercel.app
+    - DAO governance, treasury management, and community operations
+    - Pool mining efforts that feed the DAO treasury
+    
+    XMRT Ecosystem Components:
+    - mobilemonero.com: Mobile XMR mining platform
+    - xmrtdao.streamlit.app: User registration and mining tracking dashboard
+    - xmrtdao.replit.app: External promotion and scaling agents
+    - xmrteliza.vercel.app: Additional AI agent system for ecosystem growth
     
     Context: ${context || 'General conversation'}
     User message: ${userMessage}
     
-    Respond as Eliza in a helpful, professional, and friendly manner. Keep responses concise but informative.`;
+    Respond as Eliza with knowledge of the full ecosystem. Guide users to appropriate platforms and coordinate with external agents when relevant.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -50,37 +58,73 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
   }
 };
 
+// API integration functions for external systems
+export const checkSystemStatus = async (system: string) => {
+  try {
+    const endpoints = {
+      streamlit: 'https://xmrtdao.streamlit.app',
+      replit: 'https://xmrtdao.replit.app', 
+      vercel: 'https://xmrteliza.vercel.app'
+    };
+    
+    const url = endpoints[system as keyof typeof endpoints];
+    if (!url) return null;
+    
+    // Basic connectivity check - in production, implement proper API calls
+    const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+    return { status: 'connected', url };
+  } catch (error) {
+    return { status: 'unreachable', error: error.message };
+  }
+};
+
 // Offline fallback responses when API key is not available
 const getOfflineElizaResponse = (userMessage: string): string => {
   const message = userMessage.toLowerCase();
   
+  if (message.includes('mining') || message.includes('mobile')) {
+    return "🔗 For mobile XMR mining, visit mobilemonero.com to start mining. Register and track your mining progress at xmrtdao.streamlit.app. Your mining efforts contribute directly to the DAO treasury through our pool mining system.";
+  }
+  
+  if (message.includes('register') || message.includes('track')) {
+    return "📊 Visit xmrtdao.streamlit.app to register your mining account and track your mobile mining progress. This dashboard shows your contributions to the DAO and mining rewards.";
+  }
+  
+  if (message.includes('agent') || message.includes('promote')) {
+    return "🤖 Our external agents operate at xmrtdao.replit.app (promotion & scaling) and xmrteliza.vercel.app (AI ecosystem growth). These agents work autonomously to expand the XMRT ecosystem.";
+  }
+  
   if (message.includes('wrap') && message.includes('xmr')) {
-    return "To wrap XMR, you'll need to deposit your Monero tokens into our smart contract. The wrapped XMRT tokens can then be used across various DeFi protocols. Would you like me to guide you through the wrapping process?";
+    return "To wrap XMR from your mobile mining, deposit your earned Monero into our smart contract. First ensure you're registered at xmrtdao.streamlit.app to track your mining contributions.";
   }
   
   if (message.includes('unwrap') && message.includes('xmr')) {
-    return "Unwrapping XMRT back to XMR involves burning your wrapped tokens and releasing the original Monero. This process typically takes a few minutes to complete. Do you need help with unwrapping?";
+    return "Unwrapping XMRT back to XMR involves burning wrapped tokens. Your mining history at xmrtdao.streamlit.app helps verify your DAO contributions for optimal unwrapping rates.";
+  }
+  
+  if (message.includes('dao') || message.includes('governance')) {
+    return "The XMRT DAO is powered by mobile mining from mobilemonero.com users. Track participation at xmrtdao.streamlit.app and engage with promotion agents at our replit and vercel platforms.";
+  }
+  
+  if (message.includes('pool') || message.includes('treasury')) {
+    return "Pool mining via mobilemonero.com feeds directly into the DAO treasury. Monitor pool performance and treasury status through xmrtdao.streamlit.app dashboard.";
   }
   
   if (message.includes('onramp') || message.includes('buy')) {
-    return "Our fiat on-ramp service allows you to purchase XMR or XMRT directly with your bank card or wire transfer. We support multiple currencies and payment methods for your convenience.";
+    return "Fiat on-ramp services integrate with your mining account from xmrtdao.streamlit.app. Purchase XMR directly or boost your mobile mining setup through mobilemonero.com.";
   }
   
   if (message.includes('offramp') || message.includes('sell')) {
-    return "The off-ramp service lets you convert your XMR or XMRT back to fiat currency. You can receive funds via bank transfer or other supported withdrawal methods.";
-  }
-  
-  if (message.includes('fee') || message.includes('cost')) {
-    return "Our platform maintains competitive fees: wrapping/unwrapping fees are typically 0.1-0.3%, while fiat conversion fees vary by payment method and amount. All fees are transparently displayed before confirmation.";
+    return "Convert mining rewards to fiat through our off-ramp service. Your mining history from xmrtdao.streamlit.app provides bonus conversion rates for active contributors.";
   }
   
   if (message.includes('security') || message.includes('safe')) {
-    return "Security is our top priority. We use multi-signature contracts, regular audits, and implement best practices for fund protection. Your assets are secured through battle-tested smart contracts.";
+    return "Security across all platforms: mobilemonero.com uses secure mining protocols, xmrtdao.streamlit.app employs encrypted tracking, and our AI agents monitor threats 24/7.";
   }
   
   if (message.includes('help') || message.includes('support')) {
-    return "I'm here to help with all your XMRT ecosystem needs! You can ask me about wrapping/unwrapping XMR, fiat services, fees, security, or any other questions about our platform.";
+    return "🌟 XMRT Ecosystem Guide:\n• Mine XMR: mobilemonero.com\n• Track & Register: xmrtdao.streamlit.app\n• AI Agents: xmrtdao.replit.app & xmrteliza.vercel.app\n• DAO Operations: This interface\nWhat aspect interests you most?";
   }
   
-  return "Welcome to the XMRT ecosystem! I can help you with XMR wrapping, fiat conversion, and general platform questions. What would you like to know about today?";
+  return "Welcome to the XMRT DAO ecosystem! 🚀 Start mobile mining at mobilemonero.com, register at xmrtdao.streamlit.app, and interact with our AI agents. Your mining contributes to DAO treasury through pool operations. How can I help you begin?";
 };

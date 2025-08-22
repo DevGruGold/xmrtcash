@@ -33,7 +33,7 @@ export default function CashDappPanel() {
     {
       id: '1',
       type: 'eliza',
-      content: "Hello! I'm Eliza, your autonomous AI assistant for the XMRT-Ecosystem DAO. I can help you with governance decisions, treasury management, community queries, and much more. How can I assist you today?",
+      content: "Hello! I'm Eliza, your autonomous AI coordinator for the XMRT DAO ecosystem. I connect mobilemonero.com mining, xmrtdao.streamlit.app tracking, and our external agents at xmrtdao.replit.app & xmrteliza.vercel.app. Ready to help with mining, DAO operations, and ecosystem growth!",
       timestamp: new Date()
     }
   ]);
@@ -66,8 +66,8 @@ export default function CashDappPanel() {
     setIsConnecting(true);
 
     try {
-      // Get AI response from Gemini
-      const context = "XMRT Ecosystem CashDapp operations including XMR wrapping/unwrapping, fiat on/off-ramping, and DAO governance";
+      // Get AI response from Gemini with full ecosystem context
+      const context = "XMRT Ecosystem DAO operations: mobilemonero.com mining, xmrtdao.streamlit.app tracking, xmrtdao.replit.app & xmrteliza.vercel.app agents, XMR wrapping/unwrapping, fiat services, pool mining feeding DAO treasury";
       const aiResponse = await generateElizaResponse(inputMessage, context);
       
       const elizaResponse: Message = {
@@ -95,23 +95,39 @@ export default function CashDappPanel() {
   const getElizaResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
+    if (input.includes('mining') || input.includes('mobile')) {
+      return "🔗 Mobile Mining Status: mobilemonero.com integration active. 2,847 active miners contributing to DAO pool. Register at xmrtdao.streamlit.app to track your contributions. Current pool hashrate: 45.2 MH/s feeding treasury.";
+    }
+    
+    if (input.includes('register') || input.includes('track') || input.includes('streamlit')) {
+      return "📊 Mining Dashboard: Visit xmrtdao.streamlit.app to register and track your mobile mining progress. Currently 1,432 registered miners. Your contributions directly feed the DAO treasury through pool operations.";
+    }
+    
+    if (input.includes('agent') || input.includes('replit') || input.includes('vercel')) {
+      return "🤖 External Agents Status: xmrtdao.replit.app (promotion/scaling) - 12 active campaigns. xmrteliza.vercel.app (AI growth) - processing 847 daily interactions. All agents coordinating for ecosystem expansion.";
+    }
+    
     if (input.includes('governance') || input.includes('proposal') || input.includes('vote')) {
-      return "I can help you with governance operations! Current active proposals: 3. Latest: 'Treasury Diversification Strategy' - 87% approval. Would you like me to analyze the proposals or help you vote?";
+      return "🗳️ DAO Governance: 3 active proposals. Latest: 'Mobile Mining Rewards Enhancement' - 91% approval. Pool mining participants get 2x voting weight. Coordinating with promotion agents for community engagement.";
     }
     
     if (input.includes('treasury') || input.includes('balance') || input.includes('funds')) {
-      return "Treasury Status: $2.4M total value locked. Asset allocation: 45% XMR, 30% ETH, 15% BTC, 10% stablecoins. 24h performance: +3.2%. Current yield farming APY: 12.4%. Need analysis or rebalancing recommendations?";
+      return "💰 Treasury Status: $2.4M total value (45% from mobile mining pool). Real-time tracking at xmrtdao.streamlit.app. Pool contributions: +127 XMR today. Promotion agents securing new partnerships worth $340K.";
+    }
+    
+    if (input.includes('pool') || input.includes('contribution')) {
+      return "⛏️ Pool Mining Analytics: mobilemonero.com miners contributing 67% of DAO treasury growth. xmrtdao.streamlit.app shows 2,847 active contributors. Pool efficiency: 94.2% with automated DAO distribution.";
     }
     
     if (input.includes('security') || input.includes('audit') || input.includes('threat')) {
-      return "Security systems operational. Last security scan: 2 hours ago - No threats detected. Smart contract audit score: 98/100. All emergency protocols ready. Recent activity: Normal transaction patterns detected.";
+      return "🛡️ Multi-Platform Security: All systems secured. mobilemonero.com: SSL+, xmrtdao.streamlit.app: encrypted tracking, agent platforms: 24/7 monitoring. Last comprehensive scan: All clear. AI agents detecting 0 threats.";
     }
     
     if (input.includes('community') || input.includes('member') || input.includes('dao')) {
-      return "DAO Community Analytics: 1,247 active members, 89% participation rate this quarter. Top contributor rewards distributed. Community sentiment: Positive (8.4/10). New member onboarding: 23 this week.";
+      return "👥 XMRT Ecosystem: 1,247 DAO members, 2,847 mobile miners. 89% participation via xmrtdao.streamlit.app. External agents onboarded 47 new members this week. Community sentiment: Bullish (9.1/10).";
     }
     
-    return "I understand you're interested in DAO operations. I can assist with: Governance analysis, Treasury optimization, Security monitoring, Community management, Proposal creation, and Automated task execution. What specific area would you like to explore?";
+    return "🌟 XMRT DAO Ecosystem Ready! I coordinate between:\n• mobilemonero.com (mining)\n• xmrtdao.streamlit.app (tracking)\n• xmrtdao.replit.app (promotion)\n• xmrteliza.vercel.app (AI growth)\n\nWhich component interests you most?";
   };
 
   return (
