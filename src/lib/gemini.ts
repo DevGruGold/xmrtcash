@@ -29,13 +29,14 @@ export const getGeminiModel = () => {
 // Get current mining data for chatbot context
 export const getMiningDataForChat = async () => {
   try {
+    console.log('Fetching real mining data for chatbot...');
     const { getSupportXMRPoolStats, getXMRTWalletMining } = await import('./real-data-api');
     const [poolStats, walletStats] = await Promise.all([
       getSupportXMRPoolStats(),
       getXMRTWalletMining()
     ]);
     
-    return {
+    const miningData = {
       poolHashrate: poolStats.hashRate,
       poolMiners: poolStats.miners,
       totalBlocks: poolStats.totalBlocksFound,
@@ -44,6 +45,9 @@ export const getMiningDataForChat = async () => {
       walletPaid: walletStats.amountPaid,
       poolContribution: walletStats.poolContribution
     };
+    
+    console.log('Real mining data fetched for chatbot:', miningData);
+    return miningData;
   } catch (error) {
     console.error('Failed to get mining data for chat:', error);
     return null;

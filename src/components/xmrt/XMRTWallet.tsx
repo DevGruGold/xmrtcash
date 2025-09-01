@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,21 +17,49 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getXMRTWalletMining } from '@/lib/real-data-api';
 
 export default function XMRTWallet() {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [walletData, setWalletData] = useState({
+    xmr: { balance: 0.00000000, usd: 0.00 },
+    xmrt: { balance: 0, usd: 0 },
+    btc: { balance: 0.00000000, usd: 0.00 },
+    miningRewards: 0,
+    meshnetStatus: "connecting",
+    totalMined: 0
+  });
   const { toast } = useToast();
 
-  // Mock data - in real app this would come from wallet/API
-  const walletData = {
-    xmr: { balance: 0.00000000, usd: 0.00 },
-    xmrt: { balance: 847.32, usd: 423.66 },
-    btc: { balance: 0.00000000, usd: 0.00 },
-    miningRewards: 12.45,
-    meshnetStatus: "online",
-    totalMined: 2847.32
-  };
+  // Fetch real mining data
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      try {
+        const miningData = await getXMRTWalletMining();
+        setWalletData(prev => ({
+          ...prev,
+          xmrt: { 
+            balance: (miningData.amountDue / 1000000000000) || 0, 
+            usd: ((miningData.amountDue / 1000000000000) * miningData.xmrPrice) || 0 
+          },
+          miningRewards: (miningData.amountDue / 1000000000000) || 0,
+          meshnetStatus: miningData.currentHashrate > 0 ? "online" : "idle",
+          totalMined: (miningData.amountPaid / 1000000000000) || 0
+        }));
+      } catch (error) {
+        console.error('Failed to fetch wallet data:', error);
+        setWalletData(prev => ({
+          ...prev,
+          meshnetStatus: "error"
+        }));
+      }
+    };
+
+    fetchWalletData();
+    const interval = setInterval(fetchWalletData, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const copyAddress = () => {
     navigator.clipboard.writeText("4BrL51JCc9NGQ71kWhnYJLlT5JBDxJb4AJjhDpAg1TXvPmNKLBmkD3mG6VoMW1oGCCXNLZNrJ2S3KJL1KfJyKW8Q2Jn5K8X");

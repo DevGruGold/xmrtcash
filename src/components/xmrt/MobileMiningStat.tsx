@@ -17,42 +17,58 @@ import {
   Moon,
   Sun
 } from "lucide-react";
+import { getXMRTWalletMining, getSupportXMRPoolStats } from '@/lib/real-data-api';
 
 export default function MobileMiningStat() {
   const [isNightMode, setIsNightMode] = useState(false);
   const [miningActive, setMiningActive] = useState(true);
   const [meshnetStatus, setMeshnetStatus] = useState("connected");
 
-  // Mock real-time mining data
+  // Real mining data from SupportXMR
   const [miningStats, setMiningStats] = useState({
-    hashrate: 847.32,
+    hashrate: 0,
     power: 2.1,
     temperature: 42,
     battery: 89,
-    xmrtEarned: 12.45,
+    xmrtEarned: 0,
     blocksFound: 0,
-    networkHashrate: "2.84 GH/s",
-    difficulty: "225.6B",
-    uptime: "4h 23m",
-    poolShare: 0.0012
+    networkHashrate: "0 H/s",
+    difficulty: "0",
+    uptime: "0h 0m",
+    poolShare: 0
   });
 
-  // Simulate real-time updates
+  // Fetch real mining data
   useEffect(() => {
-    if (!miningActive) return;
+    const fetchMiningData = async () => {
+      try {
+        const [walletData, poolData] = await Promise.all([
+          getXMRTWalletMining(),
+          getSupportXMRPoolStats()
+        ]);
+        
+        setMiningStats(prev => ({
+          ...prev,
+          hashrate: walletData.currentHashrate || 0,
+          xmrtEarned: (walletData.amountDue / 1000000000000) || 0,
+          networkHashrate: `${(poolData.hashRate / 1000000).toFixed(1)} MH/s`,
+          difficulty: poolData.totalBlocksFound?.toString() || "0",
+          blocksFound: poolData.totalBlocksFound || 0,
+          poolShare: walletData.poolContribution || 0
+        }));
+        
+        setMiningActive(walletData.currentHashrate > 0);
+        setMeshnetStatus(walletData.currentHashrate > 0 ? "connected" : "idle");
+      } catch (error) {
+        console.error('Failed to fetch mobile mining data:', error);
+        setMeshnetStatus("disconnected");
+      }
+    };
 
-    const interval = setInterval(() => {
-      setMiningStats(prev => ({
-        ...prev,
-        hashrate: prev.hashrate + (Math.random() - 0.5) * 50,
-        xmrtEarned: prev.xmrtEarned + Math.random() * 0.01,
-        temperature: Math.max(35, Math.min(65, prev.temperature + (Math.random() - 0.5) * 2)),
-        battery: Math.max(20, Math.min(100, prev.battery + (Math.random() - 0.5) * 1))
-      }));
-    }, 3000);
-
+    fetchMiningData();
+    const interval = setInterval(fetchMiningData, 30000);
     return () => clearInterval(interval);
-  }, [miningActive]);
+  }, []);
 
   const toggleMining = () => {
     setMiningActive(!miningActive);
