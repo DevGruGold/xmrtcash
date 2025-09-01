@@ -1,10 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini AI with API key from environment
-// For now, we'll use a placeholder to demonstrate the structure
-// Users can add their own API key later
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || null;
-console.log('Gemini API Key status:', apiKey ? 'Available' : 'Not configured');
+// Initialize Gemini AI with API key from Vercel environment variables
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+console.log('Environment check:', {
+  hasApiKey: !!apiKey,
+  keyLength: apiKey?.length || 0,
+  keyPreview: apiKey ? `${apiKey.substring(0, 8)}...` : 'Not found',
+  allEnvVars: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
+});
+
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export const getGeminiModel = () => {
