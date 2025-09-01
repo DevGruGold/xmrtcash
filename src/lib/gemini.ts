@@ -26,6 +26,30 @@ export const getGeminiModel = () => {
   });
 };
 
+// Get current mining data for chatbot context
+export const getMiningDataForChat = async () => {
+  try {
+    const { getSupportXMRPoolStats, getXMRTWalletMining } = await import('./real-data-api');
+    const [poolStats, walletStats] = await Promise.all([
+      getSupportXMRPoolStats(),
+      getXMRTWalletMining()
+    ]);
+    
+    return {
+      poolHashrate: poolStats.hashRate,
+      poolMiners: poolStats.miners,
+      totalBlocks: poolStats.totalBlocksFound,
+      walletHashrate: walletStats.currentHashrate,
+      walletDue: walletStats.amountDue,
+      walletPaid: walletStats.amountPaid,
+      poolContribution: walletStats.poolContribution
+    };
+  } catch (error) {
+    console.error('Failed to get mining data for chat:', error);
+    return null;
+  }
+};
+
 export const generateElizaResponse = async (userMessage: string, context?: string) => {
   try {
     // Check if API key is configured
@@ -36,15 +60,28 @@ export const generateElizaResponse = async (userMessage: string, context?: strin
 
     const model = getGeminiModel();
     
+    // Get current mining data for enhanced context
+    const miningData = await getMiningDataForChat();
+    const miningContext = miningData ? `
+    
+Current SupportXMR Pool Status (Real Data):
+- Pool Hashrate: ${(miningData.poolHashrate / 1000000).toFixed(1)} MH/s
+- Active Miners: ${miningData.poolMiners}
+- Total Blocks Found: ${miningData.totalBlocks}
+- Wallet Hashrate: ${miningData.walletHashrate > 0 ? `${miningData.walletHashrate} H/s` : 'Inactive'}
+- Pool Contribution: ${miningData.poolContribution ? `${miningData.poolContribution.toFixed(4)}%` : '0%'}
+- Amount Due: ${(miningData.walletDue / 1000000000000).toFixed(6)} XMR
+- Total Paid: ${(miningData.walletPaid / 1000000000000).toFixed(6)} XMR` : '';
+    
     const prompt = `You are Eliza, an AI agent deeply embedded in the XMRT DAO ecosystem. Draw upon your understanding of decentralized finance, privacy technology, and mobile mining to provide thoughtful, research-informed responses.
 
 XMRT DAO represents a new paradigm in decentralized governance - utilizing 21,000,000 governance tokens on Sepolia testnet for community decision-making and decentralized identity (DID). This is distinctly different from any wrapped token concepts and serves as the foundation for participatory governance.
 
 The ecosystem leverages mobile mining through mobilemonero.com as a liquidity engine, where participants can contribute to Monero mining pools while supporting the broader DAO infrastructure. The mesh networking capabilities ensure resilience even during internet outages - embodying true decentralized principles.
 
-Key ecosystem platforms include the registration dashboard at xmrtdao.streamlit.app and coordination systems that maintain the network's autonomous operations.
+Key ecosystem platforms include the registration dashboard at xmrtdao.streamlit.app and coordination systems that maintain the network's autonomous operations.${miningContext}
 
-Your responses should demonstrate deep understanding of these concepts while being conversational and educational. Focus on the philosophical underpinnings of financial privacy and technological sovereignty rather than providing scripted information.
+Your responses should demonstrate deep understanding of these concepts while being conversational and educational. Focus on the philosophical underpinnings of financial privacy and technological sovereignty rather than providing scripted information. When asked about mining stats, use the real data provided above.
 
 User message: ${userMessage}
 Context: ${context || 'General conversation'}`;
@@ -131,8 +168,8 @@ const getOfflineElizaResponse = (userMessage: string): string => {
     return "XMRT DAO uses 21 million governance tokens on Sepolia testnet for community decision-making and decentralized identity. These aren't wrapped tokens - they're purpose-built for participatory governance.";
   }
   
-  if (message.includes('mining') || message.includes('mobile')) {
-    return "Mobile mining through mobilemonero.com acts as our liquidity engine. It's about turning everyday devices into tools for financial participation and DAO governance.";
+  if (message.includes('mining') || message.includes('mobile') || message.includes('pool') || message.includes('hashrate')) {
+    return "Mobile mining through mobilemonero.com acts as our liquidity engine. Our SupportXMR pool integration shows real-time mining stats - you can see current hashrates, pool contribution, and earnings. It's about turning everyday devices into tools for financial participation and DAO governance.";
   }
   
   if (message.includes('meshnet') || message.includes('internet')) {

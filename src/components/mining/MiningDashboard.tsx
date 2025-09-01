@@ -23,7 +23,7 @@ interface MiningDashboardProps {
 }
 
 export default function MiningDashboard({ 
-  walletAddress = "46UxNfuGM2E3UwmZWWJicaRpCRwqwW4byQkaTHkX8yPCVlhp91qAVtSFipWUGJJUyTXgzSqxzDQtNLfZbsp2DX2qCCgC5mg" 
+  walletAddress = "46UxNFuGM2E3UwmZWWJicaRPoRwqwW4byQkaTHkX8yPcVihp91qAVtSFipWUGJJUyTXgzSqxzDQtNLf2bsp2DX2qCCgC5mg" 
 }: MiningDashboardProps) {
   const [miningData, setMiningData] = useState<any>(null);
   const [poolData, setPoolData] = useState<any>(null);

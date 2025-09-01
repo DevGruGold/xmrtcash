@@ -83,17 +83,18 @@ export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
     
     console.log('SupportXMR API Response:', JSON.stringify(data, null, 2));
     
-    // SupportXMR API structure - based on actual API response
+    // SupportXMR API structure - correctly parse pool_statistics object
+    const poolStats = data.pool_statistics || data;
     return {
-      hashRate: data.pool?.hashrate || data.hashrate || 0,
-      miners: data.pool?.miners || data.miners || 0,
-      totalHashes: data.pool?.totalHashes || data.totalHashes || 0,
-      lastBlockFoundTime: data.pool?.lastBlockFoundTime || data.lastBlockFoundTime || Date.now(),
-      lastBlockFound: data.pool?.lastBlockFound || data.lastBlockFound || 0,
-      totalBlocksFound: data.pool?.totalBlocksFound || data.totalBlocksFound || 0,
-      totalMinersPaid: data.pool?.totalMinersPaid || data.totalMinersPaid || 0,
-      totalPayments: data.pool?.totalPayments || data.totalPayments || 0,
-      roundHashes: data.pool?.roundHashes || data.roundHashes || 0
+      hashRate: poolStats.hashRate || 0,
+      miners: poolStats.miners || 0,
+      totalHashes: poolStats.totalHashes || 0,
+      lastBlockFoundTime: poolStats.lastBlockFoundTime || Date.now(),
+      lastBlockFound: poolStats.lastBlockFound || 0,
+      totalBlocksFound: poolStats.totalBlocksFound || 0,
+      totalMinersPaid: poolStats.totalMinersPaid || 0,
+      totalPayments: poolStats.totalPayments || 0,
+      roundHashes: poolStats.roundHashes || 0
     };
   } catch (error) {
     console.error('Failed to fetch SupportXMR pool stats via proxy:', error);
