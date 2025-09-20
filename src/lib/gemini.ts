@@ -1,7 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { apiKeyManager } from './api-key-manager';
 
-// Initialize Gemini AI with API key from Vercel environment variables
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// Enhanced API key management with fallback
+const getAPIKey = () => {
+  return apiKeyManager.getKey('geminiApiKey');
+};
+
+const apiKey = getAPIKey();
 console.log('Environment check:', {
   hasApiKey: !!apiKey,
   keyLength: apiKey?.length || 0,
@@ -11,11 +16,15 @@ console.log('Environment check:', {
 
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-export const getGeminiModel = () => {
-  if (!genAI) {
+export const getGeminiModel = (customApiKey?: string) => {
+  const currentApiKey = customApiKey || getAPIKey();
+  
+  if (!currentApiKey) {
     throw new Error('Gemini API key not configured');
   }
-  return genAI.getGenerativeModel({ 
+  
+  const currentGenAI = new GoogleGenerativeAI(currentApiKey);
+  return currentGenAI.getGenerativeModel({ 
     model: 'gemini-1.5-flash', // Updated to more efficient model
     generationConfig: {
       temperature: 0.7,
@@ -24,6 +33,13 @@ export const getGeminiModel = () => {
       maxOutputTokens: 1024,
     },
   });
+};
+
+// Event handler for quota exhaustion that triggers user input dialog
+export let onQuotaExhausted: (() => void) | null = null;
+
+export const setQuotaExhaustedHandler = (handler: () => void) => {
+  onQuotaExhausted = handler;
 };
 
 // Get current mining data for chatbot context
@@ -54,11 +70,13 @@ export const getMiningDataForChat = async () => {
   }
 };
 
-export const generateElizaResponse = async (userMessage: string, context?: string) => {
+export const generateElizaResponse = async (userMessage: string, context?: string, retryWithUserKey = true) => {
   try {
-    // Check if API key is configured
-    if (!apiKey) {
-      console.warn('Gemini API key not available, using intelligent fallback');
+    // Try with available API key (environment or user-provided)
+    const currentApiKey = getAPIKey();
+    
+    if (!currentApiKey) {
+      console.warn('No Gemini API key available, using intelligent fallback');
       return getOfflineElizaResponse(userMessage);
     }
 
@@ -93,8 +111,22 @@ Context: ${context || 'General conversation'}`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Gemini API error:', error);
+    
+    // Check if this is a quota/rate limit error
+    if (apiKeyManager.isQuotaError(error) && retryWithUserKey) {
+      console.log('Quota exhausted, triggering user input dialog...');
+      
+      // Trigger the quota exhausted handler to show user input dialog
+      if (onQuotaExhausted) {
+        onQuotaExhausted();
+      }
+      
+      // For now, return fallback response
+      return getOfflineElizaResponse(userMessage) + '\n\n🔑 *API quota exhausted. Please provide your own Gemini API key for continued AI responses.*';
+    }
+    
     return getOfflineElizaResponse(userMessage);
   }
 };

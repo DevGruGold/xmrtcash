@@ -2,7 +2,10 @@
  * Autonomous Agent Cycle Management System
  * Based on DevGruGold/xmrtnet autonomous cycling patterns (July 26-28 commits)
  * Replicates the self-analysis, tool discovery, and state management cycles
+ * Enhanced with GitHub integration for autonomous code improvements
  */
+
+import { githubIntegration, type EnhancementProposal } from './github-integration';
 
 export interface AutonomousAgent {
   id: string;
@@ -272,14 +275,38 @@ class AutonomousCycleManager {
     ];
   }
 
-  // Self-improvement cycle
+  // Self-improvement cycle with GitHub integration
   private async performSelfImprovement(agent: AutonomousAgent): Promise<string[]> {
-    return [
+    const improvements = [
       'Optimized cycle performance by 2%',
       'Enhanced error handling capabilities',
       'Improved inter-agent communication protocols',
       'Updated decision-making algorithms'
     ];
+
+    // If GitHub integration is available, analyze and propose code improvements
+    if (githubIntegration.isAvailable() && agent.id === 'eliza-main') {
+      try {
+        const proposals = await githubIntegration.analyzeCodebase();
+        if (proposals.length > 0) {
+          improvements.push(`Identified ${proposals.length} code enhancement opportunities`);
+          
+          // Auto-implement low-impact improvements if configured
+          const lowImpactProposals = proposals.filter(p => p.estimatedImpact === 'low');
+          for (const proposal of lowImpactProposals.slice(0, 2)) { // Limit to 2 per cycle
+            const branch = await githubIntegration.implementEnhancement(proposal, false);
+            if (branch) {
+              improvements.push(`Created enhancement branch: ${branch}`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('GitHub enhancement analysis failed:', error);
+        improvements.push('GitHub integration analysis encountered an error');
+      }
+    }
+
+    return improvements;
   }
 
   // Save agent state (simulating GitHub commits)

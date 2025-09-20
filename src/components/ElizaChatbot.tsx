@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, Send, Minimize2, Maximize2, User, Zap, Loader2 } from "lucide-react";
-import { generateElizaResponse } from "@/lib/gemini";
+import { Bot, Send, Minimize2, Maximize2, User, Zap, Loader2, Key } from "lucide-react";
+import { generateElizaResponse, setQuotaExhaustedHandler } from "@/lib/gemini";
 import { useToast } from "@/components/ui/use-toast";
+import { APIKeyDialog } from "@/components/ui/api-key-dialog";
+import { apiKeyManager } from "@/lib/api-key-manager";
 
 interface Message {
   id: string;
@@ -57,6 +59,8 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken'>('geminiApiKey');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -67,6 +71,14 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Set up quota exhausted handler
+  useEffect(() => {
+    setQuotaExhaustedHandler(() => {
+      setApiKeyType('geminiApiKey');
+      setShowApiKeyDialog(true);
+    });
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -105,6 +117,21 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApiKeyAdded = (keyType: string, key: string) => {
+    toast({
+      title: "API Key Added",
+      description: `Your ${keyType === 'geminiApiKey' ? 'Gemini API' : 'GitHub'} key has been saved successfully.`,
+    });
+    
+    // If it was a Gemini key and we have pending messages, we could retry
+    if (keyType === 'geminiApiKey') {
+      toast({
+        title: "Enhanced AI Available",
+        description: "You can now continue chatting with full AI capabilities.",
+      });
     }
   };
 
@@ -163,14 +190,28 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
               </Badge>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsMinimized(true)}
-            className="text-muted-foreground hover:text-foreground flex-shrink-0"
-          >
-            <Minimize2 className="w-3 h-3 sm:w-4 sm:h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setApiKeyType('geminiApiKey');
+                setShowApiKeyDialog(true);
+              }}
+              className="text-muted-foreground hover:text-foreground flex-shrink-0"
+              title="Manage API Keys"
+            >
+              <Key className="w-3 h-3 sm:w-4 sm:h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMinimized(true)}
+              className="text-muted-foreground hover:text-foreground flex-shrink-0"
+            >
+              <Minimize2 className="w-3 h-3 sm:w-4 sm:h-4" />
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       
@@ -263,6 +304,19 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
           </Button>
         </div>
       </CardContent>
+
+      <APIKeyDialog
+        open={showApiKeyDialog}
+        onOpenChange={setShowApiKeyDialog}
+        keyType={apiKeyType}
+        onKeyAdded={handleApiKeyAdded}
+        title={`Add ${apiKeyType === 'geminiApiKey' ? 'Gemini API Key' : 'GitHub Personal Access Token'}`}
+        description={
+          apiKeyType === 'geminiApiKey' 
+            ? 'Your Gemini API key is needed for enhanced AI responses.'
+            : 'GitHub PAT enables autonomous code enhancements and repository management.'
+        }
+      />
     </Card>
   );
 };
