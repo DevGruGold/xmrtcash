@@ -153,11 +153,12 @@
   }
 }
   
-/* Mobile chat optimizations */
+/* Enhanced mobile chat optimizations */
 @media (max-width: 640px) {
   .mobile-chat {
-    height: calc(100vh - 160px);
+    height: calc(100vh - 3.5rem); /* Account for mobile header height */
     min-height: 400px;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   
   .mobile-input {
@@ -165,6 +166,7 @@
     bottom: 0;
     background: hsl(var(--background));
     border-top: 1px solid hsl(var(--border));
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
   }
   
   /* Ensure text wrapping in chat bubbles */
@@ -173,23 +175,69 @@
     overflow-wrap: break-word;
     hyphens: auto;
     max-width: 100%;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    padding: 0.75rem;
   }
   
   /* Better mobile dashboard cards */
   .glass-card {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
   }
   
   /* Mobile-first responsive grid */
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Mobile touch targets */
+  button, .touch-target, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Enhanced mobile typography */
+  h1 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  /* Mobile card adjustments */
+  .card-elevated {
+    padding: 1rem;
+  }
+}
+
+/* Enhanced responsive grid system */
+@media (min-width: 640px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
 }
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
   }
 }

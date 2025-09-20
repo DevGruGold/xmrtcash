@@ -63,7 +63,7 @@ export default function MiningDashboard({
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -105,9 +105,9 @@ export default function MiningDashboard({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Overview Cards - Mobile First */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Hashrate</CardTitle>
@@ -176,8 +176,8 @@ export default function MiningDashboard({
           <TabsTrigger value="pool">Pool Overview</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mining" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <TabsContent value="mining" className="space-y-3 sm:space-y-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -248,8 +248,8 @@ export default function MiningDashboard({
           </div>
         </TabsContent>
 
-        <TabsContent value="pool" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <TabsContent value="pool" className="space-y-3 sm:space-y-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>SupportXMR Pool Stats</CardTitle>
