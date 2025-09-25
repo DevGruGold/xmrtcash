@@ -16,20 +16,20 @@ import LiveMiningStats from '@/components/hero/LiveMiningStats';
 export default function HeroSection() {
   return (
     <section className="relative py-8 sm:py-12 lg:py-20 overflow-hidden">
-      {/* Background Effects */}
+      {/* Background Effects - Adjusted positioning to avoid chat interference */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
-      <div className="absolute top-5 right-5 sm:top-10 sm:right-10 w-48 h-48 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute top-5 left-5 sm:top-10 sm:left-10 w-48 h-48 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-5 left-5 sm:bottom-10 sm:left-10 w-64 h-64 sm:w-96 sm:h-96 bg-accent/5 rounded-full blur-3xl" />
       
-      <div className="container max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 relative z-10">
+      <div className="container max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 items-start">
           
           {/* Left Side - Hero Content */}
-          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+          <div className="lg:col-span-2 space-y-6 sm:space-y-8 relative">
             {/* Main Hero Text */}
             <div className="space-y-4 sm:space-y-6">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <Badge variant="outline" className="neon-border animate-pulse text-xs">
+                <Badge variant="outline" className="text-xs border-primary/50 bg-primary/10 text-primary">
                   <Zap className="w-3 h-3 mr-1" />
                   Live on Testnet
                 </Badge>
@@ -127,9 +127,9 @@ export default function HeroSection() {
           </div>
 
           {/* Right Side - Integrated Chatbot - Mobile First */}
-          <div className="lg:col-span-1 order-first lg:order-last">
-            <Card className="glass-card h-[500px] sm:h-[600px] lg:h-[700px]">
-              <CardHeader className="pb-3">
+          <div className="lg:col-span-1 order-first lg:order-last relative z-30">
+            <Card className="glass-card h-[500px] sm:h-[600px] lg:h-[700px] shadow-lg">
+              <CardHeader className="pb-3 relative z-40">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-primary/10">
@@ -148,7 +148,7 @@ export default function HeroSection() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-120px)]">
+              <CardContent className="p-0 h-[calc(100%-120px)] relative z-40">
                 <div className="h-full border-t border-border/50">
                   <ElizaChatbot className="h-full border-0 bg-transparent" />
                 </div>
