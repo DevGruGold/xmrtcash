@@ -6,12 +6,12 @@ import {
   Shield, 
   Users, 
   MessageCircle, 
-  TrendingUp, 
-  Zap,
   ArrowRight,
-  Globe
+  Globe,
+  Zap
 } from 'lucide-react';
 import ElizaChatbot from '@/components/ElizaChatbot';
+import LiveMiningStats from '@/components/hero/LiveMiningStats';
 
 export default function HeroSection() {
   return (
@@ -71,48 +71,8 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Key Stats - Mobile First Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <Card className="glass-card text-center">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-center mb-1 sm:mb-2">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  </div>
-                  <div className="text-lg sm:text-2xl font-bold">4,828</div>
-                  <div className="text-xs text-muted-foreground">Active Miners</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass-card text-center">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-center mb-1 sm:mb-2">
-                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  </div>
-                  <div className="text-lg sm:text-2xl font-bold">1.1 GH/s</div>
-                  <div className="text-xs text-muted-foreground">Pool Hashrate</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass-card text-center">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-center mb-1 sm:mb-2">
-                    <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  </div>
-                  <div className="text-lg sm:text-2xl font-bold">463K</div>
-                  <div className="text-xs text-muted-foreground">Blocks Found</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass-card text-center">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-center mb-1 sm:mb-2">
-                    <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  </div>
-                  <div className="text-lg sm:text-2xl font-bold">98.5%</div>
-                  <div className="text-xs text-muted-foreground">Uptime</div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Live Mining Stats - Real-time SupportXMR Data */}
+            <LiveMiningStats />
 
             {/* Key Features - Mobile Optimized */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

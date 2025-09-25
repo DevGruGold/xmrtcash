@@ -29,28 +29,9 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Mining & Activity Feed Grid - Mobile First */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Live Mining Dashboard - Full width on mobile, 2/3 on desktop */}
-          <div className="lg:col-span-2 order-1">
-            <div className="glass-card p-3 sm:p-4 md:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="status-indicator bg-primary animate-pulse" />
-                  <h2 className="text-lg sm:text-xl font-semibold">SupportXMR Live Mining</h2>
-                </div>
-                <div className="text-xs text-muted-foreground sm:ml-auto font-mono">
-                  46Ux...C5mg
-                </div>
-              </div>
-              <MiningDashboard />
-            </div>
-          </div>
-          
-          {/* Live Activity Feed - Full width on mobile, 1/3 on desktop */}
-          <div className="lg:col-span-1 order-2 lg:order-3">
-            <LiveActivityFeed className="min-h-[400px] lg:h-full" />
-          </div>
+        {/* Activity Feed - Full width */}
+        <div className="w-full">
+          <LiveActivityFeed className="min-h-[400px]" />
         </div>
 
         {/* Active Proposals - Full Width */}
