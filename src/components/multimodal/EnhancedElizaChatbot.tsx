@@ -186,11 +186,22 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
       
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Connection Error",
-        description: "Unable to send message. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Check if error is related to missing API keys
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('API key') || errorMessage.includes('unavailable')) {
+        toast({
+          title: "Setup Required",
+          description: "AI services need to be configured. Please check that API keys are set up correctly.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Connection Error",
+          description: "Unable to send message. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
