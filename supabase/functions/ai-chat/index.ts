@@ -12,89 +12,51 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const WAN_AI_API_KEY = Deno.env.get('WAN_AI_API_KEY');
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-async function callWanAI(messages: any[]): Promise<string> {
-  if (!WAN_AI_API_KEY) {
-    console.error('WAN_AI_API_KEY not found in environment variables');
-    throw new Error('WAN_AI_API_KEY not configured. Please add your API key in Supabase secrets.');
+async function callOpenAI(messages: any[]): Promise<string> {
+  if (!OPENAI_API_KEY) {
+    console.error('OPENAI_API_KEY not found in environment variables');
+    throw new Error('OPENAI_API_KEY not configured. Please add your API key in Supabase secrets.');
   }
 
-  console.log('Calling WAN AI with', messages.length, 'messages');
+  console.log('Calling OpenAI with', messages.length, 'messages');
+
+  // Add system message for context
+  const systemMessage = {
+    role: 'system',
+    content: 'You are Eliza, an intelligent AI assistant for the XMRT DAO platform - a privacy-focused Monero mining collective. You help users with mining questions, DAO governance, technical support, and general XMRT ecosystem topics. Be helpful, knowledgeable about Monero and mining, and maintain a friendly tone while respecting privacy principles.'
+  };
+
+  const messagesWithSystem = [systemMessage, ...messages];
   
-  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${WAN_AI_API_KEY}`,
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'qwen-max',
-      messages: messages,
+      model: 'gpt-4o-mini',
+      messages: messagesWithSystem,
       max_tokens: 1000,
       temperature: 0.7,
-      stream: false,
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('WAN AI API Error:', response.status, errorText);
-    throw new Error(`WAN AI API error: ${response.status} - ${errorText}`);
+    console.error('OpenAI API Error:', response.status, errorText);
+    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
   if (!data.choices || data.choices.length === 0) {
-    console.error('WAN AI returned no choices:', data);
-    throw new Error('WAN AI returned no response choices');
+    console.error('OpenAI returned no choices:', data);
+    throw new Error('OpenAI returned no response choices');
   }
   
   return data.choices[0].message.content;
-}
-
-async function callGemini(messages: any[]): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    console.error('GEMINI_API_KEY not found in environment variables');
-    throw new Error('GEMINI_API_KEY not configured. Please add your API key in Supabase secrets.');
-  }
-
-  console.log('Calling Gemini with', messages.length, 'messages');
-
-  // Convert messages to Gemini format
-  const conversationText = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
-  
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `You are an intelligent AI assistant for an XMRT (Monero mining ecosystem) platform. Based on the conversation history below, provide a helpful, accurate, and engaging response. Be conversational and remember the context. Avoid canned responses.\n\nConversation:\n${conversationText}\n\nProvide your response:`
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1000,
-      }
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Gemini API Error:', response.status, errorText);
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  if (!data.candidates || data.candidates.length === 0) {
-    console.error('Gemini returned no candidates:', data);
-    throw new Error('Gemini returned no response candidates');
-  }
-  
-  return data.candidates[0].content.parts[0].text;
 }
 
 serve(async (req) => {
@@ -187,35 +149,23 @@ serve(async (req) => {
     let aiResponse: string;
     
     try {
-      // Check if API keys are configured
-      if (!WAN_AI_API_KEY && !GEMINI_API_KEY) {
-        throw new Error('No AI services are configured. Please add WAN_AI_API_KEY and/or GEMINI_API_KEY in Supabase secrets.');
+      // Check if OpenAI API key is configured
+      if (!OPENAI_API_KEY) {
+        throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY in Supabase secrets.');
       }
 
-      // Try WAN AI first if available
-      if (WAN_AI_API_KEY) {
-        aiResponse = await callWanAI(conversationHistory);
-        console.log('✅ WAN AI response received successfully');
+      // Call OpenAI
+      aiResponse = await callOpenAI(conversationHistory);
+      console.log('✅ OpenAI response received successfully');
+      
+    } catch (openaiError) {
+      console.error('❌ OpenAI API failed:', openaiError);
+      
+      // Provide specific error message based on the failure type
+      if (openaiError instanceof Error && openaiError.message.includes('not configured')) {
+        throw new Error('OpenAI API key is not properly configured. Please check your OPENAI_API_KEY in Supabase secrets.');
       } else {
-        throw new Error('WAN_AI_API_KEY not available, trying Gemini');
-      }
-    } catch (wanError) {
-      console.warn('⚠️ WAN AI failed, trying Gemini:', wanError);
-      try {
-        // Fallback to Gemini
-        aiResponse = await callGemini(conversationHistory);
-        console.log('✅ Gemini response received successfully');
-      } catch (geminiError) {
-        console.error('❌ Both AI services failed:', { wanError, geminiError });
-        
-        // Provide specific error message based on the failure type
-        if (!WAN_AI_API_KEY && !GEMINI_API_KEY) {
-          throw new Error('No AI API keys are configured. Please add WAN_AI_API_KEY and/or GEMINI_API_KEY in your Supabase project settings under Edge Functions > Secrets.');
-        } else if (wanError instanceof Error && wanError.message.includes('not configured')) {
-          throw new Error('AI services are not properly configured. Please check your API keys in Supabase secrets.');
-        } else {
-          throw new Error('All AI services are currently unavailable. Please try again later.');
-        }
+        throw new Error('OpenAI service is currently unavailable. Please try again later.');
       }
     }
 
