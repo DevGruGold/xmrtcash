@@ -126,8 +126,8 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right Side - Integrated Chatbot - Mobile First */}
-          <div className="lg:col-span-1 order-first lg:order-last relative z-30">
+          {/* Right Side - Integrated Chatbot - Mobile Second */}
+          <div className="lg:col-span-1 lg:order-last relative z-30">
             <Card className="glass-card h-[500px] sm:h-[600px] lg:h-[700px] shadow-lg">
               <CardHeader className="pb-3 relative z-40">
                 <div className="flex items-center justify-between">
