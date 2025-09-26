@@ -82,20 +82,20 @@ export default function LiveMiningStats() {
         <Card className="glass-card text-center">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-center mb-1 sm:mb-2">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div className="text-lg sm:text-2xl font-bold">4,828</div>
-            <div className="text-xs text-muted-foreground">Active Miners</div>
+            <div className="text-lg sm:text-2xl font-bold">0 H/s</div>
+            <div className="text-xs text-muted-foreground">Wallet Hashrate</div>
           </CardContent>
         </Card>
         
         <Card className="glass-card text-center">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-center mb-1 sm:mb-2">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div className="text-lg sm:text-2xl font-bold">1.1 GH/s</div>
-            <div className="text-xs text-muted-foreground">Pool Hashrate</div>
+            <div className="text-lg sm:text-2xl font-bold">0</div>
+            <div className="text-xs text-muted-foreground">Valid Shares</div>
           </CardContent>
         </Card>
         
@@ -104,8 +104,8 @@ export default function LiveMiningStats() {
             <div className="flex items-center justify-center mb-1 sm:mb-2">
               <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div className="text-lg sm:text-2xl font-bold">463K</div>
-            <div className="text-xs text-muted-foreground">Blocks Found</div>
+            <div className="text-lg sm:text-2xl font-bold">0.0000</div>
+            <div className="text-xs text-muted-foreground">XMR Due</div>
           </CardContent>
         </Card>
         
@@ -127,24 +127,24 @@ export default function LiveMiningStats() {
       <Card className="glass-card text-center">
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center justify-center mb-1 sm:mb-2">
-            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {formatNumber(poolData?.miners || 4828)}
+            {formatHashrate(miningData?.currentHashrate || 0)}
           </div>
-          <div className="text-xs text-muted-foreground">Active Miners</div>
+          <div className="text-xs text-muted-foreground">Wallet Hashrate</div>
         </CardContent>
       </Card>
       
       <Card className="glass-card text-center">
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center justify-center mb-1 sm:mb-2">
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {formatHashrate(poolData?.hashRate || 1100000000)}
+            {formatNumber(miningData?.minerStats?.validShares || 0)}
           </div>
-          <div className="text-xs text-muted-foreground">Pool Hashrate</div>
+          <div className="text-xs text-muted-foreground">Valid Shares</div>
         </CardContent>
       </Card>
       
@@ -154,9 +154,9 @@ export default function LiveMiningStats() {
             <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {formatNumber(poolData?.totalBlocksFound || 463000)}
+            {(miningData?.amountDue / 1000000000000 || 0).toFixed(4)}
           </div>
-          <div className="text-xs text-muted-foreground">Blocks Found</div>
+          <div className="text-xs text-muted-foreground">XMR Due</div>
         </CardContent>
       </Card>
       
