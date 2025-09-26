@@ -271,7 +271,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   }
 
   return (
-    <Card className={`glass-card w-full max-w-4xl h-[calc(100vh-16rem)] sm:h-[700px] flex flex-col ${className}`}>
+    <Card className={`glass-card w-full max-w-4xl h-full flex flex-col ${className}`}>
       <CardHeader className="flex-shrink-0 pb-3 px-3 sm:px-6">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -324,8 +324,8 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-            <ScrollArea className="flex-1 w-full pr-2 sm:pr-4 min-h-0" data-radix-scroll-area-viewport>
-              <div className="space-y-3 sm:space-y-4 pb-24 sm:pb-28">
+            <ScrollArea className="h-[calc(100%-80px)] w-full pr-2 sm:pr-4" data-radix-scroll-area-viewport>
+              <div className="space-y-3 sm:space-y-4 pb-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -431,7 +431,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
               </div>
             )}
             
-            <div className="sticky bottom-0 bg-background/90 supports-[backdrop-filter]:bg-background/70 backdrop-blur border-t border-border flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 flex-shrink-0 z-10 pb-[env(safe-area-inset-bottom)]">
+            <div className="mt-2 bg-background/95 supports-[backdrop-filter]:bg-background/80 backdrop-blur border-t border-border flex gap-2 p-2 sm:p-3 flex-shrink-0 z-10">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
