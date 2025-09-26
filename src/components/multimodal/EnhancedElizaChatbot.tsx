@@ -306,16 +306,16 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                       )}
                     </Avatar>
                     
-                    <div className={`flex-1 min-w-0 ${message.isUser ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex-1 min-w-0 max-w-full ${message.isUser ? 'text-right' : 'text-left'}`}>
                       {message.text && (
                         <div
-                          className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm max-w-full overflow-hidden ${
+                          className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm w-full max-w-[calc(100%-2rem)] sm:max-w-[85%] overflow-hidden ${
                             message.isUser
                               ? 'bg-primary text-primary-foreground ml-auto'
                               : 'bg-muted/50 text-foreground border border-border/50'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap break-words word-wrap overflow-wrap-anywhere">
+                          <p className="whitespace-pre-wrap break-words word-wrap overflow-wrap-anywhere overflow-hidden">
                             {message.text}
                           </p>
                         </div>
