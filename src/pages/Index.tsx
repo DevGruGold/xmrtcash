@@ -3,7 +3,7 @@ import ModernHeader from "@/components/ModernHeader";
 import BlockchainActivity from "@/components/dashboard/BlockchainActivity";
 import BusinessPerformance from "@/components/dashboard/BusinessPerformance";
 import MiningDashboard from "@/components/mining/MiningDashboard";
-import LiveActivityFeed from "@/components/ecosystem/LiveActivityFeed";
+
 import HeroSection from "@/components/hero/HeroSection";
 
 export default function Index() {
@@ -28,10 +28,6 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Activity Feed - Full width */}
-        <div className="w-full">
-          <LiveActivityFeed className="min-h-[400px]" />
-        </div>
       </main>
     </div>
   );
