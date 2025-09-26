@@ -1,13 +1,1 @@
-project_id = "jygaxgukrvshvjsorzhi"
-
-[functions.supportxmr-proxy]
-verify_jwt = false
-
-[functions.ecosystem-webhook]
-verify_jwt = false
-
-[functions.ai-chat]
-verify_jwt = false
-
-[functions.text-to-speech]
-verify_jwt = false
+project_id = "vawouugtzwmejxqkeqqj"

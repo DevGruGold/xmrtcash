@@ -14,499 +14,489 @@ export type Database = {
   }
   public: {
     Tables: {
-      autonomous_actions: {
+      conversation_messages: {
         Row: {
-          action_description: string
-          action_type: string
-          approval_required: boolean
-          approved_by: string | null
-          completed_at: string | null
-          confidence_score: number
-          created_at: string
-          executed_at: string | null
-          execution_status: string
-          execution_time_ms: number | null
+          content: string
           id: string
-          input_data: Json | null
-          output_data: Json | null
-          risk_assessment: string
-        }
-        Insert: {
-          action_description: string
-          action_type: string
-          approval_required?: boolean
-          approved_by?: string | null
-          completed_at?: string | null
-          confidence_score: number
-          created_at?: string
-          executed_at?: string | null
-          execution_status?: string
-          execution_time_ms?: number | null
-          id?: string
-          input_data?: Json | null
-          output_data?: Json | null
-          risk_assessment: string
-        }
-        Update: {
-          action_description?: string
-          action_type?: string
-          approval_required?: boolean
-          approved_by?: string | null
-          completed_at?: string | null
-          confidence_score?: number
-          created_at?: string
-          executed_at?: string | null
-          execution_status?: string
-          execution_time_ms?: number | null
-          id?: string
-          input_data?: Json | null
-          output_data?: Json | null
-          risk_assessment?: string
-        }
-        Relationships: []
-      }
-      chat_messages: {
-        Row: {
-          audio_duration: number | null
-          confidence_score: number | null
-          has_audio: boolean | null
-          id: string
-          message_context: Json | null
-          message_text: string
-          mining_data: Json | null
-          sender: string
+          message_type: string
+          metadata: Json | null
+          processing_data: Json | null
           session_id: string
           timestamp: string
         }
         Insert: {
-          audio_duration?: number | null
-          confidence_score?: number | null
-          has_audio?: boolean | null
+          content: string
           id?: string
-          message_context?: Json | null
-          message_text: string
-          mining_data?: Json | null
-          sender: string
+          message_type: string
+          metadata?: Json | null
+          processing_data?: Json | null
           session_id: string
           timestamp?: string
         }
         Update: {
-          audio_duration?: number | null
-          confidence_score?: number | null
-          has_audio?: boolean | null
+          content?: string
           id?: string
-          message_context?: Json | null
-          message_text?: string
-          mining_data?: Json | null
-          sender?: string
+          message_type?: string
+          metadata?: Json | null
+          processing_data?: Json | null
           session_id?: string
           timestamp?: string
         }
         Relationships: [
           {
-            foreignKeyName: "chat_messages_session_id_fkey"
+            foreignKeyName: "conversation_messages_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: "chat_sessions"
+            referencedRelation: "conversation_sessions"
             referencedColumns: ["id"]
           },
         ]
       }
-      chat_sessions: {
+      conversation_sessions: {
         Row: {
           created_at: string
           id: string
-          is_active: boolean
-          last_activity: string
-          session_name: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          last_activity?: string
-          session_name?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          last_activity?: string
-          session_name?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      conversation_memory: {
-        Row: {
-          conversation_context: Json
-          created_at: string
-          id: string
-          ip_address: unknown
-          last_interaction: string
-          multimodal_context: Json | null
-          neural_embeddings: Json | null
-          session_fingerprint: string
-          total_interactions: number | null
+          is_active: boolean | null
+          metadata: Json | null
+          session_key: string
+          title: string | null
           updated_at: string
         }
         Insert: {
-          conversation_context?: Json
           created_at?: string
           id?: string
-          ip_address: unknown
-          last_interaction?: string
-          multimodal_context?: Json | null
-          neural_embeddings?: Json | null
-          session_fingerprint: string
-          total_interactions?: number | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          session_key: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
-          conversation_context?: Json
           created_at?: string
           id?: string
-          ip_address?: unknown
-          last_interaction?: string
-          multimodal_context?: Json | null
-          neural_embeddings?: Json | null
-          session_fingerprint?: string
-          total_interactions?: number | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          session_key?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: []
       }
-      debate_matches: {
+      conversation_summaries: {
         Row: {
-          compatibility_score: number
           created_at: string
+          end_message_id: string | null
           id: string
-          matched_at: string | null
-          status: string
-          topic: string
-          user1_id: string
-          user2_id: string
-        }
-        Insert: {
-          compatibility_score: number
-          created_at?: string
-          id?: string
-          matched_at?: string | null
-          status?: string
-          topic: string
-          user1_id: string
-          user2_id: string
-        }
-        Update: {
-          compatibility_score?: number
-          created_at?: string
-          id?: string
-          matched_at?: string | null
-          status?: string
-          topic?: string
-          user1_id?: string
-          user2_id?: string
-        }
-        Relationships: []
-      }
-      eliza_knowledge_base: {
-        Row: {
-          access_count: number | null
-          confidence_level: number
-          content: string
-          created_at: string
-          id: string
-          last_accessed: string | null
-          relevance_score: number
-          source: string | null
-          topic: string
+          message_count: number
+          metadata: Json | null
+          session_id: string
+          start_message_id: string | null
+          summary_text: string
           updated_at: string
         }
         Insert: {
-          access_count?: number | null
-          confidence_level?: number
-          content: string
           created_at?: string
+          end_message_id?: string | null
           id?: string
-          last_accessed?: string | null
-          relevance_score?: number
-          source?: string | null
-          topic: string
+          message_count?: number
+          metadata?: Json | null
+          session_id: string
+          start_message_id?: string | null
+          summary_text: string
           updated_at?: string
         }
         Update: {
-          access_count?: number | null
-          confidence_level?: number
-          content?: string
           created_at?: string
+          end_message_id?: string | null
           id?: string
-          last_accessed?: string | null
-          relevance_score?: number
-          source?: string | null
-          topic?: string
+          message_count?: number
+          metadata?: Json | null
+          session_id?: string
+          start_message_id?: string | null
+          summary_text?: string
           updated_at?: string
         }
         Relationships: []
       }
-      feed_analysis: {
+      entity_relationships: {
         Row: {
-          accuracy_scores: Json | null
-          analysis_type: string
-          content_analyzed: Json
           created_at: string
           id: string
-          insights: Json
-          user_id: string
+          metadata: Json | null
+          relationship_type: string
+          source_entity_id: string
+          strength: number | null
+          target_entity_id: string
         }
         Insert: {
-          accuracy_scores?: Json | null
-          analysis_type?: string
-          content_analyzed: Json
           created_at?: string
           id?: string
-          insights: Json
-          user_id: string
+          metadata?: Json | null
+          relationship_type: string
+          source_entity_id: string
+          strength?: number | null
+          target_entity_id: string
         }
         Update: {
-          accuracy_scores?: Json | null
-          analysis_type?: string
-          content_analyzed?: Json
           created_at?: string
           id?: string
-          insights?: Json
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          accuracy_rating: number | null
-          bio: string | null
-          created_at: string
-          debate_score: number | null
-          display_name: string | null
-          id: string
-          interests: string[] | null
-          political_leaning: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          accuracy_rating?: number | null
-          bio?: string | null
-          created_at?: string
-          debate_score?: number | null
-          display_name?: string | null
-          id?: string
-          interests?: string[] | null
-          political_leaning?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          accuracy_rating?: number | null
-          bio?: string | null
-          created_at?: string
-          debate_score?: number | null
-          display_name?: string | null
-          id?: string
-          interests?: string[] | null
-          political_leaning?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      sighting_media: {
-        Row: {
-          caption: string | null
-          created_at: string
-          file_name: string
-          file_path: string
-          file_size: number | null
-          file_type: string
-          id: string
-          is_primary: boolean | null
-          sighting_id: string
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          file_type: string
-          id?: string
-          is_primary?: boolean | null
-          sighting_id: string
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          file_type?: string
-          id?: string
-          is_primary?: boolean | null
-          sighting_id?: string
+          metadata?: Json | null
+          relationship_type?: string
+          source_entity_id?: string
+          strength?: number | null
+          target_entity_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sighting_media_sighting_id_fkey"
-            columns: ["sighting_id"]
+            foreignKeyName: "entity_relationships_source_entity_id_fkey"
+            columns: ["source_entity_id"]
             isOneToOne: false
-            referencedRelation: "sightings"
+            referencedRelation: "knowledge_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_relationships_target_entity_id_fkey"
+            columns: ["target_entity_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_entities"
             referencedColumns: ["id"]
           },
         ]
       }
-      sightings: {
+      interaction_patterns: {
         Row: {
-          admin_notes: string | null
-          approved_at: string | null
-          approved_by: string | null
-          confidence_rating: number | null
-          created_at: string
-          description: string
-          encounter_type: Database["public"]["Enums"]["sighting_type"]
+          confidence_score: number | null
+          frequency: number | null
           id: string
-          latitude: number
-          location_name: string
-          longitude: number
-          mystery_tags: string[] | null
-          sighting_date: string
-          sighting_time: string | null
-          status: Database["public"]["Enums"]["sighting_status"]
-          title: string
-          updated_at: string
-          user_id: string | null
-          weather_conditions: string | null
-          witness_count: number | null
+          last_occurrence: string
+          metadata: Json | null
+          pattern_data: Json
+          pattern_name: string
+          session_key: string
         }
         Insert: {
-          admin_notes?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          confidence_rating?: number | null
-          created_at?: string
-          description: string
-          encounter_type: Database["public"]["Enums"]["sighting_type"]
+          confidence_score?: number | null
+          frequency?: number | null
           id?: string
-          latitude: number
-          location_name: string
-          longitude: number
-          mystery_tags?: string[] | null
-          sighting_date: string
-          sighting_time?: string | null
-          status?: Database["public"]["Enums"]["sighting_status"]
-          title: string
-          updated_at?: string
-          user_id?: string | null
-          weather_conditions?: string | null
-          witness_count?: number | null
+          last_occurrence?: string
+          metadata?: Json | null
+          pattern_data: Json
+          pattern_name: string
+          session_key: string
         }
         Update: {
-          admin_notes?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          confidence_rating?: number | null
-          created_at?: string
-          description?: string
-          encounter_type?: Database["public"]["Enums"]["sighting_type"]
+          confidence_score?: number | null
+          frequency?: number | null
           id?: string
-          latitude?: number
-          location_name?: string
-          longitude?: number
-          mystery_tags?: string[] | null
-          sighting_date?: string
-          sighting_time?: string | null
-          status?: Database["public"]["Enums"]["sighting_status"]
-          title?: string
-          updated_at?: string
-          user_id?: string | null
-          weather_conditions?: string | null
-          witness_count?: number | null
+          last_occurrence?: string
+          metadata?: Json | null
+          pattern_data?: Json
+          pattern_name?: string
+          session_key?: string
         }
         Relationships: []
       }
-      social_media_posts: {
+      knowledge_entities: {
         Row: {
-          accuracy_score: number | null
-          analysis_result: Json | null
+          confidence_score: number | null
           created_at: string
+          description: string | null
+          entity_name: string
+          entity_type: string
           id: string
-          platform: string
-          post_content: string
-          post_url: string | null
+          metadata: Json | null
           updated_at: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          entity_name: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          entity_name?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_patterns: {
+        Row: {
+          confidence_score: number | null
+          id: string
+          last_used: string | null
+          pattern_data: Json | null
+          pattern_type: string
+          usage_count: number | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          id?: string
+          last_used?: string | null
+          pattern_data?: Json | null
+          pattern_type: string
+          usage_count?: number | null
+        }
+        Update: {
+          confidence_score?: number | null
+          id?: string
+          last_used?: string | null
+          pattern_data?: Json | null
+          pattern_type?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      memory_contexts: {
+        Row: {
+          content: string
+          context_type: string
+          embedding: number[] | null
+          id: string
+          importance_score: number | null
+          metadata: Json | null
+          session_id: string
+          timestamp: string | null
           user_id: string
         }
         Insert: {
-          accuracy_score?: number | null
-          analysis_result?: Json | null
-          created_at?: string
+          content: string
+          context_type: string
+          embedding?: number[] | null
           id?: string
-          platform: string
-          post_content: string
-          post_url?: string | null
-          updated_at?: string
+          importance_score?: number | null
+          metadata?: Json | null
+          session_id: string
+          timestamp?: string | null
           user_id: string
         }
         Update: {
-          accuracy_score?: number | null
-          analysis_result?: Json | null
-          created_at?: string
+          content?: string
+          context_type?: string
+          embedding?: number[] | null
           id?: string
-          platform?: string
-          post_content?: string
-          post_url?: string | null
-          updated_at?: string
+          importance_score?: number | null
+          metadata?: Json | null
+          session_id?: string
+          timestamp?: string | null
           user_id?: string
         }
         Relationships: []
       }
-      user_preferences: {
+      scheduled_actions: {
         Row: {
-          auto_mining_updates: boolean | null
+          action_data: Json
+          action_name: string
+          action_type: string
           created_at: string
           id: string
-          notification_frequency: string | null
-          preferred_language: string | null
-          preferred_voice: string | null
-          theme_preference: string | null
-          updated_at: string
-          user_id: string | null
-          voice_enabled: boolean | null
+          is_active: boolean | null
+          last_execution: string | null
+          metadata: Json | null
+          next_execution: string | null
+          schedule_expression: string
+          session_key: string
         }
         Insert: {
-          auto_mining_updates?: boolean | null
+          action_data: Json
+          action_name: string
+          action_type: string
           created_at?: string
           id?: string
-          notification_frequency?: string | null
-          preferred_language?: string | null
-          preferred_voice?: string | null
-          theme_preference?: string | null
-          updated_at?: string
-          user_id?: string | null
-          voice_enabled?: boolean | null
+          is_active?: boolean | null
+          last_execution?: string | null
+          metadata?: Json | null
+          next_execution?: string | null
+          schedule_expression: string
+          session_key: string
         }
         Update: {
-          auto_mining_updates?: boolean | null
+          action_data?: Json
+          action_name?: string
+          action_type?: string
           created_at?: string
           id?: string
-          notification_frequency?: string | null
-          preferred_language?: string | null
-          preferred_voice?: string | null
-          theme_preference?: string | null
+          is_active?: boolean | null
+          last_execution?: string | null
+          metadata?: Json | null
+          next_execution?: string | null
+          schedule_expression?: string
+          session_key?: string
+        }
+        Relationships: []
+      }
+      task_executions: {
+        Row: {
+          error_message: string | null
+          execution_end: string | null
+          execution_start: string
+          id: string
+          metadata: Json | null
+          result_data: Json | null
+          status: string
+          task_id: string
+        }
+        Insert: {
+          error_message?: string | null
+          execution_end?: string | null
+          execution_start?: string
+          id?: string
+          metadata?: Json | null
+          result_data?: Json | null
+          status?: string
+          task_id: string
+        }
+        Update: {
+          error_message?: string | null
+          execution_end?: string | null
+          execution_start?: string
+          id?: string
+          metadata?: Json | null
+          result_data?: Json | null
+          status?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_executions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          execution_data: Json | null
+          id: string
+          metadata: Json | null
+          parent_task_id: string | null
+          priority: number | null
+          scheduled_for: string | null
+          session_key: string
+          status: string
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          execution_data?: Json | null
+          id?: string
+          metadata?: Json | null
+          parent_task_id?: string | null
+          priority?: number | null
+          scheduled_for?: string | null
+          session_key: string
+          status?: string
+          task_type: string
+          title: string
           updated_at?: string
-          user_id?: string | null
-          voice_enabled?: boolean | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          execution_data?: Json | null
+          id?: string
+          metadata?: Json | null
+          parent_task_id?: string | null
+          priority?: number | null
+          scheduled_for?: string | null
+          session_key?: string
+          status?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          preference_key: string
+          preference_value: Json
+          session_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preference_key: string
+          preference_value: Json
+          session_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preference_key?: string
+          preference_value?: Json
+          session_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      worker_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown
+          is_active: boolean
+          last_seen: string
+          metadata: Json | null
+          registration_date: string
+          session_key: string | null
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          is_active?: boolean
+          last_seen?: string
+          metadata?: Json | null
+          registration_date?: string
+          session_key?: string | null
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean
+          last_seen?: string
+          metadata?: Json | null
+          registration_date?: string
+          session_key?: string | null
+          updated_at?: string
+          worker_id?: string
         }
         Relationships: []
       }
@@ -515,31 +505,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      clear_conversation_memory: {
-        Args: { p_ip_address: unknown; p_session_fingerprint: string }
-        Returns: boolean
-      }
-      update_conversation_memory: {
-        Args: {
-          p_ip_address: unknown
-          p_message: Json
-          p_multimodal_data?: Json
-          p_neural_context?: Json
-          p_session_fingerprint: string
-        }
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
-      sighting_status: "pending" | "approved" | "rejected"
-      sighting_type:
-        | "visual"
-        | "footprint"
-        | "sound"
-        | "smell"
-        | "structure"
-        | "hair_sample"
-        | "other"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -666,17 +635,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      sighting_status: ["pending", "approved", "rejected"],
-      sighting_type: [
-        "visual",
-        "footprint",
-        "sound",
-        "smell",
-        "structure",
-        "hair_sample",
-        "other",
-      ],
-    },
+    Enums: {},
   },
 } as const
