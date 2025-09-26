@@ -92,9 +92,30 @@ serve(async (req) => {
       throw new Error('Session ID is required');
     }
 
+    // Validate session exists
+    const { data: session, error: sessionCheckError } = await supabase
+      .from('conversation_sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionCheckError || !session) {
+      console.error('Invalid session ID:', sessionId, sessionCheckError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid session ID',
+          success: false
+        }), 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Get conversation history from database
     const { data: messages, error: messagesError } = await supabase
-      .from('chat_messages')
+      .from('conversation_messages')
       .select('*')
       .eq('session_id', sessionId)
       .order('timestamp', { ascending: true });
@@ -108,25 +129,29 @@ serve(async (req) => {
 
     // Add the new user message to the database
     if (userMessage) {
-      const { error: insertError } = await supabase
-        .from('chat_messages')
+      const { data: insertedMessage, error: insertError } = await supabase
+        .from('conversation_messages')
         .insert({
           session_id: sessionId,
-          sender: 'user',
-          message_text: userMessage,
+          message_type: 'user',
+          content: userMessage,
           timestamp: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Error inserting user message:', insertError);
         throw insertError;
       }
+      
+      console.log('Inserted user message with ID:', insertedMessage?.id);
     }
 
     // Prepare conversation history for AI
     const conversationHistory = (messages || []).map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.message_text
+      role: msg.message_type === 'user' ? 'user' : 'assistant',
+      content: msg.content
     }));
 
     // Add the current user message if provided
@@ -158,32 +183,37 @@ serve(async (req) => {
     }
 
     // Save AI response to database
-    const { error: responseError } = await supabase
-      .from('chat_messages')
+    const { data: insertedResponse, error: responseError } = await supabase
+      .from('conversation_messages')
       .insert({
         session_id: sessionId,
-        sender: 'assistant',
-        message_text: aiResponse,
+        message_type: 'assistant',
+        content: aiResponse,
         timestamp: new Date().toISOString(),
-        confidence_score: 0.9
-      });
+        metadata: { confidence_score: 0.9 }
+      })
+      .select()
+      .single();
 
     if (responseError) {
       console.error('Error saving AI response:', responseError);
       throw responseError;
     }
 
+    console.log('Inserted AI response with ID:', insertedResponse?.id);
+
     // Update session activity
     const { error: sessionError } = await supabase
-      .from('chat_sessions')
+      .from('conversation_sessions')
       .update({ 
-        last_activity: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId);
 
     if (sessionError) {
       console.error('Error updating session:', sessionError);
+    } else {
+      console.log('Updated session timestamp successfully');
     }
 
     console.log('AI Chat response generated successfully');
