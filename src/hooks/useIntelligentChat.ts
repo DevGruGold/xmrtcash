@@ -4,18 +4,22 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface ChatMessage {
   id: string;
-  sender: 'user' | 'assistant';
-  message_text: string;
+  message_type: 'user' | 'assistant';
+  content: string;
   timestamp: string;
-  confidence_score?: number;
+  metadata?: {
+    confidence_score?: number;
+  };
   has_audio?: boolean;
 }
 
 export interface ChatSession {
   id: string;
+  session_key: string;
+  title?: string;
   created_at: string;
-  last_activity: string;
-  session_name?: string;
+  updated_at: string;
+  is_active?: boolean;
 }
 
 export function useIntelligentChat() {
@@ -30,9 +34,10 @@ export function useIntelligentChat() {
     try {
       // Create a new session
       const { data: session, error: sessionError } = await (supabase as any)
-        .from('chat_sessions')
+        .from('conversation_sessions')
         .insert({
-          session_name: `Chat ${new Date().toLocaleString()}`,
+          session_key: `Chat ${new Date().toLocaleString()}`,
+          title: `Chat ${new Date().toLocaleString()}`,
           is_active: true
         })
         .select()
@@ -44,13 +49,14 @@ export function useIntelligentChat() {
       
       // Add initial system message
       const { error: messageError } = await (supabase as any)
-        .from('chat_messages')
+        .from('conversation_messages')
         .insert({
           session_id: session?.id,
-          sender: 'assistant',
-          message_text: 'Hello! I\'m your intelligent AI assistant for the XMRT platform. I can help you with Monero mining, blockchain technology, and answer any questions you have. How can I assist you today?',
-          timestamp: new Date().toISOString(),
-          confidence_score: 1.0
+          message_type: 'assistant',
+          content: 'Hello! I\'m your intelligent AI assistant for the XMRT platform. I can help you with Monero mining, blockchain technology, and answer any questions you have. How can I assist you today?',
+          metadata: {
+            confidence_score: 1.0
+          }
         });
 
       if (messageError) throw messageError;
@@ -75,7 +81,7 @@ export function useIntelligentChat() {
     try {
       setIsLoading(true);
       const { data, error } = await (supabase as any)
-        .from('chat_messages')
+        .from('conversation_messages')
         .select('*')
         .eq('session_id', sessionId)
         .order('timestamp', { ascending: true });
@@ -138,7 +144,7 @@ export function useIntelligentChat() {
     try {
       // Delete all messages for this session
       const { error } = await (supabase as any)
-        .from('chat_messages')
+        .from('conversation_messages')
         .delete()
         .eq('session_id', currentSession.id);
 
@@ -179,7 +185,7 @@ export function useIntelligentChat() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'chat_messages',
+          table: 'conversation_messages',
           filter: `session_id=eq.${currentSession.id}`
         },
         (payload) => {

@@ -1,10 +1,9 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -15,77 +14,52 @@ serve(async (req) => {
   try {
     const { path } = await req.json();
     
-    console.log(`Request body path: ${path}`);
-    
-    // Map paths to SupportXMR API endpoints
-    let apiUrl: string;
-    
-    if (path === '/pool/stats') {
-      apiUrl = 'https://supportxmr.com/api/pool/stats';
-    } else if (path.startsWith('/miner/') && path.endsWith('/stats')) {
-      const address = path.replace('/miner/', '').replace('/stats', '');
-      apiUrl = `https://supportxmr.com/api/miner/${address}/stats`;
-    } else if (path.startsWith('/pool/workers/')) {
-      const address = path.replace('/pool/workers/', '');
-      apiUrl = `https://supportxmr.com/api/pool/workers/${address}`;
-    } else {
+    if (!path) {
       return new Response(
-        JSON.stringify({ error: 'Invalid endpoint' }), 
+        JSON.stringify({ error: 'Path parameter is required' }),
         { 
-          status: 404, 
+          status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    console.log(`Proxying request to: ${apiUrl}`);
+    console.log('Proxying request to SupportXMR:', path);
 
-    // Make request to SupportXMR API
-    const response = await fetch(apiUrl, {
+    // Proxy the request to SupportXMR API
+    const supportXMRUrl = `https://supportxmr.com/api${path}`;
+    const response = await fetch(supportXMRUrl, {
       method: 'GET',
       headers: {
-        'User-Agent': 'XMRT-DAO-Mining-Dashboard/1.0',
+        'User-Agent': 'XMRT-Platform/1.0',
         'Accept': 'application/json',
       },
     });
 
     if (!response.ok) {
-      console.error(`SupportXMR API error: ${response.status} ${response.statusText}`);
-      return new Response(
-        JSON.stringify({ 
-          error: 'SupportXMR API unavailable', 
-          status: response.status,
-          statusText: response.statusText 
-        }), 
-        { 
-          status: response.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      throw new Error(`SupportXMR API responded with status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(`Successfully proxied data from ${apiUrl}`);
-    console.log(`Response data structure:`, JSON.stringify(data, null, 2));
-
-    return new Response(JSON.stringify(data), {
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=30' // Cache for 30 seconds
-      },
-    });
-
+    
+    return new Response(
+      JSON.stringify(data),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+    
   } catch (error) {
-    console.error('Error in supportxmr-proxy function:', error);
+    console.error('SupportXMR proxy error:', error);
+    
     return new Response(
       JSON.stringify({ 
-        error: 'Proxy server error', 
-        message: error instanceof Error ? error.message : String(error) 
-      }), 
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        error: 'Failed to fetch data from SupportXMR API',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }

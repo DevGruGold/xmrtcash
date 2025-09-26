@@ -74,10 +74,10 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     },
     ...chatMessages.map(msg => ({
       id: msg.id,
-      text: msg.message_text,
-      isUser: msg.sender === 'user',
+      text: msg.content,
+      isUser: msg.message_type === 'user',
       timestamp: new Date(msg.timestamp),
-      agent: msg.sender === 'assistant' ? (agent?.name || "Eliza Core") : undefined,
+      agent: msg.message_type === 'assistant' ? (agent?.name || "Eliza Core") : undefined,
       type: 'text' as const
     }))
   ];
@@ -179,8 +179,8 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
       // Play audio for the response after a short delay
       setTimeout(() => {
         const latestMessage = chatMessages[chatMessages.length - 1];
-        if (latestMessage && latestMessage.sender === 'assistant') {
-          playAudio(latestMessage.message_text);
+        if (latestMessage && latestMessage.message_type === 'assistant') {
+          playAudio(latestMessage.content);
         }
       }, 1000);
       

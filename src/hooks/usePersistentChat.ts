@@ -4,17 +4,20 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface ChatMessage {
   id: string;
-  sender: 'user' | 'assistant';
-  message_text: string;
+  message_type: 'user' | 'assistant';
+  content: string;
   timestamp: string;
-  confidence_score?: number;
+  metadata?: {
+    confidence_score?: number;
+  };
 }
 
 export interface ChatSession {
   id: string;
-  session_name?: string;
+  session_key?: string;
+  title?: string;
   created_at: string;
-  last_activity: string;
+  updated_at: string;
 }
 
 export function usePersistentChat() {
@@ -31,8 +34,8 @@ export function usePersistentChat() {
     // Add user message immediately
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
-      sender: 'user',
-      message_text: messageText.trim(),
+      message_type: 'user',
+      content: messageText.trim(),
       timestamp: new Date().toISOString(),
     };
     
@@ -53,10 +56,12 @@ export function usePersistentChat() {
       // Add AI response
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
-        sender: 'assistant',
-        message_text: data.response || 'I apologize, but I encountered an issue processing your request.',
+        message_type: 'assistant',
+        content: data.response || 'I apologize, but I encountered an issue processing your request.',
         timestamp: new Date().toISOString(),
-        confidence_score: 0.9
+        metadata: {
+          confidence_score: 0.9
+        }
       };
       
       setMessages(prev => [...prev, aiMessage]);
@@ -66,8 +71,8 @@ export function usePersistentChat() {
       
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
-        sender: 'assistant', 
-        message_text: 'I apologize, but I\'m having trouble processing your request right now. Please try again.',
+        message_type: 'assistant', 
+        content: 'I apologize, but I\'m having trouble processing your request right now. Please try again.',
         timestamp: new Date().toISOString(),
       };
       
@@ -87,10 +92,12 @@ export function usePersistentChat() {
   const clearChat = useCallback(() => {
     setMessages([{
       id: 'welcome',
-      sender: 'assistant',
-      message_text: 'Hello! I\'m your intelligent AI assistant for the XMRT platform. I have long-term memory and can help you with Monero mining, blockchain technology, and answer any questions you have. How can I assist you today?',
+      message_type: 'assistant',
+      content: 'Hello! I\'m your intelligent AI assistant for the XMRT platform. I have long-term memory and can help you with Monero mining, blockchain technology, and answer any questions you have. How can I assist you today?',
       timestamp: new Date().toISOString(),
-      confidence_score: 1.0
+      metadata: {
+        confidence_score: 1.0
+      }
     }]);
     
     toast({
@@ -104,10 +111,12 @@ export function usePersistentChat() {
     if (messages.length === 0) {
       setMessages([{
         id: 'welcome',
-        sender: 'assistant',
-        message_text: 'Hello! I\'m your intelligent AI assistant for the XMRT platform. I have long-term memory and can help you with Monero mining, blockchain technology, and answer any questions you have. How can I assist you today?',
+        message_type: 'assistant',
+        content: 'Hello! I\'m your intelligent AI assistant for the XMRT platform. I have long-term memory and can help you with Monero mining, blockchain technology, and answer any questions you have. How can I assist you today?',
         timestamp: new Date().toISOString(),
-        confidence_score: 1.0
+        metadata: {
+          confidence_score: 1.0
+        }
       }]);
     }
   }, []);
