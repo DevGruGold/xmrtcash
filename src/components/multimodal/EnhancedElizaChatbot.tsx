@@ -100,8 +100,11 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   }
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+    // Prevent auto-scrolling on mount
+    if (messages.length > 1) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages.length]);
 
   useEffect(() => {
     scrollToBottom();
