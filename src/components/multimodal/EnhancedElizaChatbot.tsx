@@ -8,12 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Bot, Send, Minimize2, Maximize2, User, Zap, Loader2, Key, 
-  Paperclip, Mic, Image, Video, FileText, Wand2, Settings 
+  Paperclip, Mic, Image, Video, FileText, Wand2, Settings, Volume2 
 } from "lucide-react";
-import { enhancedGemini, setQuotaExhaustedHandler } from "@/lib/enhanced-gemini";
 import { useToast } from "@/components/ui/use-toast";
 import { APIKeyDialog } from "@/components/ui/api-key-dialog";
 import { apiKeyManager } from "@/lib/api-key-manager";
+import { useIntelligentChat } from "@/hooks/useIntelligentChat";
+import { supabase } from "@/integrations/supabase/client";
 import MediaUploader from "./MediaUploader";
 import MediaDisplay from "./MediaDisplay";
 import VoiceInterface from "./VoiceInterface";
@@ -41,7 +42,28 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   className = "", 
   agent 
 }) => {
-  const [messages, setMessages] = useState<MultimodalMessage[]>([
+  const { 
+    messages: chatMessages, 
+    sendMessage, 
+    isLoading, 
+    isTyping, 
+    clearChat 
+  } = useIntelligentChat();
+  
+  const [inputMessage, setInputMessage] = useState('');
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken'>('geminiApiKey');
+  const [settings, setSettings] = useState<MultimodalChatSettings>(DEFAULT_CHAT_SETTINGS);
+  const [activeTab, setActiveTab] = useState('chat');
+  const [pendingFiles, setPendingFiles] = useState<MediaFile[]>([]);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  // Convert chat messages to multimodal format for display
+  const messages: MultimodalMessage[] = [
     {
       id: 'welcome',
       text: getWelcomeMessage(),
@@ -49,20 +71,16 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
       timestamp: new Date(),
       agent: agent?.name || "Eliza Core",
       type: 'text'
-    }
-  ]);
-  
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken'>('geminiApiKey');
-  const [settings, setSettings] = useState<MultimodalChatSettings>(DEFAULT_CHAT_SETTINGS);
-  const [activeTab, setActiveTab] = useState('chat');
-  const [pendingFiles, setPendingFiles] = useState<MediaFile[]>([]);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+    },
+    ...chatMessages.map(msg => ({
+      id: msg.id,
+      text: msg.message_text,
+      isUser: msg.sender === 'user',
+      timestamp: new Date(msg.timestamp),
+      agent: msg.sender === 'assistant' ? (agent?.name || "Eliza Core") : undefined,
+      type: 'text' as const
+    }))
+  ];
 
   function getWelcomeMessage(): string {
     if (!agent) {
@@ -89,73 +107,69 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Set up quota exhausted handler
-  useEffect(() => {
-    setQuotaExhaustedHandler(() => {
-      setApiKeyType('geminiApiKey');
-      setShowApiKeyDialog(true);
-    });
-  }, []);
+  // Play audio for assistant messages
+  const playAudio = async (text: string) => {
+    if (!text || isPlayingAudio) return;
+    
+    try {
+      setIsPlayingAudio(true);
+      
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text, voice: 'Aria' }
+      });
+
+      if (error) throw error;
+
+      // Convert base64 to audio and play
+      const audioBlob = new Blob([
+        Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))
+      ], { type: 'audio/mpeg' });
+      
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsPlayingAudio(false);
+      };
+      
+      await audio.play();
+      
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setIsPlayingAudio(false);
+      toast({
+        title: "Audio Error",
+        description: "Could not play audio response",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSendMessage = async () => {
-    if ((!inputMessage.trim() && pendingFiles.length === 0) || isLoading) return;
+    if (!inputMessage.trim() || isLoading) return;
 
-    const userMessage: MultimodalMessage = {
-      id: Date.now().toString(),
-      text: inputMessage.trim() || undefined,
-      isUser: true,
-      timestamp: new Date(),
-      type: pendingFiles.length > 0 ? 'multimodal' : 'text',
-      media: pendingFiles.length > 0 ? [...pendingFiles] : undefined
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputMessage.trim();
+    const messageText = inputMessage.trim();
     setInputMessage('');
-    setPendingFiles([]);
-    setIsLoading(true);
-
+    
     try {
-      const agentContext = agent 
-        ? `${agent.name} - ${agent.description}. Capabilities: ${agent.capabilities.join(', ')}` 
-        : "Enhanced XMRT Ecosystem Chat with Multimodal Capabilities";
+      await sendMessage(messageText);
       
-      const response = await enhancedGemini.generateMultimodalResponse(
-        currentInput || "Please analyze the uploaded content in the context of XMRT DAO.",
-        pendingFiles,
-        agentContext,
-        settings.preferredModel
-      );
+      // Play audio for the response after a short delay
+      setTimeout(() => {
+        const latestMessage = chatMessages[chatMessages.length - 1];
+        if (latestMessage && latestMessage.sender === 'assistant') {
+          playAudio(latestMessage.message_text);
+        }
+      }, 1000);
       
-      const elizaMessage: MultimodalMessage = {
-        id: (Date.now() + 1).toString(),
-        text: response,
-        isUser: false,
-        timestamp: new Date(),
-        agent: agent?.name || "Eliza Core",
-        type: 'text'
-      };
-
-      setMessages(prev => [...prev, elizaMessage]);
-
-      // Speak response if voice is enabled
-      if (settings.voiceSettings.enabled && settings.autoPlayAudio) {
-        // This would integrate with TTS service
-        toast({
-          title: "Voice Response",
-          description: "Voice synthesis will be implemented in the next iteration"
-        });
-      }
-
     } catch (error) {
-      console.error('Error getting enhanced response:', error);
+      console.error('Error sending message:', error);
       toast({
         title: "Connection Error",
-        description: "Unable to process your request. Please try again.",
+        description: "Unable to send message. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -164,24 +178,10 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   };
 
   const handleVoiceRecorded = (voiceData: VoiceData) => {
-    // Add voice message
-    const voiceMessage: MultimodalMessage = {
-      id: Date.now().toString(),
-      text: voiceData.transcript,
-      isUser: true,
-      timestamp: new Date(),
-      type: 'voice',
-      voice: voiceData
-    };
-
-    setMessages(prev => [...prev, voiceMessage]);
-    
-    // Process voice message
-    setIsLoading(true);
-    setTimeout(() => {
-      // This would process the voice with enhanced Gemini
-      setIsLoading(false);
-    }, 2000);
+    // Convert voice to text and send as message
+    if (voiceData.transcript) {
+      sendMessage(voiceData.transcript);
+    }
   };
 
   const handleApiKeyAdded = (keyType: string, key: string) => {
@@ -346,6 +346,17 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                             {message.type}
                           </Badge>
                         )}
+                        {!message.isUser && message.text && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => playAudio(message.text!)}
+                            className="h-4 px-1 text-xs"
+                            disabled={isPlayingAudio}
+                          >
+                            <Volume2 className="w-3 h-3" />
+                          </Button>
+                        )}
                         <span className="flex-shrink-0">
                           {message.timestamp.toLocaleTimeString([], { 
                             hour: '2-digit', 
@@ -357,7 +368,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                   </div>
                 ))}
                 
-                {isLoading && (
+                {(isLoading || isTyping) && (
                   <div className="flex gap-2 sm:gap-3">
                     <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                       <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
@@ -366,7 +377,9 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                     <div className="bg-muted/50 p-2 sm:p-3 rounded-lg border border-border/50">
                       <div className="flex items-center gap-2">
                         <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-primary flex-shrink-0" />
-                        <span className="text-xs sm:text-sm text-muted-foreground">Enhanced Eliza is processing...</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {isTyping ? 'Eliza is typing...' : 'Eliza is thinking...'}
+                        </span>
                       </div>
                     </div>
                   </div>
