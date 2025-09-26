@@ -7,6 +7,7 @@ export interface APIKeyConfig {
   geminiApiKey?: string;
   githubPersonalAccessToken?: string;
   openaiApiKey?: string;
+  elevenLabsApiKey?: string;
 }
 
 export interface APIKeyStatus {
@@ -68,6 +69,8 @@ class APIKeyManager {
         return import.meta.env.VITE_GITHUB_PAT || null;
       case 'openaiApiKey':
         return import.meta.env.VITE_OPENAI_API_KEY || null;
+      case 'elevenLabsApiKey':
+        return import.meta.env.VITE_ELEVENLABS_API_KEY || null;
       default:
         return null;
     }
@@ -91,6 +94,9 @@ class APIKeyManager {
           break;
         case 'openaiApiKey':
           status.isValid = await this.validateOpenAIKey(apiKey);
+          break;
+        case 'elevenLabsApiKey':
+          status.isValid = await this.validateElevenLabsKey(apiKey);
           break;
       }
 
@@ -157,6 +163,21 @@ class APIKeyManager {
     }
   }
 
+  private async validateElevenLabsKey(apiKey: string): Promise<boolean> {
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/user', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'xi-api-key': apiKey,
+        },
+      });
+      
+      return response.ok;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Check if a key needs user input (env key failed/missing)
   needsUserInput(keyType: keyof APIKeyConfig): boolean {
     const envKey = this.getEnvironmentKey(keyType);
@@ -175,6 +196,8 @@ class APIKeyManager {
         return import.meta.env.VITE_GITHUB_PAT || null;
       case 'openaiApiKey':
         return import.meta.env.VITE_OPENAI_API_KEY || null;
+      case 'elevenLabsApiKey':
+        return import.meta.env.VITE_ELEVENLABS_API_KEY || null;
       default:
         return null;
     }

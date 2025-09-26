@@ -64,6 +64,14 @@ export const APIKeyDialog: React.FC<APIKeyDialogProps> = ({
       description: 'OpenAI API key for advanced AI features',
       helpText: 'Get your key from platform.openai.com',
       pattern: /^sk-[A-Za-z0-9]{48,}$/
+    },
+    elevenLabsApiKey: {
+      label: 'ElevenLabs API Key',
+      icon: <Key className="w-4 h-4" />,
+      placeholder: 'sk_...',
+      description: 'ElevenLabs API key for text-to-speech functionality',
+      helpText: 'Get your key from elevenlabs.io (Speech Synthesis tab)',
+      pattern: /^sk_[A-Za-z0-9]{32,}$/
     }
   };
 
@@ -254,7 +262,7 @@ export const APIKeyDialog: React.FC<APIKeyDialogProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="geminiApiKey" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="geminiApiKey" className="text-xs">
               <Zap className="w-3 h-3 mr-1" />
               Gemini
@@ -266,6 +274,10 @@ export const APIKeyDialog: React.FC<APIKeyDialogProps> = ({
             <TabsTrigger value="openaiApiKey" className="text-xs">
               <Key className="w-3 h-3 mr-1" />
               OpenAI
+            </TabsTrigger>
+            <TabsTrigger value="elevenLabsApiKey" className="text-xs">
+              <Key className="w-3 h-3 mr-1" />
+              ElevenLabs
             </TabsTrigger>
           </TabsList>
 

@@ -53,7 +53,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   const [inputMessage, setInputMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken'>('geminiApiKey');
+  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken' | 'elevenLabsApiKey'>('geminiApiKey');
   const [settings, setSettings] = useState<MultimodalChatSettings>(DEFAULT_CHAT_SETTINGS);
   const [activeTab, setActiveTab] = useState('chat');
   const [pendingFiles, setPendingFiles] = useState<MediaFile[]>([]);
@@ -100,15 +100,17 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   }
 
   const scrollToBottom = useCallback(() => {
-    // Prevent auto-scrolling on mount
-    if (messages.length > 1) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only scroll the chat container, never the whole page
+    if (messagesEndRef.current && messages.length > 1) {
+      // Use scrollTop instead of scrollIntoView to avoid page scrolling
+      const scrollArea = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (scrollArea) {
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+      }
     }
   }, [messages.length]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+  // Removed auto-scroll useEffect to prevent page scrolling issues
 
   // Play audio for assistant messages
   const playAudio = async (text: string) => {
@@ -117,11 +119,27 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     try {
       setIsPlayingAudio(true);
       
+      // Check if ElevenLabs API key is configured
+      const elevenLabsKey = apiKeyManager.getKey('elevenLabsApiKey');
+      if (!elevenLabsKey) {
+        toast({
+          title: "Setup Required",
+          description: "Please configure your ElevenLabs API key for audio features",
+        });
+        setIsPlayingAudio(false);
+        setApiKeyType('elevenLabsApiKey');
+        setShowApiKeyDialog(true);
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { text, voice: 'Aria' }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('TTS Error:', error);
+        throw new Error('Failed to generate speech');
+      }
 
       // Convert base64 to audio and play
       const audioBlob = new Blob([
@@ -143,7 +161,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
       setIsPlayingAudio(false);
       toast({
         title: "Audio Error",
-        description: "Could not play audio response",
+        description: "Could not play audio. Please check your ElevenLabs API key.",
         variant: "destructive"
       });
     }
@@ -291,7 +309,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0">
-            <ScrollArea className="flex-1 w-full pr-2 sm:pr-4">
+            <ScrollArea className="flex-1 w-full pr-2 sm:pr-4" data-radix-scroll-area-viewport>
               <div className="space-y-3 sm:space-y-4">
                 {messages.map((message) => (
                   <div
