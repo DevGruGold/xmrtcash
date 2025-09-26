@@ -314,7 +314,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
             <ScrollArea className="flex-1 w-full pr-2 sm:pr-4 min-h-0" data-radix-scroll-area-viewport>
-              <div className="space-y-3 sm:space-y-4 pb-4">
+              <div className="space-y-3 sm:space-y-4 pb-24 sm:pb-28">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -420,7 +420,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
               </div>
             )}
             
-            <div className="flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border flex-shrink-0">
+            <div className="sticky bottom-0 bg-background/90 supports-[backdrop-filter]:bg-background/70 backdrop-blur border-t border-border flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 flex-shrink-0 z-10 pb-[env(safe-area-inset-bottom)]">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}

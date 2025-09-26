@@ -217,7 +217,7 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
       
       <CardContent className="flex-1 flex flex-col p-3 sm:p-4 pt-0 min-h-0">
         <ScrollArea className="flex-1 w-full pr-2 sm:pr-4">
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4 pb-24 sm:pb-28">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -281,7 +281,7 @@ const ElizaChatbot: React.FC<ElizaChatbotProps> = ({ className = "", agent }) =>
           <div ref={messagesEndRef} />
         </ScrollArea>
         
-        <div className="flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
+        <div className="sticky bottom-0 bg-background/90 supports-[backdrop-filter]:bg-background/70 backdrop-blur border-t border-border flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 z-10 pb-[env(safe-area-inset-bottom)]">
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
