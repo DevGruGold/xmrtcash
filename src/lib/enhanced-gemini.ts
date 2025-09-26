@@ -2,8 +2,9 @@ import { GoogleGenerativeAI, GenerativeModel, Part } from '@google/generative-ai
 import { apiKeyManager } from './api-key-manager';
 import { GEMINI_MODELS, GeminiModel, MediaFile, CreativeGenerationRequest, GeneratedContent } from '@/types/multimodal';
 import { wanAI, isWanAIAvailable } from './wan-ai';
+import { webBrowser, WebBrowserService } from './web-browser';
 
-// Enhanced Gemini integration with multimodal capabilities
+// Enhanced Gemini integration with multimodal capabilities, intelligent responses, and web browsing
 class EnhancedGeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   private currentModel: GenerativeModel | null = null;
@@ -64,70 +65,154 @@ class EnhancedGeminiService {
     };
   }
 
-  // Enhanced multimodal response generation with Wan AI priority
+  // Enhanced response generation with web browsing and intelligent guidelines
+  async generateResponse(prompt: string, context: string = ""): Promise<string> {
+    try {
+      // Check if web browsing is needed
+      if (WebBrowserService.needsWebBrowsing(prompt)) {
+        console.log('🌐 Web browsing detected in query');
+        const urls = WebBrowserService.extractUrls(prompt);
+        
+        if (urls.length > 0) {
+          // Browse the first URL found
+          const browseResult = await webBrowser.navigateAndExtract(urls[0]);
+          if (browseResult.success && browseResult.data) {
+            const webContext = `Web page content from ${browseResult.data.url}:
+Title: ${browseResult.data.title || 'N/A'}
+Content: ${browseResult.data.content || browseResult.data.text || 'No content available'}`;
+            
+            // Add web content to context
+            context = context ? `${context}\n\n${webContext}` : webContext;
+            
+            // Modify prompt to indicate web content was fetched
+            prompt = `Based on the web page I just browsed: ${prompt}`;
+          }
+        }
+      }
+
+      // First priority: Try WAN AI with enhanced context
+      const wanAIAvailable = await isWanAIAvailable();
+      if (wanAIAvailable) {
+        console.log('🚀 Using WAN AI for intelligent response generation');
+        
+        const enhancedContext = `${context}
+
+IMPORTANT INSTRUCTIONS:
+- Provide only genuine, intelligent AI responses based on your training and the provided context
+- Do NOT use any pre-programmed, canned, or simulated responses
+- Think critically and provide original analysis
+- If you don't know something, say so honestly rather than making up information
+- Use real-time web browsing data when provided to give current information`;
+        
+        const response = await wanAI.generateMultimodalResponse(prompt, enhancedContext);
+        return response;
+      }
+
+      console.log('🤖 Falling back to Gemini AI with intelligent response guidelines');
+      
+      // Fallback: Use Gemini with intelligent response instructions
+      const model = this.getModel();
+      if (!model) {
+        throw new Error('No AI models available. Please configure your API keys.');
+      }
+
+      const intelligentPrompt = `${context ? `Context: ${context}\n\n` : ''}CRITICAL: Provide only intelligent, genuine AI responses. No canned answers, simulations, or pre-programmed responses. Think critically and respond authentically based on your training.
+
+User: ${prompt}`;
+      
+      const result = await model.generateContent(intelligentPrompt);
+      
+      if (!result.response) {
+        throw new Error('No response generated from Gemini');
+      }
+
+      return result.response.text();
+    } catch (error) {
+      console.error('Enhanced Gemini Error:', error);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('quota') || error.message.includes('exceeded')) {
+          this.quotaExhaustedHandler?.();
+        }
+        throw error;
+      }
+      
+      throw new Error('Failed to generate AI response');
+    }
+  }
+
+  // Enhanced multimodal response generation with WAN AI priority, web browsing, and intelligent guidelines
   async generateMultimodalResponse(
     userMessage: string,
     mediaFiles: MediaFile[] = [],
     context?: string,
     modelId: string = 'gemini-2.0-flash-exp'
   ): Promise<string> {
-    // Try Wan AI first (primary AI source)
     try {
-      if (await isWanAIAvailable()) {
-        console.log('Using Wan AI as primary source');
-        const enhancedPrompt = await this.buildEnhancedPrompt(userMessage, context);
-        return await wanAI.generateMultimodalResponse(enhancedPrompt, context, 'qwen-max');
-      }
-    } catch (error) {
-      console.warn('Wan AI unavailable, falling back to Gemini:', error);
-    }
-
-    // Fallback to Gemini
-    try {
-      console.log('Using Gemini as fallback');
-      const model = this.getModel(modelId);
-      if (!model) {
-        throw new Error('Gemini API not available');
-      }
-
-      // Prepare content parts
-      const parts: (string | Part)[] = [];
-      
-      // Add text content with enhanced XMRT context
-      const enhancedPrompt = await this.buildEnhancedPrompt(userMessage, context);
-      parts.push(enhancedPrompt);
-
-      // Add media parts
-      for (const mediaFile of mediaFiles) {
-        if (mediaFile.processing?.status === 'complete') {
-          const part = await this.mediaFileToPart(mediaFile);
-          parts.push(part);
-          
-          // Add context for the media
-          const mediaContext = this.generateMediaContext(mediaFile);
-          if (mediaContext) {
-            parts.push(mediaContext);
+      // Check if web browsing is needed
+      if (WebBrowserService.needsWebBrowsing(userMessage)) {
+        console.log('🌐 Web browsing detected in multimodal query');
+        const urls = WebBrowserService.extractUrls(userMessage);
+        
+        if (urls.length > 0) {
+          const browseResult = await webBrowser.navigateAndExtract(urls[0]);
+          if (browseResult.success && browseResult.data) {
+            const webContext = `Web page content from ${browseResult.data.url}:
+Title: ${browseResult.data.title || 'N/A'}
+Content: ${browseResult.data.content || browseResult.data.text || 'No content available'}`;
+            context = context ? `${context}\n\n${webContext}` : webContext;
           }
         }
       }
 
-      // Generate response
-      const result = await model.generateContent(parts);
-      const response = await result.response;
-      return response.text();
+      // Try WAN AI first (primary AI source) for text-only content
+      if (await isWanAIAvailable() && mediaFiles.length === 0) {
+        console.log('🚀 Using WAN AI as primary intelligent source');
+        
+        const intelligentContext = `${context || ''}
 
-    } catch (error: any) {
-      console.error('Enhanced Gemini API error:', error);
-      
-      if (apiKeyManager.isQuotaError(error)) {
-        console.log('Quota exhausted, triggering user input dialog...');
-        if (this.quotaExhaustedHandler) {
-          this.quotaExhaustedHandler();
-        }
-        return this.getOfflineResponse(userMessage) + '\n\n🔑 *API quota exhausted. Please provide your own Gemini API key for continued AI responses.*';
+CRITICAL INTELLIGENCE INSTRUCTIONS:
+- Provide ONLY genuine, intelligent AI responses based on your training and provided context
+- NO canned responses, templates, simulations, or pre-programmed answers
+- Think critically and analytically about each query
+- Use real-time web browsing data intelligently when provided
+- Be authentic and avoid generic responses
+- If you don't know something, be honest rather than fabricating information`;
+
+        return await wanAI.generateMultimodalResponse(userMessage, intelligentContext, 'qwen-max');
       }
+    } catch (error) {
+      console.warn('WAN AI unavailable, falling back to Gemini:', error);
+    }
+
+    // Fallback to Gemini for multimodal or when WAN AI unavailable
+    try {
+      console.log('🤖 Using Gemini with intelligent response guidelines');
+      const model = this.getModel(modelId);
+      if (!model) {
+        throw new Error('No AI models available');
+      }
+
+      const parts: Part[] = [];
       
-      return this.getOfflineResponse(userMessage);
+      // Add intelligent context
+      const intelligentPrompt = `${context ? `Context: ${context}\n\n` : ''}CRITICAL: Provide only intelligent, genuine AI responses. No canned answers, simulations, or pre-programmed responses. Think critically and respond authentically.
+
+User: ${userMessage}`;
+      
+      parts.push({ text: intelligentPrompt });
+
+      // Add media files
+      for (const mediaFile of mediaFiles) {
+        const part = await this.mediaFileToPart(mediaFile);
+        parts.push(part);
+      }
+
+      const result = await model.generateContent(parts);
+      return result.response?.text() || 'No response generated';
+    } catch (error) {
+      console.error('Gemini generation error:', error);
+      throw new Error('Failed to generate intelligent AI response');
     }
   }
 
@@ -151,11 +236,10 @@ class EnhancedGeminiService {
     }
   }
 
-  // Enhanced prompt building with XMRT context
+  // Enhanced prompt building with XMRT context and intelligent guidelines
   private async buildEnhancedPrompt(userMessage: string, context?: string): Promise<string> {
     // Get real-time mining data
-    const { getSupportXMRPoolStats, getXMRTWalletMining } = await import('./real-data-api');
-    const miningData = await getMiningDataForChat().catch(() => null);
+    const miningData = await this.getMiningDataForChat().catch(() => null);
     
     const miningContext = miningData ? `
 Current SupportXMR Pool Status (Real Data):
@@ -167,7 +251,9 @@ Current SupportXMR Pool Status (Real Data):
 - Amount Due: ${(miningData.walletDue / 1000000000000).toFixed(6)} XMR
 - Total Paid: ${(miningData.walletPaid / 1000000000000).toFixed(6)} XMR` : '';
 
-    return `You are Eliza, an advanced AI agent for the XMRT DAO ecosystem with comprehensive multimodal capabilities. You can analyze images, videos, audio, and documents to provide insights about decentralized finance, privacy technology, mobile mining, and mesh networking.
+    return `You are Eliza, an advanced AI agent for the XMRT DAO ecosystem with comprehensive multimodal capabilities. You provide only intelligent, authentic responses based on your training and real-time data.
+
+CRITICAL: Provide ONLY genuine, intelligent AI responses. No canned answers, simulations, or pre-programmed responses. Think critically and respond authentically.
 
 XMRT DAO Context:
 - 21,000,000 governance tokens on Sepolia testnet for community decision-making
@@ -183,6 +269,7 @@ Advanced Capabilities:
 - Video Understanding: Review mining tutorials, governance presentations, community content
 - Audio Processing: Transcribe and analyze community calls, educational content
 - Document Analysis: Review proposals, technical documents, privacy frameworks
+- Web Browsing: Access real-time information from websites
 
 When analyzing multimodal content, always relate your findings back to XMRT DAO's mission of building unstoppable privacy infrastructure and empowering individuals through decentralized technology.
 
@@ -194,11 +281,8 @@ Provide thoughtful, educational responses that demonstrate deep understanding of
 
   // Creative content generation
   async generateCreativeContent(request: CreativeGenerationRequest): Promise<GeneratedContent | null> {
-    // This would integrate with Veo 3, ImageFX, MusicFX when available
-    // For now, return a placeholder structure
     console.log('Creative generation requested:', request);
     
-    // Placeholder for future implementation with Google's creative models
     const generatedContent: GeneratedContent = {
       id: `gen-${Date.now()}`,
       type: request.type,
@@ -213,8 +297,6 @@ Provide thoughtful, educational responses that demonstrate deep understanding of
 
   // Voice synthesis integration
   async generateVoiceResponse(text: string, voice: string = 'alloy'): Promise<string | null> {
-    // This would integrate with Google's TTS or maintain OpenAI integration
-    // For now, maintain existing voice functionality
     return null;
   }
 
@@ -225,35 +307,45 @@ Provide thoughtful, educational responses that demonstrate deep understanding of
     video: boolean;
     creative: boolean;
     voice: boolean;
+    webBrowsing: boolean;
   }> {
     const apiKey = apiKeyManager.getKey('geminiApiKey');
     
     return {
       vision: !!apiKey,
       audio: !!apiKey,
-      video: !!apiKey, // Gemini 2.0 Flash supports video
-      creative: false, // Requires separate Veo/ImageFX integration
-      voice: false // Requires TTS integration
+      video: !!apiKey,
+      creative: false,
+      voice: false,
+      webBrowsing: true // Always available via playwright
     };
   }
 
+  private async getMiningDataForChat() {
+    try {
+      const { getSupportXMRPoolStats, getXMRTWalletMining } = await import('./real-data-api');
+      const [poolStats, walletStats] = await Promise.all([
+        getSupportXMRPoolStats(),
+        getXMRTWalletMining()
+      ]);
+      
+      return {
+        poolHashrate: poolStats.hashRate,
+        poolMiners: poolStats.miners,
+        totalBlocks: poolStats.totalBlocksFound,
+        walletHashrate: walletStats.currentHashrate,
+        walletDue: walletStats.amountDue,
+        walletPaid: walletStats.amountPaid,
+        poolContribution: walletStats.poolContribution
+      };
+    } catch (error) {
+      console.error('Failed to get mining data:', error);
+      return null;
+    }
+  }
+
   private getOfflineResponse(userMessage: string): string {
-    const message = userMessage.toLowerCase();
-    
-    if (message.includes('image') || message.includes('photo') || message.includes('picture')) {
-      return "I can analyze images to help with mining setups, UI feedback, and visual content related to XMRT DAO. However, I need an active Gemini API key to process visual content.";
-    }
-    
-    if (message.includes('video')) {
-      return "Video analysis helps me understand mining tutorials, governance presentations, and community content. Please provide your Gemini API key to enable video processing capabilities.";
-    }
-    
-    if (message.includes('audio') || message.includes('voice')) {
-      return "Audio processing allows me to transcribe and analyze community calls and educational content. An active API key is required for audio analysis.";
-    }
-    
-    // Default multimodal response
-    return "Welcome to XMRT DAO's enhanced multimodal chat! I can analyze images, videos, audio, and documents to provide insights about our privacy-first ecosystem. Please provide a valid Gemini API key to unlock full multimodal capabilities.";
+    return "Welcome to XMRT DAO's enhanced AI chat with intelligent responses and web browsing capabilities! I provide only genuine, authentic AI assistance based on real training and current data. Please provide a valid API key to unlock full capabilities.";
   }
 }
 
@@ -262,7 +354,7 @@ export const enhancedGemini = new EnhancedGeminiService();
 
 // Legacy compatibility exports
 export const generateElizaResponse = (userMessage: string, context?: string) => 
-  enhancedGemini.generateMultimodalResponse(userMessage, [], context);
+  enhancedGemini.generateResponse(userMessage, context || '');
 
 export const setQuotaExhaustedHandler = (handler: () => void) => 
   enhancedGemini.setQuotaExhaustedHandler(handler);
