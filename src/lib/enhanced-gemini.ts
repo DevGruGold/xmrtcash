@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, GenerativeModel, Part } from '@google/generative-ai';
 import { apiKeyManager } from './api-key-manager';
 import { GEMINI_MODELS, GeminiModel, MediaFile, CreativeGenerationRequest, GeneratedContent } from '@/types/multimodal';
+import { wanAI, isWanAIAvailable } from './wan-ai';
 
 // Enhanced Gemini integration with multimodal capabilities
 class EnhancedGeminiService {
@@ -63,14 +64,27 @@ class EnhancedGeminiService {
     };
   }
 
-  // Enhanced multimodal response generation
+  // Enhanced multimodal response generation with Wan AI priority
   async generateMultimodalResponse(
     userMessage: string,
     mediaFiles: MediaFile[] = [],
     context?: string,
     modelId: string = 'gemini-2.0-flash-exp'
   ): Promise<string> {
+    // Try Wan AI first (primary AI source)
     try {
+      if (await isWanAIAvailable()) {
+        console.log('Using Wan AI as primary source');
+        const enhancedPrompt = await this.buildEnhancedPrompt(userMessage, context);
+        return await wanAI.generateMultimodalResponse(enhancedPrompt, context, 'qwen-max');
+      }
+    } catch (error) {
+      console.warn('Wan AI unavailable, falling back to Gemini:', error);
+    }
+
+    // Fallback to Gemini
+    try {
+      console.log('Using Gemini as fallback');
       const model = this.getModel(modelId);
       if (!model) {
         throw new Error('Gemini API not available');

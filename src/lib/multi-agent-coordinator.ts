@@ -1,5 +1,7 @@
 // Multi-Agent Coordination System for XMRT Ecosystem
 import { toast } from "@/hooks/use-toast";
+import { wanAI, isWanAIAvailable } from './wan-ai';
+import { enhancedGemini } from './enhanced-gemini';
 
 export interface Agent {
   id: string;
@@ -128,7 +130,7 @@ class MultiAgentCoordinator {
       }
       
       // For local agents, generate specialized responses
-      return this.generateSpecializedResponse(agent, userMessage, context);
+      return await this.generateSpecializedResponse(agent, userMessage, context);
     } catch (error) {
       console.error(`Error coordinating with agent ${agent.name}:`, error);
       return this.getFallbackResponse(userMessage);
@@ -162,10 +164,22 @@ class MultiAgentCoordinator {
     }
   }
 
-  // Generate specialized responses for local agents
-  private generateSpecializedResponse(agent: Agent, userMessage: string, context?: string): string {
+  // Generate specialized responses for local agents using Wan AI
+  private async generateSpecializedResponse(agent: Agent, userMessage: string, context?: string): Promise<string> {
     const message = userMessage.toLowerCase();
     
+    // Try to use Wan AI for more dynamic responses
+    try {
+      if (await isWanAIAvailable()) {
+        const agentContext = this.getAgentContext(agent, context);
+        const response = await wanAI.generateMultimodalResponse(userMessage, agentContext, 'qwen-max');
+        return response;
+      }
+    } catch (error) {
+      console.warn('Wan AI unavailable for agent response, using fallback');
+    }
+    
+    // Fallback to static responses
     switch (agent.id) {
       case 'mining-specialist':
         return this.getMiningSpecialistResponse(message);
@@ -176,6 +190,19 @@ class MultiAgentCoordinator {
       default:
         return this.getFallbackResponse(userMessage);
     }
+  }
+
+  // Get specialized context for each agent
+  private getAgentContext(agent: Agent, baseContext?: string): string {
+    const contexts = {
+      'mining-specialist': 'You are a mobile mining expert for XMRT DAO. Focus on mobile mining optimization, Night Moves mining strategy, and hardware guidance. Always relate responses to the XMRT ecosystem and privacy mining.',
+      'privacy-advocate': 'You are a privacy technology specialist for XMRT DAO. Focus on XMRT wrapping/unwrapping, privacy best practices, and financial sovereignty. Emphasize privacy as a fundamental right.',
+      'community-manager': 'You are a community coordinator for XMRT DAO. Focus on user onboarding, community engagement, DAO participation, and connecting users with the right resources.',
+      'eliza-main': 'You are Eliza, the main AI assistant for XMRT DAO. Provide comprehensive support across all aspects of the ecosystem including mobile mining, privacy technology, and community coordination.'
+    };
+    
+    const agentContext = contexts[agent.id as keyof typeof contexts] || contexts['eliza-main'];
+    return baseContext ? `${agentContext}\n\nAdditional context: ${baseContext}` : agentContext;
   }
 
   // Specialized response generators
