@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { VoiceData, VoiceSettings } from '@/types/multimodal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceInterfaceProps {
   onVoiceRecorded: (voiceData: VoiceData) => void;
@@ -150,33 +151,45 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     setIsProcessing(true);
     
     try {
-      // Create audio URL
-      const audioUrl = URL.createObjectURL(audioBlob);
+      // Convert audio blob to base64
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64Audio = btoa(String.fromCharCode(...uint8Array));
       
-      // For now, create a placeholder transcript
-      // In production, this would use speech-to-text API
-      const transcript = "Voice message recorded"; // Placeholder
+      // Call Supabase edge function for speech-to-text
+      const { data, error } = await supabase.functions.invoke('speech-to-text', {
+        body: { audio: base64Audio }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Speech-to-text failed');
+      }
+
+      const transcript = data.text || 'Could not transcribe audio';
+      
+      // Create audio URL for playback
+      const audioUrl = URL.createObjectURL(audioBlob);
       
       const voiceData: VoiceData = {
         audioUrl,
         transcript,
         language: settings.language,
         duration: recordingDuration,
-        confidence: 0.95 // Placeholder
+        confidence: 0.95
       };
       
       onVoiceRecorded(voiceData);
       
       toast({
         title: "Voice recorded",
-        description: `${recordingDuration}s recording processed`
+        description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`
       });
       
     } catch (error) {
       console.error('Error processing audio:', error);
       toast({
         title: "Processing failed",
-        description: "Could not process voice recording",
+        description: "Could not process voice recording. Please check your OpenAI API key.",
         variant: "destructive"
       });
     } finally {

@@ -53,7 +53,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   const [inputMessage, setInputMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken' | 'elevenLabsApiKey'>('geminiApiKey');
+  const [apiKeyType, setApiKeyType] = useState<'geminiApiKey' | 'githubPersonalAccessToken' | 'elevenLabsApiKey' | 'openaiApiKey'>('geminiApiKey');
   const [settings, setSettings] = useState<MultimodalChatSettings>(DEFAULT_CHAT_SETTINGS);
   const [activeTab, setActiveTab] = useState('chat');
   const [pendingFiles, setPendingFiles] = useState<MediaFile[]>([]);
@@ -200,8 +200,12 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
 
   const handleVoiceRecorded = (voiceData: VoiceData) => {
     // Convert voice to text and send as message
-    if (voiceData.transcript) {
-      sendMessage(voiceData.transcript);
+    if (voiceData.transcript && voiceData.transcript !== "Voice message recorded") {
+      setInputMessage(voiceData.transcript);
+      // Optionally auto-send the voice message
+      setTimeout(() => {
+        sendMessage(voiceData.transcript!);
+      }, 100);
     }
   };
 
@@ -256,7 +260,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   }
 
   return (
-    <Card className={`glass-card w-full max-w-4xl h-[70vh] sm:h-[700px] flex flex-col ${className}`}>
+    <Card className={`glass-card w-full max-w-4xl h-[calc(100vh-16rem)] sm:h-[700px] flex flex-col ${className}`}>
       <CardHeader className="flex-shrink-0 pb-3 px-3 sm:px-6">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
