@@ -10,7 +10,7 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import ElizaChatbot from '@/components/ElizaChatbot';
+import EnhancedElizaChatbot from '@/components/multimodal/EnhancedElizaChatbot';
 import LiveMiningStats from '@/components/hero/LiveMiningStats';
 
 export default function HeroSection() {
@@ -150,7 +150,7 @@ export default function HeroSection() {
               </CardHeader>
               <CardContent className="p-0 h-[calc(100%-120px)] relative z-40">
                 <div className="h-full border-t border-border/50">
-                  <ElizaChatbot className="h-full border-0 bg-transparent" />
+                  <EnhancedElizaChatbot className="h-full border-0 bg-transparent" />
                 </div>
               </CardContent>
             </Card>
