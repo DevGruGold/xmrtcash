@@ -29,8 +29,8 @@ export function useIntelligentChat() {
   const initializeSession = useCallback(async () => {
     try {
       // Create a new session
-      const { data: session, error: sessionError } = await supabase
-        .from('chat_sessions' as any)
+      const { data: session, error: sessionError } = await (supabase as any)
+        .from('chat_sessions')
         .insert({
           session_name: `Chat ${new Date().toLocaleString()}`,
           is_active: true
@@ -43,8 +43,8 @@ export function useIntelligentChat() {
       setCurrentSession(session);
       
       // Add initial system message
-      const { error: messageError } = await supabase
-        .from('chat_messages' as any)
+      const { error: messageError } = await (supabase as any)
+        .from('chat_messages')
         .insert({
           session_id: session?.id,
           sender: 'assistant',
@@ -74,8 +74,8 @@ export function useIntelligentChat() {
   const loadMessages = useCallback(async (sessionId: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('chat_messages' as any)
+      const { data, error } = await (supabase as any)
+        .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
         .order('timestamp', { ascending: true });
@@ -137,8 +137,8 @@ export function useIntelligentChat() {
     
     try {
       // Delete all messages for this session
-      const { error } = await supabase
-        .from('chat_messages' as any)
+      const { error } = await (supabase as any)
+        .from('chat_messages')
         .delete()
         .eq('session_id', currentSession.id);
 
