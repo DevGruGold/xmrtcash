@@ -84,17 +84,17 @@ export async function getSupportXMRPoolStats(): Promise<SupportXMRPoolStats> {
     console.log('SupportXMR API Response:', JSON.stringify(data, null, 2));
     
     // Parse actual SupportXMR API response structure
-    const stats = data.stats || {};
+    const stats = (data && data.pool_statistics) ? data.pool_statistics : {};
     return {
-      hashRate: stats.hash || 0, // Current hashrate in H/s
-      miners: 1, // Single miner (our wallet)
+      hashRate: stats.hashRate || 0,
+      miners: stats.miners || 0,
       totalHashes: stats.totalHashes || 0,
-      lastBlockFoundTime: stats.lastHash || Date.now(),
-      lastBlockFound: Math.floor(Date.now() / 1000), // Approximate block number
-      totalBlocksFound: Math.floor((stats.totalHashes || 0) / 1000000), // Estimate
-      totalMinersPaid: stats.txnCount || 0,
-      totalPayments: stats.txnCount || 0,
-      roundHashes: stats.validShares || 0
+      lastBlockFoundTime: stats.lastBlockFoundTime || 0,
+      lastBlockFound: stats.lastBlockFound || 0,
+      totalBlocksFound: stats.totalBlocksFound || 0,
+      totalMinersPaid: stats.totalMinersPaid || 0,
+      totalPayments: stats.totalPayments || 0,
+      roundHashes: stats.roundHashes || 0
     };
   } catch (error) {
     console.error('Failed to fetch SupportXMR pool stats via proxy:', error);
@@ -122,8 +122,8 @@ export async function getSupportXMRMinerStats(address: string): Promise<SupportX
     
     if (error) throw error;
     
-    // Parse actual SupportXMR API response - stats are in data.stats object
-    const stats = data.stats || {};
+    // Parse SupportXMR miner response (fields are top-level)
+    const stats = data || {};
     return {
       hash: stats.hash || 0,
       identifier: stats.identifier || address,
