@@ -49,16 +49,16 @@ export default function MobileMiningStat() {
         
         setMiningStats(prev => ({
           ...prev,
-          hashrate: walletData.currentHashrate || 0,
-          xmrtEarned: (walletData.amountDue / 1000000000000) || 0,
-          networkHashrate: `${(poolData.hashRate / 1000000).toFixed(1)} MH/s`,
-          difficulty: poolData.totalBlocksFound?.toString() || "0",
-          blocksFound: poolData.totalBlocksFound || 0,
+          hashrate: walletData.minerStats?.hash || 0,
+          xmrtEarned: (walletData.minerStats?.amtDue / 1000000000000) || 0,
+          networkHashrate: `${(walletData.poolStats?.hashRate / 1000000).toFixed(1)} MH/s`,
+          difficulty: walletData.poolStats?.totalBlocksFound?.toString() || "0",
+          blocksFound: walletData.poolStats?.totalBlocksFound || 0,
           poolShare: walletData.poolContribution || 0
         }));
         
-        setMiningActive(walletData.currentHashrate > 0);
-        setMeshnetStatus(walletData.currentHashrate > 0 ? "connected" : "idle");
+        setMiningActive(walletData.minerStats?.hash > 0);
+        setMeshnetStatus(walletData.minerStats?.hash > 0 ? "connected" : "idle");
       } catch (error) {
         console.error('Failed to fetch mobile mining data:', error);
         setMeshnetStatus("disconnected");

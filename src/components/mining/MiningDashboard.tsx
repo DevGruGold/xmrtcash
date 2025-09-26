@@ -115,10 +115,10 @@ export default function MiningDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatHashrate(miningData?.currentHashrate || 0)}
+              {formatHashrate(miningData?.minerStats?.hash || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {miningData?.currentHashrate > 0 ? 'Active Mining' : 'Inactive'}
+              {miningData?.minerStats?.hash > 0 ? 'Active Mining' : 'Inactive'}
             </p>
           </CardContent>
         </Card>
@@ -145,10 +145,10 @@ export default function MiningDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(miningData?.amountDue / 1000000000000 || 0).toFixed(6)} XMR
+              {(miningData?.minerStats?.amtDue / 1000000000000 || 0).toFixed(6)} XMR
             </div>
             <p className="text-xs text-muted-foreground">
-              ≈ ${((miningData?.amountDue / 1000000000000 || 0) * miningData?.xmrPrice || 0).toFixed(2)}
+              ≈ ${((miningData?.minerStats?.amtDue / 1000000000000 || 0) * miningData?.xmrPrice || 0).toFixed(2)}
             </p>
           </CardContent>
         </Card>
@@ -160,7 +160,7 @@ export default function MiningDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(miningData?.amountPaid / 1000000000000 || 0).toFixed(6)} XMR
+              {(miningData?.minerStats?.amtPaid / 1000000000000 || 0).toFixed(6)} XMR
             </div>
             <p className="text-xs text-muted-foreground">
               {miningData?.minerStats?.txnCount || 0} payments
@@ -190,7 +190,7 @@ export default function MiningDashboard({
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Total Hashes</span>
-                    <span className="font-mono">{formatNumber(miningData?.totalHashes || 0)}</span>
+                    <span className="font-mono">{formatNumber(miningData?.minerStats?.totalHashes || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Valid Shares</span>
@@ -223,18 +223,18 @@ export default function MiningDashboard({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span>Status</span>
-                  <Badge variant={miningData?.currentHashrate > 0 ? "default" : "secondary"}>
-                    {miningData?.currentHashrate > 0 ? "Active" : "Inactive"}
+                  <Badge variant={miningData?.minerStats?.hash > 0 ? "default" : "secondary"}>
+                    {miningData?.minerStats?.hash > 0 ? "Active" : "Inactive"}
                   </Badge>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Pool Hashrate</span>
-                    <span className="font-mono">{formatHashrate(poolData?.hashRate || 0)}</span>
+                    <span className="font-mono">{formatHashrate(miningData?.poolStats?.hashRate || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Pool Miners</span>
-                    <span className="font-mono">{formatNumber(poolData?.miners || 0)}</span>
+                    <span className="font-mono">{formatNumber(miningData?.poolStats?.miners || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Network Contribution</span>
@@ -259,23 +259,23 @@ export default function MiningDashboard({
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Total Hashrate</span>
-                    <span className="font-mono">{formatHashrate(poolData?.hashRate || 0)}</span>
+                    <span className="font-mono">{formatHashrate(miningData?.poolStats?.hashRate || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Active Miners</span>
-                    <span className="font-mono">{formatNumber(poolData?.miners || 0)}</span>
+                    <span className="font-mono">{formatNumber(miningData?.poolStats?.miners || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Blocks Found</span>
-                    <span className="font-mono">{formatNumber(poolData?.totalBlocksFound || 0)}</span>
+                    <span className="font-mono">{formatNumber(miningData?.poolStats?.totalBlocksFound || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Total Payments</span>
-                    <span className="font-mono">{formatNumber(poolData?.totalPayments || 0)}</span>
+                    <span className="font-mono">{formatNumber(miningData?.poolStats?.totalPayments || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Miners Paid</span>
-                    <span className="font-mono">{formatNumber(poolData?.totalMinersPaid || 0)}</span>
+                    <span className="font-mono">{formatNumber(miningData?.poolStats?.totalMinersPaid || 0)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -291,13 +291,13 @@ export default function MiningDashboard({
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Round Progress</span>
-                      <span>{poolData?.roundHashes ? `${(poolData.roundHashes / poolData.totalHashes * 100).toFixed(2)}%` : '0%'}</span>
+                      <span>{miningData?.poolStats?.roundHashes ? `${(miningData.poolStats.roundHashes / miningData.poolStats.totalHashes * 100).toFixed(2)}%` : '0%'}</span>
                     </div>
-                    <Progress value={poolData?.roundHashes ? (poolData.roundHashes / poolData.totalHashes * 100) : 0} />
+                    <Progress value={miningData?.poolStats?.roundHashes ? (miningData.poolStats.roundHashes / miningData.poolStats.totalHashes * 100) : 0} />
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Last Block Found</span>
-                    <span>{poolData?.lastBlockFound ? `#${poolData.lastBlockFound}` : 'N/A'}</span>
+                    <span>{miningData?.poolStats?.lastBlockFound ? `#${miningData.poolStats.lastBlockFound}` : 'N/A'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Average Block Time</span>

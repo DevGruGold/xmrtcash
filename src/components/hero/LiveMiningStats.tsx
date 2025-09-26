@@ -130,7 +130,7 @@ export default function LiveMiningStats() {
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {formatHashrate(miningData?.currentHashrate || 0)}
+            {formatHashrate(miningData?.minerStats?.hash || 0)}
           </div>
           <div className="text-xs text-muted-foreground">Wallet Hashrate</div>
         </CardContent>
@@ -154,7 +154,7 @@ export default function LiveMiningStats() {
             <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {(miningData?.amountDue / 1000000000000 || 0).toFixed(4)}
+            {(miningData?.minerStats?.amtDue / 1000000000000 || 0).toFixed(4)}
           </div>
           <div className="text-xs text-muted-foreground">XMR Due</div>
         </CardContent>
@@ -166,10 +166,10 @@ export default function LiveMiningStats() {
             <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {miningData?.currentHashrate > 0 ? '100%' : '98.5%'}
+            {miningData?.minerStats?.hash > 0 ? '100%' : '0%'}
           </div>
           <div className="text-xs text-muted-foreground">
-            {miningData?.currentHashrate > 0 ? 'Mining Active' : 'Uptime'}
+            {miningData?.minerStats?.hash > 0 ? 'Mining Active' : 'Inactive'}
           </div>
         </CardContent>
       </Card>

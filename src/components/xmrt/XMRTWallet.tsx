@@ -40,12 +40,12 @@ export default function XMRTWallet() {
         setWalletData(prev => ({
           ...prev,
           xmrt: { 
-            balance: (miningData.amountDue / 1000000000000) || 0, 
-            usd: ((miningData.amountDue / 1000000000000) * miningData.xmrPrice) || 0 
+            balance: (miningData.minerStats?.amtDue / 1000000000000) || 0, 
+            usd: ((miningData.minerStats?.amtDue / 1000000000000) * miningData.xmrPrice) || 0 
           },
-          miningRewards: (miningData.amountDue / 1000000000000) || 0,
-          meshnetStatus: miningData.currentHashrate > 0 ? "online" : "idle",
-          totalMined: (miningData.amountPaid / 1000000000000) || 0
+          miningRewards: (miningData.minerStats?.amtDue / 1000000000000) || 0,
+          meshnetStatus: miningData.minerStats?.hash > 0 ? "online" : "idle",
+          totalMined: (miningData.minerStats?.amtPaid / 1000000000000) || 0
         }));
       } catch (error) {
         console.error('Failed to fetch wallet data:', error);
