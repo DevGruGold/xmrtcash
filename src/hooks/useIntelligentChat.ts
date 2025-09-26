@@ -32,11 +32,16 @@ export function useIntelligentChat() {
   // Initialize or get current session
   const initializeSession = useCallback(async () => {
     try {
+      // Generate unique session key with timestamp and random component
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 9);
+      const sessionKey = `Chat-${timestamp}-${randomId}`;
+      
       // Create a new session
       const { data: session, error: sessionError } = await (supabase as any)
         .from('conversation_sessions')
         .insert({
-          session_key: `Chat ${new Date().toLocaleString()}`,
+          session_key: sessionKey,
           title: `Chat ${new Date().toLocaleString()}`,
           is_active: true
         })

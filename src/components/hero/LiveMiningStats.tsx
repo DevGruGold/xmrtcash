@@ -130,9 +130,17 @@ export default function LiveMiningStats() {
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {formatHashrate(miningData?.minerStats?.hash || 0)}
+            {miningData?.minerStats?.hash > 0 
+              ? formatHashrate(miningData.minerStats.hash)
+              : (miningData?.minerStats?.validShares > 0 ? "Inactive" : "0 H/s")
+            }
           </div>
-          <div className="text-xs text-muted-foreground">Wallet Hashrate</div>
+          <div className="text-xs text-muted-foreground">
+            {miningData?.minerStats?.hash > 0 
+              ? "Current Hashrate"
+              : (miningData?.minerStats?.validShares > 0 ? "Mining Paused" : "Wallet Hashrate")
+            }
+          </div>
         </CardContent>
       </Card>
       
@@ -166,10 +174,16 @@ export default function LiveMiningStats() {
             <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
           <div className="text-lg sm:text-2xl font-bold">
-            {miningData?.minerStats?.hash > 0 ? '100%' : '0%'}
+            {miningData?.minerStats?.hash > 0 
+              ? 'Active' 
+              : (miningData?.minerStats?.validShares > 0 ? 'Paused' : 'Offline')
+            }
           </div>
           <div className="text-xs text-muted-foreground">
-            {miningData?.minerStats?.hash > 0 ? 'Mining Active' : 'Inactive'}
+            {miningData?.minerStats?.hash > 0 
+              ? 'Mining Status' 
+              : (miningData?.minerStats?.validShares > 0 ? 'Has History' : 'Mining Status')
+            }
           </div>
         </CardContent>
       </Card>
