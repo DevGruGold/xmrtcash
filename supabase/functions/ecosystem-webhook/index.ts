@@ -18,6 +18,7 @@ serve(async (req) => {
 
     // Mock ecosystem activity data for development
     const mockActivityData = {
+      success: true,
       activities: [
         {
           id: '1',

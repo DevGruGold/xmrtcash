@@ -26,28 +26,40 @@ serve(async (req) => {
 
     console.log('Proxying request to SupportXMR:', path);
 
-    // Proxy the request to SupportXMR API
+    // Proxy the request to SupportXMR API with timeout
     const supportXMRUrl = `https://supportxmr.com/api${path}`;
-    const response = await fetch(supportXMRUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'XMRT-Platform/1.0',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`SupportXMR API responded with status: ${response.status}`);
-    }
-
-    const data = await response.json();
     
-    return new Response(
-      JSON.stringify(data),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
+    try {
+      const response = await fetch(supportXMRUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'XMRT-Platform/1.0',
+          'Accept': 'application/json',
+        },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`SupportXMR API responded with status: ${response.status}`);
       }
-    );
+
+      const data = await response.json();
+      
+      return new Response(
+        JSON.stringify(data),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } finally {
+      clearTimeout(timeoutId);
+    }
     
   } catch (error) {
     console.error('SupportXMR proxy error:', error);
