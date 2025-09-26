@@ -12,7 +12,21 @@ serve(async (req) => {
   }
 
   try {
-    const { path } = await req.json();
+    // Handle both GET requests with query params and POST requests with JSON body
+    let path = '';
+    
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      path = url.pathname + url.search;
+    } else {
+      try {
+        const body = await req.json();
+        path = body.path || '';
+      } catch (parseError) {
+        console.error('Failed to parse JSON body:', parseError);
+        path = new URL(req.url).pathname;
+      }
+    }
     
     console.log('Ecosystem webhook called with path:', path);
 
