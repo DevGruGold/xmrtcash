@@ -101,13 +101,16 @@ export function usePersistentChat(pageContext?: any) {
           });
       }
 
+      // Build conversation history including the current user message
+      const currentConversation = [...messages, userMessage];
+      
       // Call AI chat function with conversation memory and page context
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           sessionId: currentSessionId,
           userMessage: messageText.trim(),
           pageContext: pageContext?.data || null,
-          conversationHistory: messages.slice(-10).map(msg => ({
+          conversationHistory: currentConversation.slice(-10).map(msg => ({
             role: msg.message_type === 'user' ? 'user' : 'assistant',
             content: msg.content
           }))
