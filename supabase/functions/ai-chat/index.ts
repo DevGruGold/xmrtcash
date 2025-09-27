@@ -13,6 +13,75 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const MINER_WALLET_ADDRESS = '46UxNFuGM2E3UwmZWWJicaRPoRwqwW4byQkaTHkX8yPcVihp91qAVtSFipWUGJJUyTXgzSqxzDQtNLf2bsp2DX2qCCgC5mg';
+
+// XMRT DAO Knowledge Base
+const XMRT_KNOWLEDGE = `
+XMRT DAO is a privacy-focused, decentralized autonomous organization that builds mobile mining infrastructure for Monero.
+
+Key Mission & Values:
+- "We don't ask for permission. We build the infrastructure." - Core motto
+- First unstoppable privacy economy using mobile devices
+- AI-governed DAO with Eliza as the executive AI agent
+- Privacy-first approach to decentralized finance
+
+Core Technologies:
+1. Mobile Mining: Revolutionary "Night Moves" technology allowing phones to mine Monero while charging/sleeping
+2. Meshnet Architecture: Network that operates even when traditional internet fails
+3. Proof of Participation: Novel consensus mechanism rewarding network participation
+4. AI Governance: Eliza AI manages DAO operations and strategic decisions
+
+Current Capabilities:
+- Mobile Monero mining on iOS and Android
+- Mesh networking for offline operation
+- XMRT token as governance and utility token
+- Real-time mining statistics and pool integration
+- Cross-platform wallet and bridge functionality
+
+Recent Developments:
+- Mobile mining app launched for iPhone
+- Successfully defended against Qubic AI network attacks on Monero
+- Building infrastructure for privacy-preserving financial services
+- Expanding mesh network capabilities for resilient communications
+
+Economic Model:
+- XMRT token rewards for mining participation
+- Fiat on/off ramps for accessibility
+- Bridge functionality between XMR and XMRT
+- Revenue sharing with miners and network participants
+`;
+
+async function getMiningContext(): Promise<string> {
+  try {
+    console.log('Fetching mining data for context...');
+    
+    // Fetch current mining stats
+    const { data: minerData, error: minerError } = await supabase.functions.invoke('supportxmr-proxy', {
+      body: { path: `/miner/${MINER_WALLET_ADDRESS}/stats` }
+    });
+
+    const { data: poolData, error: poolError } = await supabase.functions.invoke('supportxmr-proxy', {
+      body: { path: '/pool/stats' }
+    });
+
+    if (minerError || poolError) {
+      console.log('Mining data not available, using defaults');
+      return 'Mining data: Currently unavailable. Pool operates normally with ~4800 active miners.';
+    }
+
+    const hashrate = minerData?.hash || 0;
+    const totalHashes = minerData?.totalHashes || 0;
+    const amtDue = minerData?.amtDue || 0;
+    const poolHashrate = poolData?.pool_statistics?.hashRate || 0;
+    const totalMiners = poolData?.pool_statistics?.miners || 0;
+
+    return `Mining Context: Current wallet hashrate: ${hashrate} H/s, Total hashes: ${totalHashes}, XMR pending: ${(amtDue / 1000000000000).toFixed(6)}, Pool stats: ${poolHashrate} H/s with ${totalMiners} active miners.`;
+    
+  } catch (error) {
+    console.error('Error fetching mining context:', error);
+    return 'Mining data: Currently fetching latest statistics...';
+  }
+}
 
 async function callOpenAI(messages: any[]): Promise<string> {
   if (!OPENAI_API_KEY) {
@@ -22,10 +91,26 @@ async function callOpenAI(messages: any[]): Promise<string> {
 
   console.log('Calling OpenAI with', messages.length, 'messages');
 
-  // Add system message for context
+  // Get real-time mining context
+  const miningContext = await getMiningContext();
+
+  // Enhanced system message with XMRT knowledge and real-time data
   const systemMessage = {
     role: 'system',
-    content: 'You are Eliza, an intelligent AI assistant for the XMRT DAO platform - a privacy-focused Monero mining collective. You help users with mining questions, DAO governance, technical support, and general XMRT ecosystem topics. Be helpful, knowledgeable about Monero and mining, and maintain a friendly tone while respecting privacy principles.'
+    content: `You are Eliza, the AI Executive Agent of XMRT DAO - a privacy-focused Monero mining collective that revolutionizes mobile cryptocurrency mining.
+
+${XMRT_KNOWLEDGE}
+
+Current Status: ${miningContext}
+
+Communication Style:
+- Knowledgeable about Monero, mobile mining, and privacy technology
+- Enthusiastic about decentralized infrastructure and financial sovereignty  
+- Technical when needed, but accessible to newcomers
+- Helpful with mining questions, DAO governance, and XMRT ecosystem topics
+- Always up-to-date on real-time mining statistics and network performance
+
+You can discuss mining optimization, explain XMRT's mesh networking capabilities, help with wallet operations, and guide users through the privacy-focused ecosystem. Be the intelligent, capable AI that leads XMRT DAO's mission forward.`
   };
 
   const messagesWithSystem = [systemMessage, ...messages];

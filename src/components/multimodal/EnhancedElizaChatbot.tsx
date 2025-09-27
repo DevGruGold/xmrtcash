@@ -74,17 +74,24 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
 
 
   const scrollToBottom = useCallback(() => {
-    // Only scroll the chat container, never the whole page
-    if (messagesEndRef.current && messages.length > 1) {
-      // Use scrollTop instead of scrollIntoView to avoid page scrolling
-      const scrollArea = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]');
-      if (scrollArea) {
-        scrollArea.scrollTop = scrollArea.scrollHeight;
+    if (messagesEndRef.current) {
+      const chatContainer = messagesEndRef.current.parentElement;
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }
   }, [messages.length]);
 
-  // Removed auto-scroll useEffect to prevent page scrolling issues
+  useEffect(() => {
+    scrollToBottom();
+  }, [scrollToBottom]);
+
+  // Re-enable auto-scroll with improved targeting
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [scrollToBottom, messages.length]);
 
   // Play audio for assistant messages
   const playAudio = async (text: string) => {
@@ -298,7 +305,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-            <ScrollArea className="flex-1 min-h-0 w-full pr-2 sm:pr-4 mb-2">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2 sm:pr-4 mb-2">
               <div className="space-y-3 sm:space-y-4 pb-4">
                 {messages.map((message) => (
                   <div
@@ -325,7 +332,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                               : 'bg-muted/50 text-foreground border border-border/50'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
+                          <p className="whitespace-pre-wrap break-words hyphens-auto word-wrap">
                             {message.text}
                           </p>
                         </div>
@@ -398,7 +405,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                 )}
               </div>
               <div ref={messagesEndRef} />
-            </ScrollArea>
+            </div>
             
             {/* Pending Files Display */}
             {pendingFiles.length > 0 && (
@@ -407,7 +414,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
               </div>
             )}
             
-            <div className="flex gap-2 p-2 sm:p-3 bg-background border-t border-border flex-shrink-0">
+            <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-2 sm:p-3 flex gap-2 flex-shrink-0">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
