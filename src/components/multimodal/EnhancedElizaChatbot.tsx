@@ -93,58 +93,51 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     }
   }, [scrollToBottom, messages.length]);
 
-  // Play audio for assistant messages
+  // Play audio for assistant messages using browser TTS
   const playAudio = async (text: string) => {
-    if (!text || isPlayingAudio) return;
+    if (!text || isPlayingAudio || !settings.voiceSettings.enabled) return;
     
     try {
       setIsPlayingAudio(true);
       
-      // Check if ElevenLabs API key is configured
-      const elevenLabsKey = apiKeyManager.getKey('elevenLabsApiKey');
-      if (!elevenLabsKey) {
-        toast({
-          title: "Setup Required",
-          description: "Please configure your ElevenLabs API key for audio features",
-        });
+      // Use browser's built-in speech synthesis
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = settings.voiceSettings.speed || 0.9;
+        utterance.pitch = settings.voiceSettings.pitch || 1.1;
+        utterance.volume = 0.8;
+        
+        // Use a pleasant voice if available
+        const voices = speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice => 
+          voice.name.includes('Female') || 
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Karen') ||
+          voice.name.includes('Google US English')
+        ) || voices[0];
+        
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+        
+        utterance.onend = () => {
+          setIsPlayingAudio(false);
+        };
+        
+        utterance.onerror = () => {
+          setIsPlayingAudio(false);
+        };
+        
+        speechSynthesis.speak(utterance);
+        console.log('Browser TTS started successfully');
+      } else {
         setIsPlayingAudio(false);
-        setApiKeyType('elevenLabsApiKey');
-        setShowApiKeyDialog(true);
-        return;
       }
-      
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text, voice: 'Aria' }
-      });
-
-      if (error) {
-        console.error('TTS Error:', error);
-        throw new Error('Failed to generate speech');
-      }
-
-      // Convert base64 to audio and play
-      const audioBlob = new Blob([
-        Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))
-      ], { type: 'audio/mpeg' });
-      
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        setIsPlayingAudio(false);
-      };
-      
-      await audio.play();
       
     } catch (error) {
-      console.error('Error playing audio:', error);
+      console.error('TTS error:', error);
       setIsPlayingAudio(false);
-      toast({
-        title: "Audio Error",
-        description: "Could not play audio. Please check your ElevenLabs API key.",
-        variant: "destructive"
-      });
+      // Silently fail - don't show error toasts for TTS failures
     }
   };
 
@@ -305,8 +298,8 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-            <div className="flex-1 min-h-0 overflow-y-auto pr-2 sm:pr-4 mb-2">
-              <div className="space-y-3 sm:space-y-4 pb-4">
+            <ScrollArea className="flex-1 p-3 sm:p-4">
+              <div className="space-y-3 sm:space-y-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -331,8 +324,9 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted/50 text-foreground border border-border/50'
                           }`}
+                          style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                         >
-                          <p className="whitespace-pre-wrap break-words hyphens-auto word-wrap">
+                          <p className="whitespace-pre-wrap" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                             {message.text}
                           </p>
                         </div>
@@ -403,9 +397,9 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
-              <div ref={messagesEndRef} />
-            </div>
+            </ScrollArea>
             
             {/* Pending Files Display */}
             {pendingFiles.length > 0 && (
@@ -414,7 +408,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
               </div>
             )}
             
-            <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-2 sm:p-3 flex gap-2 flex-shrink-0">
+            <div className="border-t border-border p-2 sm:p-3 flex gap-2 flex-shrink-0 bg-background">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
