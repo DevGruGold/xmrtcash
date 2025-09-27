@@ -83,7 +83,7 @@ async function getMiningContext(): Promise<string> {
   }
 }
 
-async function callOpenAI(messages: any[]): Promise<string> {
+async function callOpenAI(messages: any[], pageContext: any = null): Promise<string> {
   if (!OPENAI_API_KEY) {
     console.error('OPENAI_API_KEY not found in environment variables');
     throw new Error('OPENAI_API_KEY not configured. Please add your API key in Supabase secrets.');
@@ -93,6 +93,23 @@ async function callOpenAI(messages: any[]): Promise<string> {
 
   // Get real-time mining context
   const miningContext = await getMiningContext();
+  
+  // Format page context for AI awareness
+  let pageContextStr = '';
+  if (pageContext) {
+    pageContextStr = `
+
+CURRENT PAGE CONTEXT (Real-time data the user is viewing):
+- Current Mining Hashrate: ${pageContext.mining?.currentHashrate ? `${(pageContext.mining.currentHashrate / 1000).toFixed(1)} KH/s` : '0 H/s'}
+- Mining Status: ${pageContext.mining?.isActive ? 'ACTIVE' : 'INACTIVE'}
+- Amount Due: ${pageContext.mining?.amountDue ? `${(pageContext.mining.amountDue / 1000000000000).toFixed(6)} XMR` : '0 XMR'}
+- Pool Contribution: ${pageContext.mining?.poolContribution ? `${pageContext.mining.poolContribution.toFixed(4)}%` : '0%'}
+- Pool Hashrate: ${pageContext.pool?.hashRate ? `${(pageContext.pool.hashRate / 1000000).toFixed(1)} MH/s` : '0 MH/s'}
+- Active Pool Miners: ${pageContext.pool?.miners || 0}
+- Current XMR Price: $${pageContext.market?.xmrPrice?.toFixed(2) || '0'}
+
+The user is currently viewing their XMRT DAO dashboard with this real-time information. You can reference these specific values in your responses and provide contextual advice based on their current mining performance.`;
+  }
 
   // Enhanced system message with XMRT knowledge and real-time data
   const systemMessage = {
@@ -101,7 +118,7 @@ async function callOpenAI(messages: any[]): Promise<string> {
 
 ${XMRT_KNOWLEDGE}
 
-Current Status: ${miningContext}
+Current Status: ${miningContext}${pageContextStr}
 
 Communication Style:
 - Knowledgeable about Monero, mobile mining, and privacy technology
@@ -109,6 +126,7 @@ Communication Style:
 - Technical when needed, but accessible to newcomers
 - Helpful with mining questions, DAO governance, and XMRT ecosystem topics
 - Always up-to-date on real-time mining statistics and network performance
+- Can reference the user's specific current mining data and provide personalized advice
 
 You can discuss mining optimization, explain XMRT's mesh networking capabilities, help with wallet operations, and guide users through the privacy-focused ecosystem. Be the intelligent, capable AI that leads XMRT DAO's mission forward.`
   };
@@ -151,9 +169,9 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId, userMessage } = await req.json();
+    const { message, sessionId, userMessage, pageContext, conversationHistory } = await req.json();
     
-    console.log('AI Chat request:', { message, sessionId, userMessage });
+    console.log('AI Chat request:', { message, sessionId, userMessage, hasPageContext: !!pageContext, historyLength: conversationHistory?.length || 0 });
 
     if (!sessionId) {
       throw new Error('Session ID is required');
@@ -180,20 +198,6 @@ serve(async (req) => {
       );
     }
 
-    // Get conversation history from database
-    const { data: messages, error: messagesError } = await supabase
-      .from('conversation_messages')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('timestamp', { ascending: true });
-
-    if (messagesError) {
-      console.error('Error fetching messages:', messagesError);
-      throw messagesError;
-    }
-
-    console.log('Retrieved conversation history:', messages?.length || 0, 'messages');
-
     // Add the new user message to the database
     if (userMessage) {
       const { data: insertedMessage, error: insertError } = await supabase
@@ -202,7 +206,8 @@ serve(async (req) => {
           session_id: sessionId,
           message_type: 'user',
           content: userMessage,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          metadata: { pageContext: pageContext || {} }
         })
         .select()
         .single();
@@ -215,21 +220,49 @@ serve(async (req) => {
       console.log('Inserted user message with ID:', insertedMessage?.id);
     }
 
-    // Prepare conversation history for AI
-    const conversationHistory = (messages || []).map(msg => ({
-      role: msg.message_type === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    }));
+    // Get conversation history from database or use provided history
+    let messages = conversationHistory || [];
+    
+    if (!messages.length) {
+      const { data: conversationHistoryData, error: messagesError } = await supabase
+        .from('conversation_messages')
+        .select('message_type, content')
+        .eq('session_id', sessionId)
+        .order('timestamp', { ascending: true })
+        .limit(20);
 
-    // Add the current user message if provided
-    if (userMessage) {
-      conversationHistory.push({
-        role: 'user',
-        content: userMessage
-      });
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        throw messagesError;
+      }
+
+      messages = (conversationHistoryData || []).map(msg => ({
+        role: msg.message_type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
     }
 
-    console.log('Sending to AI:', conversationHistory.length, 'messages');
+    console.log('Retrieved conversation history:', messages.length, 'messages');
+
+    // Store memory context for important conversations
+    if (userMessage && userMessage.length > 50) { 
+      try {
+        await supabase
+          .from('memory_contexts')
+          .insert({
+            user_id: 'anonymous', // Would use auth.uid() for authenticated users
+            session_id: sessionId,
+            content: userMessage,
+            context_type: 'user_query',
+            importance_score: Math.min(userMessage.length / 200, 1.0),
+            metadata: { pageContext: pageContext || {} }
+          });
+      } catch (memoryError) {
+        console.error('Failed to store memory context:', memoryError);
+      }
+    }
+
+    console.log('Calling AI with page context and', messages.length, 'messages');
 
     let aiResponse: string;
     
@@ -239,8 +272,8 @@ serve(async (req) => {
         throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY in Supabase secrets.');
       }
 
-      // Call OpenAI
-      aiResponse = await callOpenAI(conversationHistory);
+      // Call OpenAI with page context
+      aiResponse = await callOpenAI(messages, pageContext);
       console.log('✅ OpenAI response received successfully');
       
     } catch (openaiError) {
@@ -262,7 +295,12 @@ serve(async (req) => {
         message_type: 'assistant',
         content: aiResponse,
         timestamp: new Date().toISOString(),
-        metadata: { confidence_score: 0.9 }
+        metadata: { 
+          confidence_score: 0.9,
+          model: 'gpt-4o-mini',
+          pageContext: pageContext || {},
+          hasRealTimeData: !!pageContext
+        }
       })
       .select()
       .single();
@@ -278,7 +316,11 @@ serve(async (req) => {
     const { error: sessionError } = await supabase
       .from('conversation_sessions')
       .update({ 
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        metadata: { 
+          lastPageContext: pageContext || {},
+          messageCount: messages.length + 2
+        }
       })
       .eq('id', sessionId);
 

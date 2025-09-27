@@ -8,12 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Bot, Send, Minimize2, Maximize2, User, Zap, Loader2, Key, 
-  Paperclip, Mic, Image, Video, FileText, Wand2, Settings, Volume2 
+  Paperclip, Mic, Image, Video, FileText, Wand2, Settings, Volume2, X 
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { APIKeyDialog } from "@/components/ui/api-key-dialog";
 import { apiKeyManager } from "@/lib/api-key-manager";
-import { useIntelligentChat } from "@/hooks/useIntelligentChat";
+import { usePersistentChat } from '@/hooks/usePersistentChat';
+import { usePageContext } from '@/contexts/PageContext';
 import { supabase } from "@/integrations/supabase/client";
 import MediaUploader from "./MediaUploader";
 import MediaDisplay from "./MediaDisplay";
@@ -44,13 +45,15 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   hideHeader = false,
   agent 
 }) => {
+  const pageContext = usePageContext();
+  
   const { 
     messages: chatMessages, 
     sendMessage, 
     isLoading, 
     isTyping, 
     clearChat 
-  } = useIntelligentChat();
+  } = usePersistentChat(pageContext);
   
   const [inputMessage, setInputMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
@@ -635,6 +638,15 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                 title="Attach Media"
               >
                 <Paperclip className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+              <Button 
+                onClick={clearChat}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 mr-2"
+                title="Clear chat history"
+              >
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
               <Button 
                 onClick={handleSendMessage}
