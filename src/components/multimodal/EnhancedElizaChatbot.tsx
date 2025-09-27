@@ -84,16 +84,16 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
 
   function getWelcomeMessage(): string {
     if (!agent) {
-      return "🛡️ Welcome to XMRT DAO's Enhanced Multimodal Chat! I'm Eliza, your AI executive agent with comprehensive capabilities:\n\n📱 **Multimodal Understanding**: Upload images, videos, audio, and documents\n🎨 **Creative Generation**: AI-powered image and video creation\n🗣️ **Voice Interface**: Real-time speech recognition and synthesis\n📊 **Live Data Analysis**: Real-time mining stats and DAO insights\n🌐 **Advanced Models**: Powered by Gemini 2.0 Flash with vision and audio\n\nPrivacy is a fundamental right - how can I help you explore our technological sovereignty?";
+      return "🛡️ Welcome to XMRT DAO! I'm Eliza, your multimodal AI assistant. Upload media, ask questions, or explore with voice commands. How can I help?";
     }
 
     const welcomeMessages = {
-      'mining-oracle': "⚡ **Enhanced Mining Oracle** - Now with multimodal capabilities!\n\n📊 Upload mining setup photos for optimization advice\n🎥 Share mining tutorial videos for analysis\n📈 Voice queries for real-time statistics\n💻 Document analysis for hardware specs\n🔧 Advanced troubleshooting with visual diagnostics\n\nWhat mining challenge can I help solve with my enhanced capabilities?",
-      'dao-governance': "🗳️ **Advanced DAO Governance Assistant**\n\n📜 Analyze proposal documents and presentations\n🎥 Review governance meeting recordings\n📊 Generate visual governance reports\n👥 Voice-activated voting guidance\n📈 Multimodal proposal analysis\n\nHow can I enhance your governance experience?",
-      'privacy-guard': "🛡️ **Enhanced Privacy Guard** with multimodal security analysis\n\n🔒 Visual security audit capabilities\n📱 Mobile privacy setup guidance\n🎥 Video-based threat assessment\n🔍 Document security analysis\n⚠️ Voice-activated privacy alerts\n\nWhat privacy or security concerns can I address with my enhanced capabilities?",
-      'defi-strategist': "💰 **Advanced DeFi Strategist** with comprehensive analysis\n\n📈 Chart analysis and market visualization\n📊 Document-based strategy review\n🎥 Educational video analysis\n💼 Voice-activated portfolio updates\n💱 Visual cross-chain opportunity mapping\n\nWhat DeFi strategy can I help develop with multimodal insights?",
-      'mesh-coordinator': "🌐 **Enhanced Mesh Coordinator** with advanced diagnostics\n\n🕸️ Network topology visualization\n📡 Hardware setup photo analysis\n🎥 Network tutorial video processing\n🔗 Voice-controlled network monitoring\n⚡ Visual performance diagnostics\n\nHow can I optimize your mesh networking with enhanced capabilities?",
-      'eliza-core': "🛡️ **Eliza Core - Enhanced Multimodal Assistant**\n\n🎯 Upload any content for AI analysis\n🎨 Creative content generation\n🗣️ Voice-powered interactions\n📊 Real-time ecosystem insights\n🔗 Seamless agent coordination\n\nExperience the future of AI interaction!"
+      'mining-oracle': "⚡ Mining Oracle ready! Upload photos, share videos, or ask questions about mining optimization.",
+      'dao-governance': "🗳️ DAO Governance Assistant online. I can analyze documents, review proposals, and guide voting decisions.",
+      'privacy-guard': "🛡️ Privacy Guard active. I help with security audits, privacy setup, and threat assessment.",
+      'defi-strategist': "💰 DeFi Strategist ready. Share charts, ask about strategies, or get portfolio insights.",
+      'mesh-coordinator': "🌐 Mesh Coordinator online. I assist with network setup, monitoring, and optimization.",
+      'eliza-core': "🛡️ Eliza Core ready. Upload content, generate media, or chat about anything!"
     };
 
     return welcomeMessages[agent.id as keyof typeof welcomeMessages] || welcomeMessages['eliza-core'];
@@ -324,7 +324,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-            <ScrollArea className="h-[calc(100%-80px)] w-full pr-2 sm:pr-4" data-radix-scroll-area-viewport>
+            <ScrollArea className="flex-1 w-full pr-2 sm:pr-4 mb-2">
               <div className="space-y-3 sm:space-y-4 pb-4">
                 {messages.map((message) => (
                   <div
@@ -342,16 +342,16 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                       )}
                     </Avatar>
                     
-                    <div className={`flex-1 min-w-0 max-w-full ${message.isUser ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex-1 min-w-0 ${message.isUser ? 'flex justify-end' : 'flex justify-start'}`}>
                       {message.text && (
                         <div
-                          className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm w-full max-w-[calc(100%-2rem)] sm:max-w-[85%] overflow-hidden ${
+                          className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm max-w-[85%] ${
                             message.isUser
-                              ? 'bg-primary text-primary-foreground ml-auto'
+                              ? 'bg-primary text-primary-foreground'
                               : 'bg-muted/50 text-foreground border border-border/50'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap break-words word-wrap overflow-wrap-anywhere overflow-hidden">
+                          <p className="whitespace-pre-wrap break-words">
                             {message.text}
                           </p>
                         </div>
@@ -371,7 +371,9 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
+                      <div className={`flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap ${
+                        message.isUser ? 'justify-end' : 'justify-start'
+                      }`}>
                         {!message.isUser && message.agent && (
                           <Badge variant="outline" className="text-xs px-1 py-0 flex-shrink-0">
                             {message.agent}
@@ -426,19 +428,19 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
             
             {/* Pending Files Display */}
             {pendingFiles.length > 0 && (
-              <div className="py-2 border-t border-border">
+              <div className="py-2 border-t border-border flex-shrink-0">
                 <MediaDisplay media={pendingFiles} />
               </div>
             )}
             
-            <div className="mt-2 bg-background/95 supports-[backdrop-filter]:bg-background/80 backdrop-blur border-t border-border flex gap-2 p-2 sm:p-3 flex-shrink-0 z-10">
+            <div className="flex gap-2 p-2 sm:p-3 bg-background border-t border-border flex-shrink-0">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={agent ? `Ask ${agent.name} anything...` : "Ask Enhanced Eliza anything..."}
                 disabled={isLoading}
-                className="flex-1 text-xs sm:text-sm min-w-0"
+                className="flex-1 text-xs sm:text-sm"
               />
               <Button
                 variant="outline"
