@@ -63,41 +63,15 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   const { toast } = useToast();
 
   // Convert chat messages to multimodal format for display
-  const messages: MultimodalMessage[] = [
-    {
-      id: 'welcome',
-      text: getWelcomeMessage(),
-      isUser: false,
-      timestamp: new Date(),
-      agent: agent?.name || "Eliza Core",
-      type: 'text'
-    },
-    ...chatMessages.map(msg => ({
-      id: msg.id,
-      text: msg.content,
-      isUser: msg.message_type === 'user',
-      timestamp: new Date(msg.timestamp),
-      agent: msg.message_type === 'assistant' ? (agent?.name || "Eliza Core") : undefined,
-      type: 'text' as const
-    }))
-  ];
+  const messages: MultimodalMessage[] = chatMessages.map(msg => ({
+    id: msg.id,
+    text: msg.content,
+    isUser: msg.message_type === 'user',
+    timestamp: new Date(msg.timestamp),
+    agent: msg.message_type === 'assistant' ? (agent?.name || "Eliza Core") : undefined,
+    type: 'text' as const
+  }));
 
-  function getWelcomeMessage(): string {
-    if (!agent) {
-      return "🛡️ Welcome to XMRT DAO! I'm Eliza, your multimodal AI assistant. Upload media, ask questions, or explore with voice commands. How can I help?";
-    }
-
-    const welcomeMessages = {
-      'mining-oracle': "⚡ Mining Oracle ready! Upload photos, share videos, or ask questions about mining optimization.",
-      'dao-governance': "🗳️ DAO Governance Assistant online. I can analyze documents, review proposals, and guide voting decisions.",
-      'privacy-guard': "🛡️ Privacy Guard active. I help with security audits, privacy setup, and threat assessment.",
-      'defi-strategist': "💰 DeFi Strategist ready. Share charts, ask about strategies, or get portfolio insights.",
-      'mesh-coordinator': "🌐 Mesh Coordinator online. I assist with network setup, monitoring, and optimization.",
-      'eliza-core': "🛡️ Eliza Core ready. Upload content, generate media, or chat about anything!"
-    };
-
-    return welcomeMessages[agent.id as keyof typeof welcomeMessages] || welcomeMessages['eliza-core'];
-  }
 
   const scrollToBottom = useCallback(() => {
     // Only scroll the chat container, never the whole page
