@@ -271,7 +271,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   }
 
   return (
-    <Card className={`glass-card w-full max-w-4xl h-full flex flex-col ${className}`}>
+    <Card className={`glass-card w-full max-w-4xl max-h-[85vh] sm:max-h-[80vh] h-full flex flex-col overflow-hidden ${className}`}>
       <CardHeader className="flex-shrink-0 pb-3 px-3 sm:px-6">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -324,7 +324,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-            <ScrollArea className="flex-1 w-full pr-2 sm:pr-4 mb-2">
+            <ScrollArea className="flex-1 min-h-0 w-full pr-2 sm:pr-4 mb-2">
               <div className="space-y-3 sm:space-y-4 pb-4">
                 {messages.map((message) => (
                   <div
@@ -351,7 +351,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                               : 'bg-muted/50 text-foreground border border-border/50'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap break-words">
+                          <p className="whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
                             {message.text}
                           </p>
                         </div>
