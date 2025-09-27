@@ -77,10 +77,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      const chatContainer = messagesEndRef.current.parentElement;
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages.length]);
 
@@ -246,6 +243,227 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     );
   }
 
+  if (hideHeader) {
+    return (
+      <div className={`h-full flex flex-col overflow-hidden ${className}`}>
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
+              <TabsTrigger value="media" className="text-xs">Media</TabsTrigger>
+              <TabsTrigger value="voice" className="text-xs">Voice</TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
+              <ScrollArea className="flex-1 min-h-0 h-0 p-3 sm:p-4">
+                <div className="space-y-3 sm:space-y-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-2 sm:gap-3 ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
+                      <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
+                        {message.isUser ? (
+                          <AvatarFallback><User className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
+                        ) : (
+                          <>
+                            <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
+                            <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
+                          </>
+                        )}
+                      </Avatar>
+                      <div className={`flex-1 min-w-0 ${message.isUser ? 'flex justify-end' : 'flex justify-start'}`}>
+                        {message.text && (
+                          <div
+                            className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm max-w-[85%] ${
+                              message.isUser
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted/50 text-foreground border border-border/50'
+                            }`}
+                            style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                          >
+                            <p className="whitespace-pre-wrap" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                              {message.text}
+                            </p>
+                          </div>
+                        )}
+                        {message.media && message.media.length > 0 && (
+                          <div className="mt-2">
+                            <MediaDisplay media={message.media} />
+                          </div>
+                        )}
+                        {message.generated && message.generated.length > 0 && (
+                          <div className="mt-2">
+                            <MediaDisplay generated={message.generated} />
+                          </div>
+                        )}
+                        <div className={`flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap ${
+                          message.isUser ? 'justify-end' : 'justify-start'
+                        }`}>
+                          {!message.isUser && message.agent && (
+                            <Badge variant="outline" className="text-xs px-1 py-0 flex-shrink-0">
+                              {message.agent}
+                            </Badge>
+                          )}
+                          {message.type !== 'text' && (
+                            <Badge variant="outline" className="text-xs px-1 py-0 flex-shrink-0">
+                              {message.type}
+                            </Badge>
+                          )}
+                          {!message.isUser && message.text && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => playAudio(message.text!)}
+                              className="h-4 px-1 text-xs"
+                              disabled={isPlayingAudio}
+                            >
+                              <Volume2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <span className="flex-shrink-0">
+                            {message.timestamp.toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {(isLoading || isTyping) && (
+                    <div className="flex gap-2 sm:gap-3">
+                      <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
+                        <AvatarImage src="/eliza-avatar.jpg" alt="Eliza" />
+                        <AvatarFallback><Bot className="w-3 h-3 sm:w-4 sm:h-4" /></AvatarFallback>
+                      </Avatar>
+                      <div className="bg-muted/50 p-2 sm:p-3 rounded-lg border border-border/50">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-primary flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-muted-foreground">
+                            {isTyping ? 'Eliza is typing...' : 'Eliza is thinking...'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+              {pendingFiles.length > 0 && (
+                <div className="py-2 border-t border-border flex-shrink-0">
+                  <MediaDisplay media={pendingFiles} />
+                </div>
+              )}
+              <div className="border-t border-border p-2 sm:p-3 pb-[env(safe-area-inset-bottom)] flex gap-2 flex-shrink-0 bg-background">
+                <Input
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={agent ? `Ask ${agent.name} anything...` : "Ask Enhanced Eliza anything..."}
+                  disabled={isLoading}
+                  className="flex-1 text-xs sm:text-sm"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setActiveTab('media')}
+                  className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10"
+                  title="Attach Media"
+                >
+                  <Paperclip className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={isLoading || (!inputMessage.trim() && pendingFiles.length === 0)}
+                  size="icon"
+                  className="neon-button flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+                  )}
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="media" className="flex-1 mt-0">
+              <MediaUploader 
+                onFilesAdded={handleFilesAdded}
+                maxFiles={settings.maxFileSize}
+                allowedTypes={settings.allowedFileTypes}
+              />
+            </TabsContent>
+
+            <TabsContent value="voice" className="flex-1 mt-0">
+              <VoiceInterface
+                onVoiceRecorded={handleVoiceRecorded}
+                onSpeakText={(text) => {
+                  toast({
+                    title: "Text-to-Speech",
+                    description: "Voice synthesis will be implemented in the next iteration"
+                  });
+                }}
+                settings={settings.voiceSettings}
+                onSettingsChange={(voiceSettings) => 
+                  setSettings(prev => ({ ...prev, voiceSettings }))
+                }
+              />
+            </TabsContent>
+
+            <TabsContent value="settings" className="flex-1 mt-0">
+              <div className="space-y-4">
+                <h3 className="font-medium">Chat Settings</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium">Preferred Model</label>
+                    <select 
+                      value={settings.preferredModel}
+                      onChange={(e) => setSettings(prev => ({ ...prev, preferredModel: e.target.value }))}
+                      className="w-full mt-1 p-2 rounded border bg-background"
+                    >
+                      {GEMINI_MODELS.map(model => (
+                        <option key={model.id} value={model.id}>
+                          {model.name} - {model.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="autoPlayAudio"
+                      checked={settings.autoPlayAudio}
+                      onChange={(e) => setSettings(prev => ({ ...prev, autoPlayAudio: e.target.checked }))}
+                    />
+                    <label htmlFor="autoPlayAudio" className="text-sm">Auto-play voice responses</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="enableCreativeGeneration"
+                      checked={settings.enableCreativeGeneration}
+                      onChange={(e) => setSettings(prev => ({ ...prev, enableCreativeGeneration: e.target.checked }))}
+                    />
+                    <label htmlFor="enableCreativeGeneration" className="text-sm">Enable creative generation</label>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+        <APIKeyDialog
+          open={showApiKeyDialog}
+          onOpenChange={setShowApiKeyDialog}
+          keyType={apiKeyType}
+          onKeyAdded={handleApiKeyAdded}
+        />
+      </div>
+    );
+  }
+
   return (
     <Card className={`glass-card w-full max-w-4xl max-h-[85vh] sm:max-h-[80vh] h-full flex flex-col overflow-hidden ${className}`}>
       <CardHeader className="flex-shrink-0 pb-3 px-3 sm:px-6">
@@ -289,9 +507,9 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </div>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="flex-1 flex flex-col p-3 sm:p-4 pt-0 min-h-0">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
             <TabsTrigger value="media" className="text-xs">Media</TabsTrigger>
@@ -300,7 +518,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-            <ScrollArea className="flex-1 p-3 sm:p-4">
+            <ScrollArea className="flex-1 min-h-0 h-0 p-3 sm:p-4">
               <div className="space-y-3 sm:space-y-4">
                 {messages.map((message) => (
                   <div
@@ -317,7 +535,6 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                         </>
                       )}
                     </Avatar>
-                    
                     <div className={`flex-1 min-w-0 ${message.isUser ? 'flex justify-end' : 'flex justify-start'}`}>
                       {message.text && (
                         <div
@@ -333,21 +550,16 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                           </p>
                         </div>
                       )}
-                      
-                      {/* Media Display */}
                       {message.media && message.media.length > 0 && (
                         <div className="mt-2">
                           <MediaDisplay media={message.media} />
                         </div>
                       )}
-                      
-                      {/* Generated Content Display */}
                       {message.generated && message.generated.length > 0 && (
                         <div className="mt-2">
                           <MediaDisplay generated={message.generated} />
                         </div>
                       )}
-                      
                       <div className={`flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap ${
                         message.isUser ? 'justify-end' : 'justify-start'
                       }`}>
@@ -382,7 +594,6 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                     </div>
                   </div>
                 ))}
-                
                 {(isLoading || isTyping) && (
                   <div className="flex gap-2 sm:gap-3">
                     <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
@@ -402,15 +613,12 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
-            
-            {/* Pending Files Display */}
             {pendingFiles.length > 0 && (
               <div className="py-2 border-t border-border flex-shrink-0">
                 <MediaDisplay media={pendingFiles} />
               </div>
             )}
-            
-            <div className="border-t border-border p-2 sm:p-3 flex gap-2 flex-shrink-0 bg-background">
+            <div className="border-t border-border p-2 sm:p-3 pb-[env(safe-area-inset-bottom)] flex gap-2 flex-shrink-0 bg-background">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
@@ -455,7 +663,6 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
             <VoiceInterface
               onVoiceRecorded={handleVoiceRecorded}
               onSpeakText={(text) => {
-                // Implement TTS functionality
                 toast({
                   title: "Text-to-Speech",
                   description: "Voice synthesis will be implemented in the next iteration"
