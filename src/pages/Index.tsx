@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle } from 'lucide-react';
 import EnhancedElizaChatbot from '@/components/multimodal/EnhancedElizaChatbot';
+import Footer from "@/components/Footer";
 
 import HeroSection from "@/components/hero/HeroSection";
 
@@ -33,9 +34,9 @@ export default function Index() {
         </div>
 
         {/* AI Assistant Chat - Bottom of page */}
-        <div className="mt-8">
-          <Card className="glass-card h-[600px] shadow-lg">
-            <CardHeader className="pb-3">
+        <div className="mt-8 mb-8">
+          <Card className="glass-card h-[500px] shadow-lg flex flex-col">
+            <CardHeader className="pb-3 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-lg bg-primary/10">
@@ -54,7 +55,7 @@ export default function Index() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 min-h-0">
+            <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
               <div className="h-full border-t border-border/50">
                 <EnhancedElizaChatbot className="h-full border-0 bg-transparent" hideHeader={true} />
               </div>
@@ -63,6 +64,8 @@ export default function Index() {
         </div>
 
       </main>
+      
+      <Footer />
     </div>
   );
 }
