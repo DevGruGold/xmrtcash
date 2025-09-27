@@ -30,6 +30,7 @@ import {
 
 interface EnhancedElizaChatbotProps {
   className?: string;
+  hideHeader?: boolean;
   agent?: {
     id: string;
     name: string;
@@ -40,6 +41,7 @@ interface EnhancedElizaChatbotProps {
 
 const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({ 
   className = "", 
+  hideHeader = false,
   agent 
 }) => {
   const { 

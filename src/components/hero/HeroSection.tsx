@@ -10,7 +10,7 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import EnhancedElizaChatbot from '@/components/multimodal/EnhancedElizaChatbot';
+
 import LiveMiningStats from '@/components/hero/LiveMiningStats';
 
 export default function HeroSection() {
@@ -22,10 +22,10 @@ export default function HeroSection() {
       <div className="absolute bottom-5 left-5 sm:bottom-10 sm:left-10 w-64 h-64 sm:w-96 sm:h-96 bg-accent/5 rounded-full blur-3xl" />
       
       <div className="container max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 relative z-20">
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 items-start">
+        <div className="space-y-6 sm:space-y-8">
           
-          {/* Hero Content - Always First on Mobile */}
-          <div className="w-full lg:col-span-2 space-y-6 sm:space-y-8 relative order-1">
+          {/* Hero Content */}
+          <div className="w-full space-y-6 sm:space-y-8 relative">
             {/* Main Hero Text */}
             <div className="space-y-4 sm:space-y-6">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
@@ -126,35 +126,6 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Chatbot - Second on Mobile */}
-          <div className="w-full lg:col-span-1 relative z-30 order-2">
-            <Card className="glass-card h-[500px] sm:h-[600px] lg:h-[700px] shadow-lg">
-              <CardHeader className="pb-3 relative z-40">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <MessageCircle className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Eliza AI Assistant</CardTitle>
-                      <CardDescription className="text-sm">
-                        Ask about mining, DAO governance, or technical questions
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    <span className="w-2 h-2 bg-primary rounded-full mr-1 animate-pulse" />
-                    Online
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-120px)] relative z-40">
-                <div className="h-full border-t border-border/50">
-                  <EnhancedElizaChatbot className="h-full border-0 bg-transparent" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
           
         </div>
       </div>
