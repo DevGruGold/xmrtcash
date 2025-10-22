@@ -220,10 +220,18 @@ serve(async (req) => {
       console.log('Inserted user message with ID:', insertedMessage?.id);
     }
 
-    // Get conversation history from database or use provided history
-    let messages = conversationHistory || [];
+    // Get conversation history - ALWAYS trust frontend's conversationHistory when provided
+    let messages = [];
     
-    if (!messages.length) {
+    if (conversationHistory && conversationHistory.length > 0) {
+      // Frontend sent the complete conversation including the current user message
+      // Use it directly - this is the source of truth
+      messages = conversationHistory;
+      console.log('✅ Using frontend conversation history:', messages.length, 'messages');
+      console.log('Last message in history:', messages[messages.length - 1]);
+    } else {
+      // Only fetch from database if frontend didn't provide history (fallback/legacy)
+      console.log('⚠️ No conversationHistory from frontend, fetching from database');
       const { data: conversationHistoryData, error: messagesError } = await supabase
         .from('conversation_messages')
         .select('message_type, content')
@@ -240,9 +248,8 @@ serve(async (req) => {
         role: msg.message_type === 'user' ? 'user' : 'assistant',
         content: msg.content
       }));
+      console.log('Fetched from database:', messages.length, 'messages');
     }
-
-    console.log('Retrieved conversation history:', messages.length, 'messages');
 
     // Store memory context for important conversations
     if (userMessage && userMessage.length > 50) { 
