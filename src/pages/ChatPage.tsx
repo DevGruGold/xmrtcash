@@ -1,5 +1,5 @@
 import ModernHeader from "@/components/ModernHeader";
-import ElizaChatbot from "@/components/ElizaChatbot";
+import EnhancedElizaChatbot from "@/components/multimodal/EnhancedElizaChatbot";
 import { MessageCircle, Bot, Zap, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ export default function ChatPage() {
             </div>
             
             <div className="flex-1 min-h-0">
-              <ElizaChatbot className="h-full max-w-none" />
+              <EnhancedElizaChatbot className="h-full max-w-none" hideHeader={true} />
             </div>
           </div>
 

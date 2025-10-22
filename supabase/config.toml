@@ -1,1 +1,28 @@
 project_id = "vawouugtzwmejxqkeqqj"
+
+[functions.ai-chat]
+verify_jwt = false
+
+[functions.wan-ai-chat]
+verify_jwt = false
+
+[functions.speech-to-text]
+verify_jwt = false
+
+[functions.text-to-speech]
+verify_jwt = false
+
+[functions.supportxmr-proxy]
+verify_jwt = false
+
+[functions.ecosystem-webhook]
+verify_jwt = false
+
+[functions.playwright-browse]
+verify_jwt = false
+
+[functions.vectorize-memory]
+verify_jwt = false
+
+[functions.extract-knowledge]
+verify_jwt = false

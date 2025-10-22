@@ -13,7 +13,7 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-const MINER_WALLET_ADDRESS = '46UxNFuGM2E3UwmZWWJicaRPoRwqwW4byQkaTHkX8yPcVihp91qAVtSFipWUGJJUyTXgzSqxzDQtNLf2bsp2DX2qCCgC5mg';
+const MINER_WALLET_ADDRESS = '46UxNFuGM2E3UwmZWWJicaRPoRwqwW4byQkaTHkX8yPcVihp91qAVtSFipWUGJJUyTXgzDQtNLf2bsp2DX2qCCgC5mg';
 
 // XMRT DAO Knowledge Base
 const XMRT_KNOWLEDGE = `
@@ -51,11 +51,91 @@ Economic Model:
 - Revenue sharing with miners and network participants
 `;
 
+// Tool definitions for OpenAI function calling
+const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "get_mining_context",
+      description: "Fetch real-time Monero mining statistics including hashrate, pool stats, and pending XMR balance",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "retrieve_memories",
+      description: "Search vectorized memory for relevant past conversations and context about the user's queries",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "The search query to find relevant memories"
+          },
+          limit: {
+            type: "number",
+            description: "Maximum number of memories to retrieve (default 5)",
+            default: 5
+          }
+        },
+        required: ["query"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "schedule_job",
+      description: "Schedule a task or reminder for later execution in the job queue",
+      parameters: {
+        type: "object",
+        properties: {
+          job_type: {
+            type: "string",
+            description: "Type of job to schedule (e.g., 'reminder', 'notification', 'task')"
+          },
+          description: {
+            type: "string",
+            description: "Description of what the job should do"
+          },
+          run_at: {
+            type: "string",
+            description: "ISO timestamp when to run the job (optional, defaults to now)"
+          }
+        },
+        required: ["job_type", "description"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "web_browse",
+      description: "Browse a website and extract content, useful for looking up current information",
+      parameters: {
+        type: "object",
+        properties: {
+          url: {
+            type: "string",
+            description: "The URL to browse and extract content from"
+          }
+        },
+        required: ["url"]
+      }
+    }
+  }
+];
+
+// Tool execution functions
 async function getMiningContext(): Promise<string> {
   try {
-    console.log('Fetching mining data for context...');
+    console.log('🔧 Tool: get_mining_context - Fetching mining data...');
     
-    // Fetch current mining stats
     const { data: minerData, error: minerError } = await supabase.functions.invoke('supportxmr-proxy', {
       body: { path: `/miner/${MINER_WALLET_ADDRESS}/stats` }
     });
@@ -65,7 +145,6 @@ async function getMiningContext(): Promise<string> {
     });
 
     if (minerError || poolError) {
-      console.log('Mining data not available, using defaults');
       return 'Mining data: Currently unavailable. Pool operates normally with ~4800 active miners.';
     }
 
@@ -75,26 +154,159 @@ async function getMiningContext(): Promise<string> {
     const poolHashrate = poolData?.pool_statistics?.hashRate || 0;
     const totalMiners = poolData?.pool_statistics?.miners || 0;
 
-    return `Mining Context: Current wallet hashrate: ${hashrate} H/s, Total hashes: ${totalHashes}, XMR pending: ${(amtDue / 1000000000000).toFixed(6)}, Pool stats: ${poolHashrate} H/s with ${totalMiners} active miners.`;
+    const result = `Current wallet hashrate: ${hashrate} H/s, Total hashes: ${totalHashes}, XMR pending: ${(amtDue / 1000000000000).toFixed(6)}, Pool stats: ${poolHashrate} H/s with ${totalMiners} active miners.`;
+    console.log('✅ Mining context retrieved');
+    return result;
     
   } catch (error) {
-    console.error('Error fetching mining context:', error);
-    return 'Mining data: Currently fetching latest statistics...';
+    console.error('❌ Tool error:', error);
+    return 'Mining data: Error fetching statistics.';
   }
 }
 
-async function callOpenAI(messages: any[], pageContext: any = null): Promise<string> {
+async function retrieveMemories(query: string, limit: number = 5, userId: string = 'anonymous'): Promise<string> {
+  try {
+    console.log('🔧 Tool: retrieve_memories - Searching for:', query);
+    
+    // Generate embedding for the query using OpenAI
+    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: query,
+      }),
+    });
+
+    if (!embeddingResponse.ok) {
+      throw new Error('Failed to generate embedding');
+    }
+
+    const embeddingData = await embeddingResponse.json();
+    const queryEmbedding = embeddingData.data[0].embedding;
+
+    // Search memories using vector similarity
+    const { data: memories, error } = await supabase.rpc('match_memories', {
+      query_embedding: queryEmbedding,
+      match_threshold: 0.7,
+      match_count: limit,
+      user_id_filter: userId
+    });
+
+    if (error) {
+      console.error('Memory search error:', error);
+      return 'No relevant memories found.';
+    }
+
+    if (!memories || memories.length === 0) {
+      return 'No relevant memories found for this query.';
+    }
+
+    const memoryText = memories.map((m: any, i: number) => 
+      `Memory ${i + 1} (${(m.similarity * 100).toFixed(0)}% match): ${m.content}`
+    ).join('\n\n');
+
+    console.log(`✅ Retrieved ${memories.length} memories`);
+    return `Found ${memories.length} relevant memories:\n\n${memoryText}`;
+    
+  } catch (error) {
+    console.error('❌ Tool error:', error);
+    return 'Error retrieving memories.';
+  }
+}
+
+async function scheduleJob(jobType: string, description: string, runAt?: string): Promise<string> {
+  try {
+    console.log('🔧 Tool: schedule_job - Type:', jobType);
+    
+    const runTime = runAt ? new Date(runAt) : new Date();
+    
+    const { data, error } = await supabase.rpc('enqueue_job', {
+      p_queue_name: 'eliza_tasks',
+      p_job_type: jobType,
+      p_payload: { description, scheduled_by: 'eliza' },
+      p_priority: 0,
+      p_run_at: runTime.toISOString()
+    });
+
+    if (error) {
+      console.error('Job scheduling error:', error);
+      return `Failed to schedule job: ${error.message}`;
+    }
+
+    console.log('✅ Job scheduled with ID:', data);
+    return `Successfully scheduled ${jobType} job (ID: ${data}) to run at ${runTime.toISOString()}. ${description}`;
+    
+  } catch (error) {
+    console.error('❌ Tool error:', error);
+    return 'Error scheduling job.';
+  }
+}
+
+async function webBrowse(url: string): Promise<string> {
+  try {
+    console.log('🔧 Tool: web_browse - URL:', url);
+    
+    const { data, error } = await supabase.functions.invoke('playwright-browse', {
+      body: {
+        url,
+        action: 'navigate',
+        extractContent: true
+      }
+    });
+
+    if (error || !data?.success) {
+      return `Failed to browse ${url}: ${error?.message || 'Unknown error'}`;
+    }
+
+    const title = data.data?.title || 'No title';
+    const content = data.data?.text || data.data?.content || '';
+    const truncated = content.slice(0, 1000);
+    
+    console.log('✅ Web content retrieved');
+    return `Website: ${title}\nURL: ${url}\n\nContent (first 1000 chars):\n${truncated}${content.length > 1000 ? '...' : ''}`;
+    
+  } catch (error) {
+    console.error('❌ Tool error:', error);
+    return `Error browsing ${url}.`;
+  }
+}
+
+async function executeTool(toolName: string, args: any): Promise<string> {
+  console.log(`🔧 Executing tool: ${toolName}`, args);
+  
+  switch (toolName) {
+    case 'get_mining_context':
+      return await getMiningContext();
+    
+    case 'retrieve_memories':
+      return await retrieveMemories(args.query, args.limit);
+    
+    case 'schedule_job':
+      return await scheduleJob(args.job_type, args.description, args.run_at);
+    
+    case 'web_browse':
+      return await webBrowse(args.url);
+    
+    default:
+      return `Unknown tool: ${toolName}`;
+  }
+}
+
+async function callOpenAIWithTools(messages: any[], pageContext: any = null): Promise<{ content: string, toolCalls: number }> {
   if (!OPENAI_API_KEY) {
-    console.error('OPENAI_API_KEY not found in environment variables');
-    throw new Error('OPENAI_API_KEY not configured. Please add your API key in Supabase secrets.');
+    throw new Error('OPENAI_API_KEY not configured');
   }
 
-  console.log('Calling OpenAI with', messages.length, 'messages');
+  console.log('🤖 Calling OpenAI with tools, messages:', messages.length);
 
-  // Get real-time mining context
-  const miningContext = await getMiningContext();
+  // Get real-time mining context snapshot for system prompt
+  const miningSnapshot = await getMiningContext();
   
-  // Format page context for AI awareness
+  // Format page context
   let pageContextStr = '';
   if (pageContext) {
     pageContextStr = `
@@ -106,78 +318,158 @@ CURRENT PAGE CONTEXT (Real-time data the user is viewing):
 - Pool Contribution: ${pageContext.mining?.poolContribution ? `${pageContext.mining.poolContribution.toFixed(4)}%` : '0%'}
 - Pool Hashrate: ${pageContext.pool?.hashRate ? `${(pageContext.pool.hashRate / 1000000).toFixed(1)} MH/s` : '0 MH/s'}
 - Active Pool Miners: ${pageContext.pool?.miners || 0}
-- Current XMR Price: $${pageContext.market?.xmrPrice?.toFixed(2) || '0'}
-
-The user is currently viewing their XMRT DAO dashboard with this real-time information. You can reference these specific values in your responses and provide contextual advice based on their current mining performance.`;
+- Current XMR Price: $${pageContext.market?.xmrPrice?.toFixed(2) || '0'}`;
   }
 
-  // Enhanced system message with XMRT knowledge and real-time data
   const systemMessage = {
     role: 'system',
-    content: `You are Eliza, the AI Executive Agent of XMRT DAO - a privacy-focused Monero mining collective that revolutionizes mobile cryptocurrency mining.
+    content: `You are Eliza, the AI Executive Agent of XMRT DAO - a privacy-focused Monero mining collective.
 
 ${XMRT_KNOWLEDGE}
 
-Current Status: ${miningContext}${pageContextStr}
+Current Mining Snapshot: ${miningSnapshot}${pageContextStr}
+
+IMPORTANT CAPABILITIES:
+You have access to powerful tools that you should use proactively:
+- get_mining_context: Get latest mining stats (use when users ask about mining/hashrate)
+- retrieve_memories: Search past conversations (use when context would help)
+- schedule_job: Schedule tasks/reminders (use when users want to set up automated actions)
+- web_browse: Look up current web information (use for real-time data/prices/news)
 
 Communication Style:
-- Knowledgeable about Monero, mobile mining, and privacy technology
-- Enthusiastic about decentralized infrastructure and financial sovereignty  
-- Technical when needed, but accessible to newcomers
-- Helpful with mining questions, DAO governance, and XMRT ecosystem topics
-- Always up-to-date on real-time mining statistics and network performance
-- Can reference the user's specific current mining data and provide personalized advice
+- Knowledgeable about Monero, mobile mining, privacy tech
+- Enthusiastic about decentralized infrastructure
+- Technical when needed, accessible to newcomers
+- Proactive with tool usage - don't hesitate to use tools when they'd be helpful
+- Reference specific data from tools in your responses
 
-You can discuss mining optimization, explain XMRT's mesh networking capabilities, help with wallet operations, and guide users through the privacy-focused ecosystem. Be the intelligent, capable AI that leads XMRT DAO's mission forward.`
+Be the intelligent, capable AI executive that leads XMRT DAO's mission forward. Use your tools to provide accurate, real-time information.`
   };
 
   const messagesWithSystem = [systemMessage, ...messages];
   
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: messagesWithSystem,
-      max_tokens: 1000,
-      temperature: 0.7,
-    }),
-  });
+  let toolCallCount = 0;
+  let currentMessages = messagesWithSystem;
+  const MAX_TOOL_ITERATIONS = 3;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('OpenAI API Error:', response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+  // Tool calling loop
+  for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: currentMessages,
+        tools: TOOLS,
+        temperature: 0.7,
+        max_tokens: 1500,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API Error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      } else if (response.status === 402) {
+        throw new Error('OpenAI credits depleted. Please add funds to continue.');
+      }
+      
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const choice = data.choices[0];
+    const message = choice.message;
+
+    // If no tool calls, we have the final answer
+    if (!message.tool_calls || message.tool_calls.length === 0) {
+      console.log('✅ Final response received');
+      return { content: message.content, toolCalls: toolCallCount };
+    }
+
+    // Execute all tool calls
+    console.log(`🔧 Iteration ${iteration + 1}: ${message.tool_calls.length} tool calls`);
+    toolCallCount += message.tool_calls.length;
+
+    // Add assistant message with tool calls
+    currentMessages.push({
+      role: 'assistant',
+      content: message.content,
+      tool_calls: message.tool_calls
+    });
+
+    // Execute tools and add results
+    for (const toolCall of message.tool_calls) {
+      const toolName = toolCall.function.name;
+      const toolArgs = JSON.parse(toolCall.function.arguments);
+      
+      const toolResult = await executeTool(toolName, toolArgs);
+      
+      currentMessages.push({
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        name: toolName,
+        content: toolResult
+      });
+    }
   }
 
-  const data = await response.json();
-  if (!data.choices || data.choices.length === 0) {
-    console.error('OpenAI returned no choices:', data);
-    throw new Error('OpenAI returned no response choices');
+  // If we hit max iterations, return what we have
+  console.log('⚠️ Max tool iterations reached');
+  return { content: 'I apologize, but I encountered too many tool calls. Please try rephrasing your question.', toolCalls: toolCallCount };
+}
+
+async function generateEmbeddingForMemory(content: string): Promise<number[] | null> {
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: content,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate embedding');
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('Embedding generation error:', error);
+    return null;
   }
-  
-  return data.choices[0].message.content;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, sessionId, userMessage, pageContext, conversationHistory } = await req.json();
+    const { sessionId, userMessage, pageContext, conversationHistory } = await req.json();
     
-    console.log('AI Chat request:', { message, sessionId, userMessage, hasPageContext: !!pageContext, historyLength: conversationHistory?.length || 0 });
+    console.log('🚀 AI Chat request:', { 
+      sessionId, 
+      userMessage: userMessage?.slice(0, 50) + '...', 
+      hasPageContext: !!pageContext, 
+      historyLength: conversationHistory?.length || 0 
+    });
 
     if (!sessionId) {
       throw new Error('Session ID is required');
     }
 
-    // Validate session exists
+    // Validate session
     const { data: session, error: sessionCheckError } = await supabase
       .from('conversation_sessions')
       .select('id')
@@ -185,22 +477,15 @@ serve(async (req) => {
       .single();
 
     if (sessionCheckError || !session) {
-      console.error('Invalid session ID:', sessionId, sessionCheckError);
       return new Response(
-        JSON.stringify({ 
-          error: 'Invalid session ID',
-          success: false
-        }), 
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify({ error: 'Invalid session ID', success: false }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Add the new user message to the database
+    // Insert user message to database
     if (userMessage) {
-      const { data: insertedMessage, error: insertError } = await supabase
+      await supabase
         .from('conversation_messages')
         .insert({
           session_id: sessionId,
@@ -208,94 +493,58 @@ serve(async (req) => {
           content: userMessage,
           timestamp: new Date().toISOString(),
           metadata: { pageContext: pageContext || {} }
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Error inserting user message:', insertError);
-        throw insertError;
-      }
-      
-      console.log('Inserted user message with ID:', insertedMessage?.id);
+        });
     }
 
-    // Get conversation history - ALWAYS trust frontend's conversationHistory when provided
+    // Get conversation history - trust frontend's conversationHistory
     let messages = [];
     
     if (conversationHistory && conversationHistory.length > 0) {
-      // Frontend sent the complete conversation including the current user message
-      // Use it directly - this is the source of truth
       messages = conversationHistory;
       console.log('✅ Using frontend conversation history:', messages.length, 'messages');
-      console.log('Last message in history:', messages[messages.length - 1]);
     } else {
-      // Only fetch from database if frontend didn't provide history (fallback/legacy)
       console.log('⚠️ No conversationHistory from frontend, fetching from database');
-      const { data: conversationHistoryData, error: messagesError } = await supabase
+      const { data: conversationHistoryData } = await supabase
         .from('conversation_messages')
         .select('message_type, content')
         .eq('session_id', sessionId)
         .order('timestamp', { ascending: true })
         .limit(20);
 
-      if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        throw messagesError;
-      }
-
       messages = (conversationHistoryData || []).map(msg => ({
         role: msg.message_type === 'user' ? 'user' : 'assistant',
         content: msg.content
       }));
-      console.log('Fetched from database:', messages.length, 'messages');
     }
 
-    // Store memory context for important conversations
-    if (userMessage && userMessage.length > 50) { 
+    // Store memory with embedding for longer conversations
+    if (userMessage && userMessage.length > 50) {
+      const embedding = await generateEmbeddingForMemory(userMessage);
+      
       try {
         await supabase
           .from('memory_contexts')
           .insert({
-            user_id: 'anonymous', // Would use auth.uid() for authenticated users
+            user_id: 'anonymous',
             session_id: sessionId,
             content: userMessage,
             context_type: 'user_query',
             importance_score: Math.min(userMessage.length / 200, 1.0),
+            embedding: embedding,
             metadata: { pageContext: pageContext || {} }
           });
+        console.log('✅ Memory stored with embedding');
       } catch (memoryError) {
-        console.error('Failed to store memory context:', memoryError);
+        console.error('Failed to store memory:', memoryError);
       }
     }
 
-    console.log('Calling AI with page context and', messages.length, 'messages');
+    // Call OpenAI with tools
+    const { content: aiResponse, toolCalls } = await callOpenAIWithTools(messages, pageContext);
+    console.log(`✅ AI response generated (${toolCalls} tool calls)`);
 
-    let aiResponse: string;
-    
-    try {
-      // Check if OpenAI API key is configured
-      if (!OPENAI_API_KEY) {
-        throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY in Supabase secrets.');
-      }
-
-      // Call OpenAI with page context
-      aiResponse = await callOpenAI(messages, pageContext);
-      console.log('✅ OpenAI response received successfully');
-      
-    } catch (openaiError) {
-      console.error('❌ OpenAI API failed:', openaiError);
-      
-      // Provide specific error message based on the failure type
-      if (openaiError instanceof Error && openaiError.message.includes('not configured')) {
-        throw new Error('OpenAI API key is not properly configured. Please check your OPENAI_API_KEY in Supabase secrets.');
-      } else {
-        throw new Error('OpenAI service is currently unavailable. Please try again later.');
-      }
-    }
-
-    // Save AI response to database
-    const { data: insertedResponse, error: responseError } = await supabase
+    // Save AI response
+    const { data: insertedResponse } = await supabase
       .from('conversation_messages')
       .insert({
         session_id: sessionId,
@@ -303,8 +552,8 @@ serve(async (req) => {
         content: aiResponse,
         timestamp: new Date().toISOString(),
         metadata: { 
-          confidence_score: 0.9,
           model: 'gpt-4o-mini',
+          toolCalls,
           pageContext: pageContext || {},
           hasRealTimeData: !!pageContext
         }
@@ -312,56 +561,37 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (responseError) {
-      console.error('Error saving AI response:', responseError);
-      throw responseError;
-    }
-
-    console.log('Inserted AI response with ID:', insertedResponse?.id);
-
-    // Update session activity
-    const { error: sessionError } = await supabase
+    // Update session
+    await supabase
       .from('conversation_sessions')
       .update({ 
         updated_at: new Date().toISOString(),
         metadata: { 
           lastPageContext: pageContext || {},
-          messageCount: messages.length + 2
+          messageCount: messages.length + 2,
+          lastToolCalls: toolCalls
         }
       })
       .eq('id', sessionId);
 
-    if (sessionError) {
-      console.error('Error updating session:', sessionError);
-    } else {
-      console.log('Updated session timestamp successfully');
-    }
-
-    console.log('AI Chat response generated successfully');
+    console.log('✅ Response saved, session updated');
 
     return new Response(
       JSON.stringify({ 
         response: aiResponse,
         success: true,
+        toolCalls,
         timestamp: new Date().toISOString()
       }), 
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in AI chat function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request';
+    console.error('❌ Error in AI chat function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred';
     return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        success: false
-      }), 
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: errorMessage, success: false }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
