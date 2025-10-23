@@ -231,7 +231,7 @@ async function getMiningContext(): Promise<string> {
   }
 }
 
-async function retrieveMemories(query: string, limit: number = 5, userId: string = 'anonymous'): Promise<string> {
+async function retrieveMemories(query: string, limit: number = 5, userId: string = 'anonymous', sessionId?: string): Promise<string> {
   try {
     console.log('🔧 Tool: retrieve_memories - Searching for:', query);
     
@@ -255,12 +255,12 @@ async function retrieveMemories(query: string, limit: number = 5, userId: string
     const embeddingData = await embeddingResponse.json();
     const queryEmbedding = embeddingData.data[0].embedding;
 
-    // Search memories using vector similarity
+    // Search memories using vector similarity - use sessionId if available, otherwise userId
     const { data: memories, error } = await supabase.rpc('match_memories', {
       query_embedding: queryEmbedding,
       match_threshold: 0.7,
       match_count: limit,
-      user_id_filter: userId
+      user_id_filter: sessionId || userId
     });
 
     if (error) {
@@ -685,42 +685,50 @@ serve(async (req) => {
   try {
     const { sessionId, userMessage, pageContext, conversationHistory } = await req.json();
     
+    const isAnonymous = !sessionId;
+    
     console.log('🚀 AI Chat request:', { 
-      sessionId, 
+      mode: isAnonymous ? 'anonymous' : 'authenticated',
+      sessionId: sessionId || 'none', 
       userMessage: userMessage?.slice(0, 50) + '...', 
       hasPageContext: !!pageContext, 
       historyLength: conversationHistory?.length || 0 
     });
 
-    if (!sessionId) {
-      throw new Error('Session ID is required');
+    // Validate session if provided
+    if (sessionId) {
+      const { data: session, error: sessionCheckError } = await supabase
+        .from('conversation_sessions')
+        .select('id')
+        .eq('id', sessionId)
+        .single();
+
+      if (sessionCheckError || !session) {
+        console.log('⚠️ Invalid session, continuing in anonymous mode');
+        // Continue in anonymous mode rather than failing
+      } else {
+        console.log('✅ Valid session found');
+      }
+    } else {
+      console.log('ℹ️ Anonymous mode - no session persistence');
     }
 
-    // Validate session
-    const { data: session, error: sessionCheckError } = await supabase
-      .from('conversation_sessions')
-      .select('id')
-      .eq('id', sessionId)
-      .single();
-
-    if (sessionCheckError || !session) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid session ID', success: false }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Insert user message to database
-    if (userMessage) {
-      await supabase
-        .from('conversation_messages')
-        .insert({
-          session_id: sessionId,
-          message_type: 'user',
-          content: userMessage,
-          timestamp: new Date().toISOString(),
-          metadata: { pageContext: pageContext || {} }
-        });
+    // Insert user message to database (only if session exists)
+    if (userMessage && sessionId && !isAnonymous) {
+      try {
+        await supabase
+          .from('conversation_messages')
+          .insert({
+            session_id: sessionId,
+            message_type: 'user',
+            content: userMessage,
+            timestamp: new Date().toISOString(),
+            metadata: { pageContext: pageContext || {} }
+          });
+        console.log('✅ User message stored');
+      } catch (error) {
+        console.log('⚠️ Failed to store user message, continuing anyway');
+      }
     }
 
     // Get conversation history - trust frontend's conversationHistory
@@ -744,8 +752,8 @@ serve(async (req) => {
       }));
     }
 
-    // Store memory with embedding for longer conversations
-    if (userMessage && userMessage.length > 50) {
+    // Store memory with embedding for longer conversations (only if session exists)
+    if (userMessage && userMessage.length > 50 && sessionId && !isAnonymous) {
       const embedding = await generateEmbeddingForMemory(userMessage);
       
       try {
@@ -764,44 +772,52 @@ serve(async (req) => {
       } catch (memoryError) {
         console.error('Failed to store memory:', memoryError);
       }
+    } else if (isAnonymous) {
+      console.log('ℹ️ Anonymous mode - skipping memory storage');
     }
 
     // Call OpenAI with tools
     const { content: aiResponse, toolCalls } = await callOpenAIWithTools(messages, pageContext);
     console.log(`✅ AI response generated (${toolCalls} tool calls)`);
 
-    // Save AI response
-    const { data: insertedResponse } = await supabase
-      .from('conversation_messages')
-      .insert({
-        session_id: sessionId,
-        message_type: 'assistant',
-        content: aiResponse,
-        timestamp: new Date().toISOString(),
-        metadata: { 
-          model: 'gpt-4o-mini',
-          toolCalls,
-          pageContext: pageContext || {},
-          hasRealTimeData: !!pageContext
-        }
-      })
-      .select()
-      .single();
+    // Save AI response (only if session exists)
+    if (sessionId && !isAnonymous) {
+      try {
+        await supabase
+          .from('conversation_messages')
+          .insert({
+            session_id: sessionId,
+            message_type: 'assistant',
+            content: aiResponse,
+            timestamp: new Date().toISOString(),
+            metadata: { 
+              model: 'gpt-4o-mini',
+              toolCalls,
+              pageContext: pageContext || {},
+              hasRealTimeData: !!pageContext
+            }
+          });
 
-    // Update session
-    await supabase
-      .from('conversation_sessions')
-      .update({ 
-        updated_at: new Date().toISOString(),
-        metadata: { 
-          lastPageContext: pageContext || {},
-          messageCount: messages.length + 2,
-          lastToolCalls: toolCalls
-        }
-      })
-      .eq('id', sessionId);
+        // Update session
+        await supabase
+          .from('conversation_sessions')
+          .update({ 
+            updated_at: new Date().toISOString(),
+            metadata: { 
+              lastPageContext: pageContext || {},
+              messageCount: messages.length + 2,
+              lastToolCalls: toolCalls
+            }
+          })
+          .eq('id', sessionId);
 
-    console.log('✅ Response saved, session updated');
+        console.log('✅ Response saved, session updated');
+      } catch (error) {
+        console.log('⚠️ Failed to save response, continuing anyway');
+      }
+    } else {
+      console.log('ℹ️ Anonymous mode - skipping response storage');
+    }
 
     return new Response(
       JSON.stringify({ 
