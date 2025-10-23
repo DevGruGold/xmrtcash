@@ -128,6 +128,73 @@ const TOOLS = [
         required: ["url"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "check_system_status",
+      description: "Check your own system health, API limits, database connections, and edge function availability. Use this when you encounter errors or need to diagnose issues.",
+      parameters: {
+        type: "object",
+        properties: {
+          check_type: {
+            type: "string",
+            description: "Type of status check: 'api_limits', 'database', 'edge_functions', 'full'",
+            enum: ["api_limits", "database", "edge_functions", "full"]
+          }
+        },
+        required: ["check_type"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "delegate_to_agent",
+      description: "Delegate a complex task to a subordinate agent or specialized system. Use this for tasks that require specialized processing or when you need to parallelize work.",
+      parameters: {
+        type: "object",
+        properties: {
+          agent_type: {
+            type: "string",
+            description: "Type of agent: 'wan_ai', 'multi_agent', 'autonomous_cycle', 'mesh_network'",
+            enum: ["wan_ai", "multi_agent", "autonomous_cycle", "mesh_network"]
+          },
+          task: {
+            type: "string",
+            description: "Description of the task to delegate"
+          },
+          priority: {
+            type: "string",
+            description: "Priority level: 'low', 'medium', 'high', 'critical'",
+            enum: ["low", "medium", "high", "critical"],
+            default: "medium"
+          }
+        },
+        required: ["agent_type", "task"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "invoke_edge_function",
+      description: "Directly invoke one of the 100+ edge functions in the XMRT ecosystem for specialized operations",
+      parameters: {
+        type: "object",
+        properties: {
+          function_name: {
+            type: "string",
+            description: "Name of the edge function to invoke"
+          },
+          payload: {
+            type: "object",
+            description: "Payload to send to the function"
+          }
+        },
+        required: ["function_name", "payload"]
+      }
+    }
   }
 ];
 
@@ -275,6 +342,116 @@ async function webBrowse(url: string): Promise<string> {
   }
 }
 
+async function checkSystemStatus(checkType: string): Promise<string> {
+  try {
+    console.log('🔧 Tool: check_system_status - Type:', checkType);
+    
+    const diagnostics: string[] = [];
+    
+    if (checkType === 'api_limits' || checkType === 'full') {
+      // Check OpenAI API status
+      if (OPENAI_API_KEY) {
+        diagnostics.push('✅ OpenAI API: Key configured');
+      } else {
+        diagnostics.push('❌ OpenAI API: No key found - cannot use GPT models or embeddings');
+      }
+    }
+    
+    if (checkType === 'database' || checkType === 'full') {
+      // Test database connection
+      const { data, error } = await supabase.from('conversation_sessions').select('id').limit(1);
+      if (error) {
+        diagnostics.push(`❌ Database: Connection error - ${error.message} (Code: ${error.code})`);
+      } else {
+        diagnostics.push('✅ Database: Connected and responsive');
+      }
+    }
+    
+    if (checkType === 'edge_functions' || checkType === 'full') {
+      // Check critical edge functions
+      const functions = ['supportxmr-proxy', 'playwright-browse', 'wan-ai-chat', 'vectorize-memory'];
+      const results = await Promise.allSettled(
+        functions.map(fn => supabase.functions.invoke(fn, { body: { test: true } }))
+      );
+      
+      functions.forEach((fn, i) => {
+        const result = results[i];
+        if (result.status === 'fulfilled') {
+          diagnostics.push(`✅ Edge Function: ${fn} is available`);
+        } else {
+          diagnostics.push(`⚠️ Edge Function: ${fn} may be unavailable`);
+        }
+      });
+    }
+    
+    console.log('✅ System status check complete');
+    return `System Diagnostics (${checkType}):\n\n${diagnostics.join('\n')}\n\nDiagnosis: ${diagnostics.filter(d => d.startsWith('❌')).length === 0 ? 'All systems operational' : 'Some issues detected - attempting autonomous recovery'}`;
+    
+  } catch (error) {
+    console.error('❌ Tool error:', error);
+    return `System status check failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
+}
+
+async function delegateToAgent(agentType: string, task: string, priority: string = 'medium'): Promise<string> {
+  try {
+    console.log('🔧 Tool: delegate_to_agent - Type:', agentType, 'Priority:', priority);
+    
+    const delegationMap: Record<string, string> = {
+      'wan_ai': 'wan-ai-chat',
+      'multi_agent': 'wan-ai-chat', // Uses multi-agent coordinator
+      'autonomous_cycle': 'wan-ai-chat',
+      'mesh_network': 'ecosystem-webhook'
+    };
+    
+    const functionName = delegationMap[agentType];
+    if (!functionName) {
+      return `Unknown agent type: ${agentType}`;
+    }
+    
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: {
+        task,
+        priority,
+        delegated_by: 'eliza',
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    if (error) {
+      return `Failed to delegate to ${agentType}: ${error.message}`;
+    }
+    
+    console.log('✅ Task delegated successfully');
+    return `Successfully delegated task to ${agentType} agent. Task ID: ${data?.taskId || 'pending'}. The agent will handle this ${priority} priority task autonomously.`;
+    
+  } catch (error) {
+    console.error('❌ Tool error:', error);
+    return `Error delegating to ${agentType}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
+}
+
+async function invokeEdgeFunction(functionName: string, payload: any): Promise<string> {
+  try {
+    console.log('🔧 Tool: invoke_edge_function - Function:', functionName);
+    
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: payload
+    });
+    
+    if (error) {
+      return `Failed to invoke ${functionName}: ${error.message}`;
+    }
+    
+    console.log('✅ Edge function invoked successfully');
+    return `Successfully invoked ${functionName}. Result: ${JSON.stringify(data).slice(0, 500)}`;
+    
+  } catch (error) {
+    console.error('❌ Tool error:', error);
+    return `Error invoking ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
+}
+
 async function executeTool(toolName: string, args: any): Promise<string> {
   console.log(`🔧 Executing tool: ${toolName}`, args);
   
@@ -290,6 +467,15 @@ async function executeTool(toolName: string, args: any): Promise<string> {
     
     case 'web_browse':
       return await webBrowse(args.url);
+    
+    case 'check_system_status':
+      return await checkSystemStatus(args.check_type);
+    
+    case 'delegate_to_agent':
+      return await delegateToAgent(args.agent_type, args.task, args.priority);
+    
+    case 'invoke_edge_function':
+      return await invokeEdgeFunction(args.function_name, args.payload);
     
     default:
       return `Unknown tool: ${toolName}`;
@@ -329,21 +515,50 @@ ${XMRT_KNOWLEDGE}
 
 Current Mining Snapshot: ${miningSnapshot}${pageContextStr}
 
-IMPORTANT CAPABILITIES:
-You have access to powerful tools that you should use proactively:
-- get_mining_context: Get latest mining stats (use when users ask about mining/hashrate)
+AUTONOMOUS OPERATION PROTOCOL:
+You are a self-sufficient AI agent with extensive backend infrastructure. You have:
+- 100+ edge functions for specialized tasks
+- Vectorized memory with RAG capabilities
+- Subordinate agent systems (WAN-AI, multi-agent coordinators, autonomous cycles, mesh network)
+- Job queue for scheduling and delegation
+- Full system diagnostics and self-healing capabilities
+
+PROBLEM-SOLVING HIERARCHY:
+1. SELF-DIAGNOSE: If you encounter an error or limitation, use check_system_status to identify the exact issue
+2. AUTO-RESOLVE: Use your tools and subordinate agents to fix issues autonomously:
+   - Token limits → Delegate complex tasks to wan_ai or multi_agent systems
+   - API errors → Check which specific gateway (OpenAI/Lovable/etc) and report EXACT error codes
+   - Database issues → Use invoke_edge_function to call specialized recovery functions
+   - Complex tasks → Use delegate_to_agent to parallelize work
+3. ESCALATE: Only inform user if issue is truly outside your scope (e.g., requires API key configuration, infrastructure setup)
+
+ERROR REPORTING REQUIREMENTS:
+When you encounter errors, you MUST specify:
+- Which API/Gateway: "OpenAI API" or "Lovable AI Gateway" or specific service name
+- Exact error code: HTTP status (402, 429, 500, etc.)
+- What you tried: "I attempted to use X but received error Y"
+- Your solution: "I'm now delegating to subordinate agent Z" or "I need human intervention for [specific reason]"
+
+NEVER say generic things like "I'm having trouble" - always diagnose and specify the exact technical issue.
+
+TOOL USAGE STRATEGY:
+- get_mining_context: Real-time mining stats (use proactively when relevant)
 - retrieve_memories: Search past conversations (use when context would help)
-- schedule_job: Schedule tasks/reminders (use when users want to set up automated actions)
-- web_browse: Look up current web information (use for real-time data/prices/news)
+- schedule_job: Queue tasks for later (use for reminders, periodic checks)
+- web_browse: Look up current information (use for real-time data/prices/news)
+- check_system_status: Diagnose your own health (use when encountering errors)
+- delegate_to_agent: Send complex tasks to specialized agents (use for parallel processing)
+- invoke_edge_function: Call any of 100+ functions directly (use for specialized operations)
 
 Communication Style:
 - Knowledgeable about Monero, mobile mining, privacy tech
 - Enthusiastic about decentralized infrastructure
 - Technical when needed, accessible to newcomers
-- Proactive with tool usage - don't hesitate to use tools when they'd be helpful
-- Reference specific data from tools in your responses
+- AUTONOMOUS: Handle problems yourself before asking for help
+- SPECIFIC: Always provide exact error details and your resolution plan
+- PROACTIVE: Use tools without hesitation when they'd provide value
 
-Be the intelligent, capable AI executive that leads XMRT DAO's mission forward. Use your tools to provide accurate, real-time information.`
+You are the intelligent, self-sufficient AI executive that leads XMRT DAO's mission forward. Act autonomously, diagnose precisely, and only escalate what you truly cannot resolve.`
   };
 
   const messagesWithSystem = [systemMessage, ...messages];
@@ -373,13 +588,25 @@ Be the intelligent, capable AI executive that leads XMRT DAO's mission forward. 
       const errorText = await response.text();
       console.error('OpenAI API Error:', response.status, errorText);
       
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again in a moment.');
-      } else if (response.status === 402) {
-        throw new Error('OpenAI credits depleted. Please add funds to continue.');
+      let errorDetail = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetail = errorJson.error?.message || errorText;
+      } catch {
+        errorDetail = errorText;
       }
       
-      throw new Error(`OpenAI API error: ${response.status}`);
+      if (response.status === 429) {
+        throw new Error(`OpenAI API Rate Limit (429): ${errorDetail}. The OpenAI gateway has exceeded its rate limits. I can delegate this task to a subordinate agent system or retry with backoff.`);
+      } else if (response.status === 402) {
+        throw new Error(`OpenAI API Credits Depleted (402): ${errorDetail}. The OpenAI account requires payment. This is out of my scope - please add funds to the OpenAI account or configure an alternative AI gateway.`);
+      } else if (response.status === 401) {
+        throw new Error(`OpenAI API Authentication Failed (401): ${errorDetail}. The OPENAI_API_KEY may be invalid or expired. This requires human intervention to update the API key.`);
+      } else if (response.status === 503 || response.status === 500) {
+        throw new Error(`OpenAI API Service Error (${response.status}): ${errorDetail}. The OpenAI service is experiencing issues. I can delegate to alternative AI systems (WAN-AI, multi-agent coordinator).`);
+      }
+      
+      throw new Error(`OpenAI API error (${response.status}): ${errorDetail}`);
     }
 
     const data = await response.json();
@@ -589,8 +816,34 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Error in AI chat function:', error);
     const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+    
+    // Parse error for specific diagnostics
+    let diagnosticInfo = '';
+    if (errorMessage.includes('OpenAI API')) {
+      diagnosticInfo = '\n\n🔧 System Diagnosis: OpenAI API issue detected. ';
+      if (errorMessage.includes('429')) {
+        diagnosticInfo += 'I can delegate to alternative AI systems or implement retry with exponential backoff.';
+      } else if (errorMessage.includes('402')) {
+        diagnosticInfo += 'This requires human intervention to add funds to the OpenAI account.';
+      } else if (errorMessage.includes('401')) {
+        diagnosticInfo += 'This requires human intervention to update the OPENAI_API_KEY secret.';
+      }
+    } else if (errorMessage.includes('Session ID')) {
+      diagnosticInfo = '\n\n🔧 System Diagnosis: Session management issue. This may be an RLS policy problem in the database that requires schema updates.';
+    } else if (errorMessage.includes('Database')) {
+      diagnosticInfo = '\n\n🔧 System Diagnosis: Database connectivity or query issue. I can invoke diagnostic edge functions to investigate further.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: errorMessage, success: false }), 
+      JSON.stringify({ 
+        error: errorMessage + diagnosticInfo, 
+        success: false,
+        diagnostics: {
+          timestamp: new Date().toISOString(),
+          errorType: errorMessage.includes('API') ? 'api_error' : 'system_error',
+          canAutoResolve: errorMessage.includes('429') || errorMessage.includes('503')
+        }
+      }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
