@@ -9,6 +9,10 @@ export interface ChatMessage {
   timestamp: string;
   metadata?: {
     confidence_score?: number;
+    autoResolved?: boolean;
+    method?: string;
+    diagnostics?: any;
+    isError?: boolean;
   };
 }
 
@@ -117,38 +121,85 @@ export function usePersistentChat(pageContext?: any) {
         }
       });
 
-      if (error) throw error;
+      // Handle both success and autonomous recovery responses
+      if (error && !data) throw error;
+
+      // Parse response - handle both standard and recovery responses
+      let responseContent = data.response || 'I apologize, but I encountered an issue processing your request.';
+      let metadata: any = { confidence_score: 0.9 };
+      
+      // Check for autonomous recovery indicators
+      if (data.autoResolved !== undefined) {
+        metadata.autoResolved = data.autoResolved;
+        metadata.method = data.method;
+        metadata.diagnostics = data.diagnostics;
+        
+        // If auto-resolved via fallback, add indicator
+        if (data.autoResolved && data.method) {
+          const fallbackLabel = data.method === 'wan-ai-chat' ? '🔄 WAN-AI' : `🔄 ${data.method}`;
+          responseContent = `${fallbackLabel}\n\n${responseContent}`;
+        }
+      }
 
       // Add AI response
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         message_type: 'assistant',
-        content: data.response || 'I apologize, but I encountered an issue processing your request.',
+        content: responseContent,
         timestamp: new Date().toISOString(),
-        metadata: {
-          confidence_score: 0.9
-        }
+        metadata
       };
       
       setMessages(prev => [...prev, aiMessage]);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      
+      // Try to parse structured error response
+      let errorContent = 'I apologize, but I\'m having trouble processing your request right now. Please try again.';
+      let showToast = true;
+      
+      // Check if we have a structured error response from the edge function
+      if (error?.message) {
+        try {
+          const errorData = JSON.parse(error.message);
+          if (errorData.diagnostics) {
+            errorContent = `🔧 **System Diagnosis**\n\n${errorData.details || errorData.error}\n\n`;
+            
+            if (errorData.diagnostics.requiresHumanIntervention) {
+              errorContent += '⚠️ **Action Required:** This issue requires manual configuration. Please check the system logs.';
+            }
+            
+            if (errorData.diagnostics.originalError) {
+              errorContent += `\n\n**Technical Details:** ${errorData.diagnostics.originalError}`;
+            }
+            
+            showToast = false; // Don't show redundant toast for structured errors
+          }
+        } catch (e) {
+          // Not JSON, use default message
+        }
+      }
       
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         message_type: 'assistant', 
-        content: 'I apologize, but I\'m having trouble processing your request right now. Please try again.',
+        content: errorContent,
         timestamp: new Date().toISOString(),
+        metadata: {
+          isError: true
+        }
       };
       
       setMessages(prev => [...prev, errorMessage]);
       
-      toast({
-        title: "Message Error",
-        description: "Failed to get AI response",
-        variant: "destructive"
-      });
+      if (showToast) {
+        toast({
+          title: "Message Error",
+          description: "Failed to get AI response",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsTyping(false);
     }

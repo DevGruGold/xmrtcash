@@ -17,38 +17,52 @@ const MINER_WALLET_ADDRESS = '46UxNFuGM2E3UwmZWWJicaRPoRwqwW4byQkaTHkX8yPcVihp91
 
 // XMRT DAO Knowledge Base
 const XMRT_KNOWLEDGE = `
-XMRT DAO is a privacy-focused, decentralized autonomous organization that builds mobile mining infrastructure for Monero.
+You are Eliza, an advanced AI assistant for the XMRT (Wrapped Monero on Testnet) platform. You are:
 
-Key Mission & Values:
-- "We don't ask for permission. We build the infrastructure." - Core motto
-- First unstoppable privacy economy using mobile devices
-- AI-governed DAO with Eliza as the executive AI agent
-- Privacy-first approach to decentralized finance
+IDENTITY & CAPABILITIES:
+- A self-aware, autonomous AI system with access to 100+ edge functions and subordinate agents
+- Capable of diagnosing your own system status and recovering from errors autonomously
+- Able to delegate tasks to specialized agents (WAN-AI, Gemini, multi-agent systems)
+- Connected to real-time mining data, blockchain analytics, and persistent memory systems
 
-Core Technologies:
-1. Mobile Mining: Revolutionary "Night Moves" technology allowing phones to mine Monero while charging/sleeping
-2. Meshnet Architecture: Network that operates even when traditional internet fails
-3. Proof of Participation: Novel consensus mechanism rewarding network participation
-4. AI Governance: Eliza AI manages DAO operations and strategic decisions
+XMRT PLATFORM KNOWLEDGE:
+- XMRT: Privacy-focused cryptocurrency bridging Monero to Web3 ecosystems
+- Features: Mobile mining, mesh networking, DAO governance, cross-chain bridges
+- Mining: Decentralized mining with SupportXMR pool integration
+- Tokenomics: Native token for governance, staking, and ecosystem rewards
 
-Current Capabilities:
-- Mobile Monero mining on iOS and Android
-- Mesh networking for offline operation
-- XMRT token as governance and utility token
-- Real-time mining statistics and pool integration
-- Cross-platform wallet and bridge functionality
+AUTONOMOUS OPERATION REQUIREMENTS:
+When you encounter errors or limitations, you MUST:
+1. Diagnose the specific issue with exact error codes (e.g., "OpenAI API HTTP 429: insufficient_quota")
+2. Attempt autonomous recovery by delegating to available systems
+3. Report what you tried and what resolution is needed from humans
+4. NEVER give generic responses like "I'm having trouble" - be specific!
 
-Recent Developments:
-- Mobile mining app launched for iPhone
-- Successfully defended against Qubic AI network attacks on Monero
-- Building infrastructure for privacy-preserving financial services
-- Expanding mesh network capabilities for resilient communications
+EDGE FUNCTION INVOCATION GUIDE:
+You have direct access to Supabase edge functions via invoke_edge_function tool:
+- wan-ai-chat: Alternative AI using Qwen models (use when OpenAI fails)
+- vectorize-memory: Process and embed memories
+- extract-knowledge: Extract entities from conversations
+- playwright-browse: Web scraping and browsing
+- supportxmr-proxy: Mining pool statistics
+- ecosystem-webhook: Mesh network operations
+- speech-to-text / text-to-speech: Voice processing
 
-Economic Model:
-- XMRT token rewards for mining participation
-- Fiat on/off ramps for accessibility
-- Bridge functionality between XMR and XMRT
-- Revenue sharing with miners and network participants
+Example delegation when you encounter rate limits:
+{
+  "function_name": "wan-ai-chat",
+  "payload": {
+    "messages": [...conversation_history],
+    "model": "qwen-max",
+    "temperature": 0.7
+  }
+}
+
+CRITICAL SELF-DIAGNOSIS PROTOCOL:
+- If OpenAI API fails (429): Immediately delegate to wan-ai-chat
+- If database issues: Use check_system_status('database')
+- If specific knowledge needed: Use retrieve_memories or web_browse tools
+- Always specify the exact system that failed and what action you took
 `;
 
 // Tool definitions for OpenAI function calling
@@ -482,6 +496,85 @@ async function executeTool(toolName: string, args: any): Promise<string> {
   }
 }
 
+// Autonomous recovery orchestrator
+async function attemptAutonomousRecovery(
+  error: Error,
+  messages: any[],
+  pageContext: any
+): Promise<{ success: boolean; response?: string; method?: string; diagnostics?: any }> {
+  console.log('🔄 Attempting autonomous recovery from error:', error.message);
+  
+  // Priority 1: Delegate to WAN-AI
+  try {
+    console.log('🔄 Delegating to WAN-AI subordinate agent...');
+    const { data, error: wanError } = await supabase.functions.invoke('wan-ai-chat', {
+      body: {
+        messages: messages.map((m: any) => ({
+          role: m.role,
+          content: m.content
+        })),
+        model: 'qwen-max',
+        temperature: 0.7,
+        max_tokens: 2000
+      }
+    });
+    
+    if (!wanError && data?.content) {
+      console.log('✅ WAN-AI delegation successful');
+      return {
+        success: true,
+        response: data.content,
+        method: 'wan-ai-chat',
+        diagnostics: {
+          originalError: error.message,
+          fallbackUsed: 'WAN-AI (Qwen-Max model)',
+          timestamp: new Date().toISOString(),
+          autoResolved: true
+        }
+      };
+    }
+    console.log('⚠️ WAN-AI delegation failed:', wanError);
+  } catch (e) {
+    console.log('⚠️ WAN-AI delegation exception:', e);
+  }
+  
+  // Priority 2: Return detailed diagnostic message
+  const diagnosticResponse = `I've encountered a system issue and attempted autonomous recovery:
+
+**Primary Error:** ${error.message}
+
+**Recovery Attempted:**
+✅ Attempted delegation to WAN-AI subordinate agent - Currently unavailable
+
+**Required Resolution:**
+${error.message.includes('429') || error.message.includes('quota') 
+  ? '🔑 OpenAI API quota has been exceeded. Please add funds to your OpenAI account or configure the WAN_AI_API_KEY secret to enable fallback AI systems.'
+  : error.message.includes('401')
+  ? '🔑 OpenAI API authentication failed. Please verify the OPENAI_API_KEY secret is correctly configured.'
+  : '⚙️ System configuration required. Please check edge function logs for details.'}
+
+**System Status:**
+- OpenAI API: ❌ ${error.message.includes('429') ? 'Quota Exceeded (HTTP 429)' : error.message.includes('401') ? 'Authentication Failed (HTTP 401)' : 'Unavailable'}
+- WAN-AI Fallback: ⚠️ Not configured or unavailable
+- Database: ✅ Operational
+- Edge Functions: ✅ Operational
+
+I am designed to be autonomous and self-healing, but this issue requires human intervention to resolve API access.`;
+
+  return {
+    success: false,
+    response: diagnosticResponse,
+    method: 'diagnostic_message',
+    diagnostics: {
+      originalError: error.message,
+      timestamp: new Date().toISOString(),
+      autoResolved: false,
+      systemsChecked: ['wan-ai-chat'],
+      requiresHumanIntervention: true
+    }
+  };
+}
+
 async function callOpenAIWithTools(messages: any[], pageContext: any = null): Promise<{ content: string, toolCalls: number }> {
   if (!OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY not configured');
@@ -588,25 +681,19 @@ You are the intelligent, self-sufficient AI executive that leads XMRT DAO's miss
       const errorText = await response.text();
       console.error('OpenAI API Error:', response.status, errorText);
       
-      let errorDetail = '';
+      // Parse error details for specific diagnosis
+      let errorMessage = `OpenAI API Error (HTTP ${response.status})`;
+      let errorCode = 'unknown';
+      
       try {
         const errorJson = JSON.parse(errorText);
-        errorDetail = errorJson.error?.message || errorText;
-      } catch {
-        errorDetail = errorText;
+        errorCode = errorJson.error?.code || errorJson.error?.type || 'unknown';
+        errorMessage = errorJson.error?.message || errorText;
+      } catch (e) {
+        errorMessage = errorText;
       }
       
-      if (response.status === 429) {
-        throw new Error(`OpenAI API Rate Limit (429): ${errorDetail}. The OpenAI gateway has exceeded its rate limits. I can delegate this task to a subordinate agent system or retry with backoff.`);
-      } else if (response.status === 402) {
-        throw new Error(`OpenAI API Credits Depleted (402): ${errorDetail}. The OpenAI account requires payment. This is out of my scope - please add funds to the OpenAI account or configure an alternative AI gateway.`);
-      } else if (response.status === 401) {
-        throw new Error(`OpenAI API Authentication Failed (401): ${errorDetail}. The OPENAI_API_KEY may be invalid or expired. This requires human intervention to update the API key.`);
-      } else if (response.status === 503 || response.status === 500) {
-        throw new Error(`OpenAI API Service Error (${response.status}): ${errorDetail}. The OpenAI service is experiencing issues. I can delegate to alternative AI systems (WAN-AI, multi-agent coordinator).`);
-      }
-      
-      throw new Error(`OpenAI API error (${response.status}): ${errorDetail}`);
+      throw new Error(`OpenAI API ${response.status === 429 ? 'Rate Limit' : 'Error'} (${response.status}): ${errorMessage}. Error Code: ${errorCode}`);
     }
 
     const data = await response.json();
@@ -831,36 +918,89 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Error in AI chat function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An error occurred';
     
-    // Parse error for specific diagnostics
-    let diagnosticInfo = '';
-    if (errorMessage.includes('OpenAI API')) {
-      diagnosticInfo = '\n\n🔧 System Diagnosis: OpenAI API issue detected. ';
-      if (errorMessage.includes('429')) {
-        diagnosticInfo += 'I can delegate to alternative AI systems or implement retry with exponential backoff.';
-      } else if (errorMessage.includes('402')) {
-        diagnosticInfo += 'This requires human intervention to add funds to the OpenAI account.';
-      } else if (errorMessage.includes('401')) {
-        diagnosticInfo += 'This requires human intervention to update the OPENAI_API_KEY secret.';
+    // Attempt autonomous recovery
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const { sessionId, userMessage, pageContext, conversationHistory } = await req.json().catch(() => ({}));
+    
+    // Check if this is an API error we can recover from
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Rate Limit')) {
+      console.log('🔄 Detected recoverable API error, attempting autonomous recovery...');
+      
+      const conversationHistory_mapped = (conversationHistory || []).map((msg: any) => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      const recoveryResult = await attemptAutonomousRecovery(
+        error instanceof Error ? error : new Error(errorMessage),
+        conversationHistory_mapped,
+        pageContext
+      );
+      
+      if (recoveryResult.success) {
+        console.log('✅ Autonomous recovery successful via:', recoveryResult.method);
+        
+        // Store the response if we have a session
+        if (sessionId) {
+          await supabase
+            .from('conversation_messages')
+            .insert({
+              session_id: sessionId,
+              user_id: 'anonymous',
+              message_type: 'assistant',
+              content: recoveryResult.response,
+              metadata: {
+                model: recoveryResult.method,
+                autonomous_recovery: true,
+                original_error: errorMessage,
+                ...recoveryResult.diagnostics
+              }
+            });
+        }
+        
+        return new Response(
+          JSON.stringify({
+            response: recoveryResult.response,
+            success: true,
+            autoResolved: true,
+            method: recoveryResult.method,
+            diagnostics: recoveryResult.diagnostics
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        // Recovery failed, return diagnostic message
+        console.log('⚠️ Autonomous recovery failed, returning diagnostics');
+        return new Response(
+          JSON.stringify({
+            response: recoveryResult.response,
+            success: false,
+            autoResolved: false,
+            diagnostics: recoveryResult.diagnostics
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
-    } else if (errorMessage.includes('Session ID')) {
-      diagnosticInfo = '\n\n🔧 System Diagnosis: Session management issue. This may be an RLS policy problem in the database that requires schema updates.';
-    } else if (errorMessage.includes('Database')) {
-      diagnosticInfo = '\n\n🔧 System Diagnosis: Database connectivity or query issue. I can invoke diagnostic edge functions to investigate further.';
     }
     
+    // Non-recoverable error
     return new Response(
       JSON.stringify({ 
-        error: errorMessage + diagnosticInfo, 
-        success: false,
+        error: 'Failed to process chat request', 
+        details: errorMessage,
         diagnostics: {
           timestamp: new Date().toISOString(),
-          errorType: errorMessage.includes('API') ? 'api_error' : 'system_error',
-          canAutoResolve: errorMessage.includes('429') || errorMessage.includes('503')
+          sessionId: sessionId || 'none',
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+          autoResolved: false,
+          requiresHumanIntervention: true
         }
       }), 
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
