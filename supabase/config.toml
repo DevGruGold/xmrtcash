@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.extract-knowledge]
 verify_jwt = false
+
+[functions.python-executor]
+verify_jwt = false

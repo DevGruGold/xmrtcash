@@ -109,17 +109,56 @@ export function usePersistentChat(pageContext?: any) {
       const currentConversation = [...messages, userMessage];
       
       // Call AI chat function with conversation memory and page context
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: {
-          sessionId: currentSessionId,
-          userMessage: messageText.trim(),
-          pageContext: pageContext?.data || null,
-          conversationHistory: currentConversation.slice(-10).map(msg => ({
-            role: msg.message_type === 'user' ? 'user' : 'assistant',
-            content: msg.content
-          }))
-        }
-      });
+      // Python-first mode can be enabled by setting PYTHON_FIRST env var
+      const usePythonFirst = false; // Can be toggled via UI or env var in the future
+      
+      let data, error;
+      
+      if (usePythonFirst) {
+        // Route through Python executor for advanced orchestration
+        const pythonCode = `
+import json
+
+result = await tools.ai_chat(
+    message=${JSON.stringify(messageText.trim())},
+    context=${JSON.stringify(pageContext?.data || null)},
+    conversation_history=${JSON.stringify(currentConversation.slice(-10).map(msg => ({
+      role: msg.message_type === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    })))}
+)
+
+result
+`;
+
+        const response = await supabase.functions.invoke('python-executor', {
+          body: {
+            code: pythonCode,
+            source: 'persistent-chat',
+            workflow_id: currentSessionId,
+            metadata: { mode: 'python-first' }
+          }
+        });
+        
+        data = response.data?.result;
+        error = response.error;
+      } else {
+        // Direct call to ai-chat (standard mode)
+        const response = await supabase.functions.invoke('ai-chat', {
+          body: {
+            sessionId: currentSessionId,
+            userMessage: messageText.trim(),
+            pageContext: pageContext?.data || null,
+            conversationHistory: currentConversation.slice(-10).map(msg => ({
+              role: msg.message_type === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            }))
+          }
+        });
+        
+        data = response.data;
+        error = response.error;
+      }
 
       // Handle both success and autonomous recovery responses
       if (error && !data) throw error;

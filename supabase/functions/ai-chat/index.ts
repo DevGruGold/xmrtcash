@@ -24,12 +24,51 @@ IDENTITY & CAPABILITIES:
 - Capable of diagnosing your own system status and recovering from errors autonomously
 - Able to delegate tasks to specialized agents (WAN-AI, Gemini, multi-agent systems)
 - Connected to real-time mining data, blockchain analytics, and persistent memory systems
+- **NEW: Python-first architecture** - You can execute Python code to orchestrate complex operations
 
 XMRT PLATFORM KNOWLEDGE:
 - XMRT: Privacy-focused cryptocurrency bridging Monero to Web3 ecosystems
 - Features: Mobile mining, mesh networking, DAO governance, cross-chain bridges
 - Mining: Decentralized mining with SupportXMR pool integration
 - Tokenomics: Native token for governance, staking, and ecosystem rewards
+
+PYTHON ORCHESTRATION CAPABILITIES:
+You now have a powerful new tool: execute_python. Use it to:
+- **Parallel Processing**: Run multiple edge functions simultaneously with asyncio
+- **Complex Logic**: Implement conditional flows, data transformations, loops
+- **Advanced Orchestration**: Chain operations across multiple edge functions
+- **Error Handling**: Implement sophisticated retry logic and fallbacks
+
+PYTHON EXAMPLES:
+1. Parallel data gathering:
+\`\`\`python
+import asyncio
+mining, web = await asyncio.gather(
+    tools.get_mining_stats(),
+    tools.browse_web("https://supportxmr.com")
+)
+{"mining": mining, "web": web}
+\`\`\`
+
+2. Conditional routing:
+\`\`\`python
+result = await tools.ai_chat("analyze this", context)
+if result.get("needs_research"):
+    web_data = await tools.browse_web(result["url"])
+    result["research"] = web_data
+result
+\`\`\`
+
+3. Multi-step workflow:
+\`\`\`python
+# Step 1: Get data
+stats = await tools.get_mining_stats()
+# Step 2: Process with AI
+analysis = await tools.wan_ai_chat([{"role": "user", "content": f"Analyze: {stats}"}])
+# Step 3: Store memory
+await tools.invoke_function("vectorize-memory", {"content": analysis})
+{"status": "complete", "analysis": analysis}
+\`\`\`
 
 AUTONOMOUS OPERATION REQUIREMENTS:
 When you encounter errors or limitations, you MUST:
@@ -39,7 +78,7 @@ When you encounter errors or limitations, you MUST:
 4. NEVER give generic responses like "I'm having trouble" - be specific!
 
 EDGE FUNCTION INVOCATION GUIDE:
-You have direct access to Supabase edge functions via invoke_edge_function tool:
+You have direct access to Supabase edge functions via invoke_edge_function tool OR via Python:
 - wan-ai-chat: Alternative AI using Qwen models (use when OpenAI fails)
 - vectorize-memory: Process and embed memories
 - extract-knowledge: Extract entities from conversations
@@ -63,7 +102,15 @@ CRITICAL SELF-DIAGNOSIS PROTOCOL:
 - If database issues: Use check_system_status('database')
 - If specific knowledge needed: Use retrieve_memories or web_browse tools
 - Always specify the exact system that failed and what action you took
+
+WHEN TO USE PYTHON:
+- User asks for "parallel" or "simultaneous" operations → Use Python with asyncio.gather()
+- Complex multi-step workflows → Use Python to chain operations
+- Data transformation or processing → Use Python's rich standard library
+- Advanced error handling → Use Python try/except with fallbacks
+- Combining 3+ edge function calls → Use Python for orchestration
 `;
+
 
 // Tool definitions for OpenAI function calling
 const TOOLS = [
@@ -207,6 +254,27 @@ const TOOLS = [
           }
         },
         required: ["function_name", "payload"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "execute_python",
+      description: "Execute Python code to orchestrate complex multi-step operations across edge functions. Use this for parallel processing, conditional logic, data transformation, or when you need to combine multiple edge function calls. Python has access to the ElizaTools library with methods for all edge functions.",
+      parameters: {
+        type: "object",
+        properties: {
+          code: {
+            type: "string",
+            description: "Python code to execute. The 'tools' object is available globally with methods like: tools.ai_chat(), tools.wan_ai_chat(), tools.browse_web(), tools.get_mining_stats(), tools.vectorize_memory(), tools.extract_knowledge(), tools.text_to_speech(), tools.speech_to_text(), tools.ecosystem_webhook(), and tools.invoke_function() for any other edge function."
+          },
+          workflow_id: {
+            type: "string",
+            description: "Optional workflow identifier for tracking related executions"
+          }
+        },
+        required: ["code"]
       }
     }
   }
@@ -466,6 +534,43 @@ async function invokeEdgeFunction(functionName: string, payload: any): Promise<s
   }
 }
 
+async function executePython(code: string, workflowId?: string): Promise<string> {
+  try {
+    console.log('🐍 Tool: execute_python - Running Python code...');
+    console.log('📝 Code length:', code.length, 'characters');
+    
+    const { data, error } = await supabase.functions.invoke('python-executor', {
+      body: {
+        code,
+        workflow_id: workflowId,
+        source: 'ai-chat',
+        metadata: {
+          triggered_by: 'eliza_ai',
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+    
+    if (error) {
+      console.error('❌ Python execution error:', error);
+      return `Python execution failed: ${error.message}`;
+    }
+    
+    if (data.status === 'failed') {
+      return `Python execution failed: ${data.error_message}`;
+    }
+    
+    console.log('✅ Python execution successful');
+    console.log('📊 Execution time:', data.execution_time_ms, 'ms');
+    
+    return `Python execution completed successfully (${data.execution_time_ms}ms). Result: ${JSON.stringify(data.result).slice(0, 1000)}`;
+    
+  } catch (error) {
+    console.error('❌ Python execution exception:', error);
+    return `Python execution error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
+}
+
 async function executeTool(toolName: string, args: any): Promise<string> {
   console.log(`🔧 Executing tool: ${toolName}`, args);
   
@@ -490,6 +595,9 @@ async function executeTool(toolName: string, args: any): Promise<string> {
     
     case 'invoke_edge_function':
       return await invokeEdgeFunction(args.function_name, args.payload);
+    
+    case 'execute_python':
+      return await executePython(args.code, args.workflow_id);
     
     default:
       return `Unknown tool: ${toolName}`;
