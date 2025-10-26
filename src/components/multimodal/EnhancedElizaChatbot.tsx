@@ -65,6 +65,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastSpokenMessageIdRef = useRef<string | null>(null);
   const { toast } = useToast();
 
   // Convert chat messages to multimodal format for display
@@ -95,45 +96,66 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     }
   }, [scrollToBottom, messages.length]);
 
-  // Play audio for assistant messages using browser TTS
+  // Detect if text is in Spanish (Costa Rican or general Spanish)
+  const detectLanguage = (text: string): 'en-US' | 'es-CR' => {
+    const spanishIndicators = [
+      /[áéíóúñ¿¡]/i,
+      /\b(hola|gracias|por favor|buenos días|buenas tardes|buenas noches|sí|no)\b/i,
+      /\b(está|estoy|cómo|qué|cuándo|dónde|cuál|pura vida|mae|tuanis)\b/i
+    ];
+    
+    const spanishScore = spanishIndicators.reduce((score, pattern) => {
+      return score + (pattern.test(text) ? 1 : 0);
+    }, 0);
+    
+    return spanishScore >= 2 ? 'es-CR' : 'en-US';
+  };
+
+  // Play audio using OpenAI TTS edge function
   const playAudio = async (text: string) => {
     if (!text || isPlayingAudio || !settings.voiceSettings.enabled) return;
     
     try {
       setIsPlayingAudio(true);
       
-      // Use browser's built-in speech synthesis
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = settings.voiceSettings.speed || 0.9;
-        utterance.pitch = settings.voiceSettings.pitch || 1.1;
-        utterance.volume = 0.8;
-        
-        // Use a pleasant voice if available
-        const voices = speechSynthesis.getVoices();
-        const preferredVoice = voices.find(voice => 
-          voice.name.includes('Female') || 
-          voice.name.includes('Samantha') ||
-          voice.name.includes('Karen') ||
-          voice.name.includes('Google US English')
-        ) || voices[0];
-        
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
+      // Detect language for appropriate voice selection
+      const language = detectLanguage(text);
+      const isSpanish = language === 'es-CR';
+      
+      // Use Sarah for multilingual (Spanish), or user preference for English
+      const voice = isSpanish ? 'Sarah' : (settings.voiceSettings.voice || 'Aria');
+      
+      // Call text-to-speech edge function
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { 
+          text,
+          voice
         }
+      });
+
+      if (error) throw error;
+
+      if (data?.audioContent) {
+        // Convert base64 to audio blob
+        const binaryString = atob(data.audioContent);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(blob);
         
-        utterance.onend = () => {
+        // Play the audio
+        const audio = new Audio(audioUrl);
+        audio.onended = () => {
           setIsPlayingAudio(false);
+          URL.revokeObjectURL(audioUrl);
         };
-        
-        utterance.onerror = () => {
+        audio.onerror = () => {
           setIsPlayingAudio(false);
+          URL.revokeObjectURL(audioUrl);
         };
-        
-        speechSynthesis.speak(utterance);
-        console.log('Browser TTS started successfully');
-      } else {
-        setIsPlayingAudio(false);
+        await audio.play();
       }
       
     } catch (error) {
@@ -143,6 +165,25 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     }
   };
 
+  // Auto-play audio for new assistant messages
+  useEffect(() => {
+    if (!settings.autoPlayAudio || !settings.voiceSettings.enabled) return;
+    
+    // Get the most recent message
+    const lastMessage = messages[messages.length - 1];
+    
+    // Only play if it's a new assistant message we haven't spoken yet
+    if (
+      lastMessage && 
+      !lastMessage.isUser && 
+      lastMessage.id !== lastSpokenMessageIdRef.current &&
+      lastMessage.text
+    ) {
+      lastSpokenMessageIdRef.current = lastMessage.id;
+      playAudio(lastMessage.text);
+    }
+  }, [messages, settings.autoPlayAudio, settings.voiceSettings.enabled]);
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -151,15 +192,7 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     
     try {
       await sendMessage(messageText);
-      
-      // Play audio for the response after a short delay
-      setTimeout(() => {
-        const latestMessage = chatMessages[chatMessages.length - 1];
-        if (latestMessage && latestMessage.message_type === 'assistant') {
-          playAudio(latestMessage.content);
-        }
-      }, 1000);
-      
+      // Auto-play handled by useEffect watching messages
     } catch (error) {
       console.error('Error sending message:', error);
       

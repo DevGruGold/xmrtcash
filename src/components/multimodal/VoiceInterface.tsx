@@ -264,6 +264,14 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     }
   }, [settings.enabled]);
 
+  const VOICE_OPTIONS = [
+    { id: 'Aria', name: 'Aria (English - Warm)', language: 'en-US' },
+    { id: 'Sarah', name: 'Sarah (Multilingual - Spanish)', language: 'multi' },
+    { id: 'Charlotte', name: 'Charlotte (English - Professional)', language: 'en-US' },
+    { id: 'Alice', name: 'Alice (English - Friendly)', language: 'en-US' },
+    { id: 'Jessica', name: 'Jessica (English - Calm)', language: 'en-US' }
+  ];
+
   return (
     <Card className={`${className}`}>
       <CardContent className="p-4">
@@ -291,6 +299,24 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
 
         {settings.enabled && (
           <div className="space-y-4">
+            {/* Voice Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Voice</label>
+              <select 
+                value={settings.voice}
+                onChange={(e) => onSettingsChange({ ...settings, voice: e.target.value })}
+                className="w-full p-2 rounded border bg-background text-sm"
+              >
+                {VOICE_OPTIONS.map(voice => (
+                  <option key={voice.id} value={voice.id}>
+                    {voice.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Sarah voice supports fluent Costa Rican Spanish and English
+              </p>
+            </div>
             {/* Recording Controls */}
             <div className="flex items-center gap-3">
               <Button
