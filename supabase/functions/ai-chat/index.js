@@ -2,14 +2,26 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.0'
 import { OpenAI } from 'https://esm.sh/openai@4.49.1'
 
-console.info('ai-chat started - Enhanced & Fixed');
+console.info('ai-chat started - Enhanced & Fixed 500');
 
-// Initialize OpenAI client
-// Note: The Edge Function environment must have OPENAI_API_KEY and OPENAI_BASE_URL set.
-const openai = new OpenAI({
-  apiKey: Deno.env.get('OPENAI_API_KEY'),
-  baseURL: Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1',
-});
+// Initialize OpenAI client lazily to avoid crashing on GET health checks
+let openaiClient = null;
+
+function getOpenAIClient() {
+  if (openaiClient) return openaiClient;
+  
+  const apiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!apiKey) {
+      console.error("OPENAI_API_KEY environment variable is not set. AI functions will be disabled.");
+      return null; 
+  }
+  
+  openaiClient = new OpenAI({
+    apiKey: apiKey,
+    baseURL: Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1',
+  });
+  return openaiClient;
+}
 
 // Helper function to determine content type and extract text/url
 function extractContent(body) {
@@ -53,6 +65,11 @@ async function fetchUrlContent(url) {
 
 // Function to call the AI model for analysis and response generation
 async function getAIResponse(userContent, contentType) {
+  const client = getOpenAIClient();
+  if (!client) {
+      return "AI service is unavailable. OPENAI_API_KEY is missing in the environment.";
+  }
+  
   let prompt = `You are an intelligent assistant. The user has provided the following content of type "${contentType}". Analyze it and provide a helpful, concise response. 
   
   If the content is a code snippet (Python, Solidity, etc.), explain what it does and suggest a potential improvement or use case.
@@ -66,7 +83,7 @@ async function getAIResponse(userContent, contentType) {
   Your response:`;
 
   try {
-    const chatCompletion = await openai.chat.completions.create({
+    const chatCompletion = await client.chat.completions.create({
       model: "gpt-4o-mini", // A capable and cost-effective model
       messages: [{ role: "user", content: prompt }],
       max_tokens: 512,
@@ -86,7 +103,7 @@ Deno.serve(async (req) => {
   if (req.method === 'GET' && (url.pathname === '/ai-chat' || url.pathname === '/')) {
     return new Response(JSON.stringify({
       status: 'ok',
-      version: 'enhanced-fixed'
+      version: 'enhanced-fixed-500'
     }), {
       status: 200,
       headers: {
@@ -101,6 +118,7 @@ Deno.serve(async (req) => {
     const contentType = req.headers.get('content-type');
     const contentLength = req.headers.get('content-length');
 
+    // Safe body parsing logic
     try {
       if (contentLength === '0' || !contentType) {
         body = {}; // Handle empty body
