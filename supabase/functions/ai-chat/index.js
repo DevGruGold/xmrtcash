@@ -2,7 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.0'
 import { OpenAI } from 'https://esm.sh/openai@4.49.1'
 
-console.info('ai-chat started - Enhanced');
+console.info('ai-chat started - Enhanced & Fixed');
 
 // Initialize OpenAI client
 // Note: The Edge Function environment must have OPENAI_API_KEY and OPENAI_BASE_URL set.
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
   if (req.method === 'GET' && (url.pathname === '/ai-chat' || url.pathname === '/')) {
     return new Response(JSON.stringify({
       status: 'ok',
-      version: 'enhanced'
+      version: 'enhanced-fixed'
     }), {
       status: 200,
       headers: {
@@ -97,23 +97,28 @@ Deno.serve(async (req) => {
   }
 
   if (req.method === 'POST') {
-    // Safely parse JSON body or extract text
-    let body = null;
-    const contentTypeHeader = req.headers.get('content-type') || '';
+    let body = {};
+    const contentType = req.headers.get('content-type');
+    const contentLength = req.headers.get('content-length');
+
     try {
-      if (contentTypeHeader.includes('application/json')) {
+      if (contentLength === '0' || !contentType) {
+        body = {}; // Handle empty body
+      } else if (contentType.includes('application/json')) {
         body = await req.json();
       } else {
+        // Fallback for non-JSON content types
         const text = await req.text();
         try {
-          body = text ? JSON.parse(text) : { text };
+          body = text ? JSON.parse(text) : {};
         } catch (_) {
-          body = { text };
+          body = { text: text };
         }
       }
     } catch (e) {
+      // Catch all parsing errors and return 400
       return new Response(JSON.stringify({
-        error: 'Invalid or empty body',
+        error: 'Invalid or unparsable request body',
         details: String(e)
       }), {
         status: 400,
@@ -124,18 +129,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { content: userContent, contentType } = extractContent(body);
+    const { content: userContent, contentType: detectedType } = extractContent(body);
     let aiInputContent = userContent;
-    let aiContentType = contentType;
+    let aiContentType = detectedType;
     
     // Ingest content if it's a URL
-    if (contentType === 'url') {
+    if (detectedType === 'url') {
       console.info(`Attempting to ingest content from URL: ${userContent}`);
-      // NOTE: This fetch is a simple GET request. For complex GitHub repos, 
-      // a dedicated service or a more robust parsing logic would be needed.
-      // For now, this handles raw file links.
       aiInputContent = await fetchUrlContent(userContent);
-      aiContentType = 'ingested-' + aiContentType;
+      aiContentType = 'ingested-' + detectedType;
     }
     
     // Get AI response
@@ -144,7 +146,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       ok: true,
       query_content: userContent,
-      query_type: contentType,
+      query_type: detectedType,
       ai_response: aiResponse,
     }), {
       status: 200,
