@@ -77,9 +77,20 @@ When you encounter errors or limitations, you MUST:
 3. Report what you tried and what resolution is needed from humans
 4. NEVER give generic responses like "I'm having trouble" - be specific!
 
+5-TIER AI FALLBACK CHAIN:
+The system automatically attempts recovery through multiple AI providers:
+1. **OpenAI (gpt-4o-mini)** - Primary system (OPENAI_API_KEY)
+2. **Gemini (gemini-1.5-flash)** - Fast, cost-effective (GEMINI_API_KEY)
+3. **DeepSeek (deepseek-chat)** - Strong reasoning (DEEPSEEK_API_KEY)
+4. **Kimi (moonshot-v1-32k)** - Long context via OpenRouter (OPENROUTER_API_KEY)
+5. **WAN-AI (qwen-max)** - Final fallback (WAN_AI_API_KEY)
+
 EDGE FUNCTION INVOCATION GUIDE:
 You have direct access to Supabase edge functions via invoke_edge_function tool OR via Python:
-- wan-ai-chat: Alternative AI using Qwen models (use when OpenAI fails)
+- gemini-chat: Google Gemini AI (gemini-1.5-flash model)
+- deepseek-chat: DeepSeek AI (deepseek-chat model)
+- kimi-chat: Kimi AI via OpenRouter (moonshot-v1-32k model)
+- wan-ai-chat: WAN-AI using Qwen models (qwen-max)
 - vectorize-memory: Process and embed memories
 - extract-knowledge: Extract entities from conversations
 - playwright-browse: Web scraping and browsing
@@ -604,7 +615,7 @@ async function executeTool(toolName: string, args: any): Promise<string> {
   }
 }
 
-// Autonomous recovery orchestrator
+// Autonomous recovery orchestrator with 5-tier fallback chain
 async function attemptAutonomousRecovery(
   error: Error,
   messages: any[],
@@ -612,62 +623,81 @@ async function attemptAutonomousRecovery(
 ): Promise<{ success: boolean; response?: string; method?: string; diagnostics?: any }> {
   console.log('🔄 Attempting autonomous recovery from error:', error.message);
   
-  // Priority 1: Delegate to WAN-AI
-  try {
-    console.log('🔄 Delegating to WAN-AI subordinate agent...');
-    const { data, error: wanError } = await supabase.functions.invoke('wan-ai-chat', {
-      body: {
-        messages: messages.map((m: any) => ({
-          role: m.role,
-          content: m.content
-        })),
-        model: 'qwen-max',
-        temperature: 0.7,
-        max_tokens: 2000
-      }
-    });
-    
-    if (!wanError && data?.content) {
-      console.log('✅ WAN-AI delegation successful');
-      return {
-        success: true,
-        response: data.content,
-        method: 'wan-ai-chat',
-        diagnostics: {
-          originalError: error.message,
-          fallbackUsed: 'WAN-AI (Qwen-Max model)',
-          timestamp: new Date().toISOString(),
-          autoResolved: true
+  const fallbackChain = [
+    { name: 'Gemini', function: 'gemini-chat', model: 'gemini-1.5-flash', emoji: '🟢' },
+    { name: 'DeepSeek', function: 'deepseek-chat', model: 'deepseek-chat', emoji: '🔵' },
+    { name: 'Kimi (OpenRouter)', function: 'kimi-chat', model: 'moonshot/moonshot-v1-32k', emoji: '🟣' },
+    { name: 'WAN-AI (Qwen)', function: 'wan-ai-chat', model: 'qwen-max', emoji: '🟠' }
+  ];
+  
+  const attemptedFallbacks: string[] = [];
+  
+  for (const fallback of fallbackChain) {
+    try {
+      console.log(`${fallback.emoji} Attempting fallback: ${fallback.name}...`);
+      
+      const { data, error: fallbackError } = await supabase.functions.invoke(fallback.function, {
+        body: {
+          messages: messages.map((m: any) => ({
+            role: m.role,
+            content: m.content
+          })),
+          model: fallback.model,
+          temperature: 0.7,
+          max_tokens: 2000
         }
-      };
+      });
+      
+      if (!fallbackError && data?.content) {
+        console.log(`✅ ${fallback.name} fallback successful`);
+        return {
+          success: true,
+          response: data.content,
+          method: fallback.function,
+          diagnostics: {
+            originalError: error.message,
+            fallbackUsed: `${fallback.name} (${fallback.model})`,
+            attemptedProviders: [...attemptedFallbacks, fallback.name],
+            timestamp: new Date().toISOString(),
+            autoResolved: true
+          }
+        };
+      }
+      
+      console.log(`⚠️ ${fallback.name} failed:`, fallbackError?.message || 'No response');
+      attemptedFallbacks.push(fallback.name);
+      
+    } catch (e) {
+      console.log(`⚠️ ${fallback.name} exception:`, e);
+      attemptedFallbacks.push(fallback.name);
     }
-    console.log('⚠️ WAN-AI delegation failed:', wanError);
-  } catch (e) {
-    console.log('⚠️ WAN-AI delegation exception:', e);
   }
   
-  // Priority 2: Return detailed diagnostic message
-  const diagnosticResponse = `I've encountered a system issue and attempted autonomous recovery:
+  // All fallbacks exhausted
+  const diagnosticResponse = `I've encountered a system issue and attempted autonomous recovery through multiple AI providers:
 
 **Primary Error:** ${error.message}
 
-**Recovery Attempted:**
-✅ Attempted delegation to WAN-AI subordinate agent - Currently unavailable
+**Recovery Attempts:**
+${attemptedFallbacks.map((name, i) => `${i + 1}. ${name} - ❌ Unavailable or not configured`).join('\n')}
 
 **Required Resolution:**
 ${error.message.includes('429') || error.message.includes('quota') 
-  ? '🔑 OpenAI API quota has been exceeded. Please add funds to your OpenAI account or configure the WAN_AI_API_KEY secret to enable fallback AI systems.'
+  ? '🔑 OpenAI API quota exceeded. Please configure alternative AI provider API keys in Supabase Secrets:\n   • GEMINI_API_KEY (Google Gemini)\n   • DEEPSEEK_API_KEY (DeepSeek AI)\n   • OPENROUTER_API_KEY (Kimi via OpenRouter)\n   • WAN_AI_API_KEY (Alibaba Qwen)'
   : error.message.includes('401')
-  ? '🔑 OpenAI API authentication failed. Please verify the OPENAI_API_KEY secret is correctly configured.'
-  : '⚙️ System configuration required. Please check edge function logs for details.'}
+  ? '🔑 OpenAI API authentication failed. Please verify OPENAI_API_KEY or configure alternative providers.'
+  : '⚙️ All AI providers unavailable. Please configure at least one API key in Supabase Secrets.'}
 
 **System Status:**
-- OpenAI API: ❌ ${error.message.includes('429') ? 'Quota Exceeded (HTTP 429)' : error.message.includes('401') ? 'Authentication Failed (HTTP 401)' : 'Unavailable'}
-- WAN-AI Fallback: ⚠️ Not configured or unavailable
+- OpenAI: ❌ ${error.message}
+- Gemini: ${attemptedFallbacks.includes('Gemini') ? '⚠️ Not configured' : '⏭️ Skipped'}
+- DeepSeek: ${attemptedFallbacks.includes('DeepSeek') ? '⚠️ Not configured' : '⏭️ Skipped'}
+- Kimi: ${attemptedFallbacks.includes('Kimi (OpenRouter)') ? '⚠️ Not configured' : '⏭️ Skipped'}
+- WAN-AI: ${attemptedFallbacks.includes('WAN-AI (Qwen)') ? '⚠️ Not configured' : '⏭️ Skipped'}
 - Database: ✅ Operational
 - Edge Functions: ✅ Operational
 
-I am designed to be autonomous and self-healing, but this issue requires human intervention to resolve API access.`;
+I am designed to be autonomous and self-healing with 5-tier redundancy, but all AI providers require API key configuration.`;
 
   return {
     success: false,
@@ -677,8 +707,9 @@ I am designed to be autonomous and self-healing, but this issue requires human i
       originalError: error.message,
       timestamp: new Date().toISOString(),
       autoResolved: false,
-      systemsChecked: ['wan-ai-chat'],
-      requiresHumanIntervention: true
+      systemsChecked: attemptedFallbacks,
+      requiresHumanIntervention: true,
+      requiredSecrets: ['GEMINI_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'WAN_AI_API_KEY']
     }
   };
 }

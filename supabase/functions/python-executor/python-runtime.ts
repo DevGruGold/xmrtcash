@@ -127,8 +127,32 @@ class ElizaTools:
         })
     
     async def wan_ai_chat(self, messages: list, model: str = "qwen-max", temperature: float = 0.7) -> Dict[str, Any]:
-        """Call wan-ai-chat function - Alternative AI using Qwen models"""
+        """Call wan-ai-chat function - WAN-AI using Qwen models"""
         return await self.invoke_function("wan-ai-chat", {
+            "messages": messages,
+            "model": model,
+            "temperature": temperature
+        })
+    
+    async def gemini_chat(self, messages: list, model: str = "gemini-1.5-flash", temperature: float = 0.7) -> Dict[str, Any]:
+        """Call gemini-chat function - Google Gemini AI"""
+        return await self.invoke_function("gemini-chat", {
+            "messages": messages,
+            "model": model,
+            "temperature": temperature
+        })
+    
+    async def deepseek_chat(self, messages: list, model: str = "deepseek-chat", temperature: float = 0.7) -> Dict[str, Any]:
+        """Call deepseek-chat function - DeepSeek AI"""
+        return await self.invoke_function("deepseek-chat", {
+            "messages": messages,
+            "model": model,
+            "temperature": temperature
+        })
+    
+    async def kimi_chat(self, messages: list, model: str = "moonshot/moonshot-v1-32k", temperature: float = 0.7) -> Dict[str, Any]:
+        """Call kimi-chat function - Kimi AI via OpenRouter"""
+        return await self.invoke_function("kimi-chat", {
             "messages": messages,
             "model": model,
             "temperature": temperature

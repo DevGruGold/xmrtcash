@@ -6,6 +6,15 @@ verify_jwt = false
 [functions.wan-ai-chat]
 verify_jwt = false
 
+[functions.gemini-chat]
+verify_jwt = false
+
+[functions.deepseek-chat]
+verify_jwt = false
+
+[functions.kimi-chat]
+verify_jwt = false
+
 [functions.speech-to-text]
 verify_jwt = false
 
