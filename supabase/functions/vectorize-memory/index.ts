@@ -102,11 +102,12 @@ serve(async (req) => {
         processed++;
         console.log(`✅ Vectorized memory ${memoryId}`);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error(`❌ Failed to vectorize:`, error);
+        const errorMessage = error?.message || String(error) || 'Unknown error';
         await supabase
           .from('webhook_logs')
-          .update({ status: 'failed', error_message: error.message })
+          .update({ status: 'failed', error_message: errorMessage })
           .eq('id', log.id);
         failed++;
       }
@@ -123,10 +124,11 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error in vectorize-memory function:', error);
+    const errorMessage = error?.message || String(error) || 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

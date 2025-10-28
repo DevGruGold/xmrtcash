@@ -16,13 +16,24 @@ serve(async (req) => {
     const { text, voice = 'Aria' } = await req.json();
 
     if (!text) {
-      throw new Error('Text is required');
+      return new Response(
+        JSON.stringify({ error: 'Text parameter is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     
     if (!ELEVENLABS_API_KEY) {
-      throw new Error('ElevenLabs API key not configured');
+      console.error('⚠️ ELEVENLABS_API_KEY not configured - TTS unavailable');
+      return new Response(
+        JSON.stringify({ 
+          error: 'TTS service unavailable',
+          details: 'ELEVENLABS_API_KEY not configured in Supabase secrets',
+          fallback: 'Please add your ElevenLabs API key to enable text-to-speech'
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Generating speech for text:', text.substring(0, 100));
@@ -86,10 +97,14 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in text-to-speech function:', error);
+    const errorMessage = error?.message || String(error) || 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
+      JSON.stringify({ 
+        error: 'Failed to generate speech',
+        details: errorMessage
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

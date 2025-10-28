@@ -138,14 +138,15 @@ serve(async (req) => {
 
         processed++;
 
-      } catch (error) {
-        console.error(`❌ Failed to extract knowledge:`, error);
-        await supabase
-          .from('webhook_logs')
-          .update({ status: 'failed', error_message: error.message })
-          .eq('id', log.id);
-        failed++;
-      }
+    } catch (error: any) {
+      console.error(`❌ Failed to extract knowledge:`, error);
+      const errorMessage = error?.message || String(error) || 'Unknown error';
+      await supabase
+        .from('webhook_logs')
+        .update({ status: 'failed', error_message: errorMessage })
+        .eq('id', log.id);
+      failed++;
+    }
     }
 
     console.log(`✅ Knowledge extraction complete: ${processed} processed, ${failed} failed`);
@@ -159,10 +160,11 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error in extract-knowledge function:', error);
+    const errorMessage = error?.message || String(error) || 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
