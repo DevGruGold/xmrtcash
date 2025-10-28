@@ -19,11 +19,35 @@ serve(async (req) => {
   }
 
   try {
-    const request: PythonExecutionRequest = await req.json();
+    let request: PythonExecutionRequest;
+    
+    try {
+      const body = await req.text();
+      if (!body || body.trim() === '') {
+        return new Response(
+          JSON.stringify({ error: 'Request body is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      request = JSON.parse(body);
+    } catch (parseError: any) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body',
+          details: parseError?.message || 'Failed to parse JSON'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { code, workflow_id, source = 'direct', metadata = {} } = request;
 
     if (!code || typeof code !== 'string') {
-      throw new Error('Python code is required');
+      return new Response(
+        JSON.stringify({ error: 'Python code is required and must be a string' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('🐍 Python Executor - Starting execution');
@@ -126,9 +150,10 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('❌ Python executor error:', error);
+    const errorMessage = error?.message || String(error) || 'Unknown error';
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         details: 'Failed to execute Python code'
       }),
       { 
