@@ -18,6 +18,185 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // GET endpoint - List available functions
+  if (req.method === 'GET') {
+    const documentation = {
+      name: "Eliza Python Executor",
+      description: "Execute Python code with access to Eliza's tool ecosystem",
+      endpoint: "https://vawouugtzwmejxqkeqqj.supabase.co/functions/v1/python-executor",
+      
+      usage: {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: {
+          code: "Python code to execute (required)",
+          workflow_id: "Optional workflow identifier",
+          source: "Optional source identifier (default: 'direct')",
+          metadata: "Optional metadata object"
+        }
+      },
+
+      available_tools: {
+        description: "All tools are accessible via the 'tools' object in your Python code",
+        
+        ai_orchestration: [
+          {
+            name: "tools.ai_chat(message, model='gemini', context=None)",
+            description: "Chat with AI providers (gemini, deepseek, kimi, wan-ai)",
+            example: "response = await tools.ai_chat('Explain quantum computing', model='gemini')"
+          },
+          {
+            name: "tools.wan_ai_chat(message)",
+            description: "Chat using WAN-AI provider",
+            example: "response = await tools.wan_ai_chat('What is machine learning?')"
+          },
+          {
+            name: "tools.gemini_chat(message)",
+            description: "Chat using Google Gemini",
+            example: "response = await tools.gemini_chat('Summarize this text')"
+          }
+        ],
+
+        web_browsing: [
+          {
+            name: "tools.browse_web(url)",
+            description: "Browse and extract content from web pages",
+            example: "content = await tools.browse_web('https://example.com')"
+          }
+        ],
+
+        mining_data: [
+          {
+            name: "tools.get_mining_stats()",
+            description: "Get SupportXMR mining pool statistics",
+            example: "stats = await tools.get_mining_stats()"
+          }
+        ],
+
+        memory_management: [
+          {
+            name: "tools.vectorize_memory(content, memory_id=None)",
+            description: "Store content in vector memory for semantic search",
+            example: "result = await tools.vectorize_memory('Important information to remember')"
+          },
+          {
+            name: "tools.extract_knowledge(content, source=None)",
+            description: "Extract structured knowledge from content",
+            example: "knowledge = await tools.extract_knowledge('Article text here')"
+          }
+        ],
+
+        voice_processing: [
+          {
+            name: "tools.text_to_speech(text, voice='Aria')",
+            description: "Convert text to speech audio",
+            example: "audio = await tools.text_to_speech('Hello world')"
+          },
+          {
+            name: "tools.speech_to_text(audio_data)",
+            description: "Convert speech audio to text",
+            example: "text = await tools.speech_to_text(audio_bytes)"
+          }
+        ],
+
+        ecosystem: [
+          {
+            name: "tools.ecosystem_webhook(event_type, data)",
+            description: "Trigger ecosystem webhook events",
+            example: "result = await tools.ecosystem_webhook('user_action', {'action': 'login'})"
+          }
+        ],
+
+        generic: [
+          {
+            name: "tools.invoke_function(function_name, payload=None)",
+            description: "Invoke any Supabase edge function directly",
+            example: "result = await tools.invoke_function('custom-function', {'param': 'value'})"
+          }
+        ]
+      },
+
+      examples: {
+        parallel_execution: `# Execute multiple AI calls in parallel
+import asyncio
+
+responses = await asyncio.gather(
+  tools.gemini_chat('What is Python?'),
+  tools.wan_ai_chat('What is JavaScript?'),
+  tools.get_mining_stats()
+)
+
+print(responses)`,
+
+        conditional_workflow: `# Conditional workflow with error handling
+try:
+  stats = await tools.get_mining_stats()
+  if stats['hashrate'] > 1000000:
+    summary = await tools.ai_chat(f"Summarize: {stats}", model='gemini')
+    await tools.vectorize_memory(summary)
+  print("Workflow completed")
+except Exception as e:
+  print(f"Error: {e}")`,
+
+        data_pipeline: `# Data gathering and processing pipeline
+web_content = await tools.browse_web('https://docs.python.org')
+knowledge = await tools.extract_knowledge(web_content, source='python_docs')
+summary = await tools.gemini_chat(f"Summarize: {knowledge}")
+print(summary)`
+      },
+
+      request_example: {
+        curl: `curl -X POST https://vawouugtzwmejxqkeqqj.supabase.co/functions/v1/python-executor \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "code": "response = await tools.ai_chat('Hello Eliza'); print(response)",
+    "source": "user_request"
+  }'`,
+        
+        javascript: `const response = await fetch('https://vawouugtzwmejxqkeqqj.supabase.co/functions/v1/python-executor', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    code: "response = await tools.ai_chat('Hello Eliza'); print(response)",
+    source: 'user_request'
+  })
+});
+const result = await response.json();
+console.log(result);`
+      },
+
+      response_format: {
+        success: {
+          execution_id: "uuid",
+          status: "completed",
+          result: "Execution result (any type)",
+          error_message: null,
+          exit_code: 0,
+          execution_time_ms: 1234
+        },
+        error: {
+          execution_id: "uuid",
+          status: "failed",
+          result: null,
+          error_message: "Error description",
+          exit_code: 1,
+          execution_time_ms: 567
+        }
+      }
+    };
+
+    return new Response(
+      JSON.stringify(documentation, null, 2),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
+    );
+  }
+
+  // POST endpoint - Execute Python code
   try {
     let request: PythonExecutionRequest;
     
