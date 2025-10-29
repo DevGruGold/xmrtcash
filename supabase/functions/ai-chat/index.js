@@ -1,12 +1,42 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.0'
 import { OpenAI } from 'https://esm.sh/openai@4.49.1'
 
-console.info('ai-chat started - Agent Router');
+console.info('ai-chat started - Agent Router with Tool Use');
 
 // --- Configuration ---
 const SUPABASE_URL = Deno.env.get('NEXT_PUBLIC_SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY');
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); // Should be set for secure internal calls
+
+// --- Tool Definitions for OpenAI ---
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "exec_python",
+      description: "Executes a Python code snippet via the python-executor Edge Function. Use this tool when the user asks to run or execute Python code.",
+      parameters: {
+        type: "object",
+        properties: {
+          code: {
+            type: "string",
+            description: "The Python code snippet to execute. Must be a single string."
+          }
+        },
+        required: ["code"]
+      }
+    }
+  },
+  // Placeholder for cron job tool
+  // {
+  //   type: "function",
+  //   function: {
+  //     name: "manage_cron_job",
+  //     description: "Manages scheduled cron jobs (listing, adding, deleting).",
+  //     parameters: { ... }
+  //   }
+  // }
+];
 
 // --- Lazy OpenAI Client Initialization ---
 let openaiClient = null;
@@ -27,7 +57,7 @@ function getOpenAIClient() {
   return openaiClient;
 }
 
-// --- CLI/Command Parsing and Routing Logic ---
+// --- Internal Function Calling ---
 
 // Function to call another Supabase Edge Function
 async function callEdgeFunction(functionName, payload) {
@@ -58,37 +88,7 @@ async function callEdgeFunction(functionName, payload) {
   }
 }
 
-// Function to handle the "CLI" commands
-async function handleCliCommand(command, argument) {
-    switch (command) {
-        case 'exec-python':
-            // Example: exec-python print("Hello World")
-            const pythonPayload = { code: argument };
-            const pythonResult = await callEdgeFunction('python-executor', pythonPayload);
-            return `Python Executor Result: ${JSON.stringify(pythonResult, null, 2)}`;
-
-        case 'cron-list':
-            // Placeholder for interacting with a cron management system (e.g., a table in Supabase)
-            return "Cron Job Manager: Listing all scheduled jobs (Placeholder: Requires a cron management function/table).";
-            
-        case 'cron-add':
-            // Placeholder for adding a cron job
-            return `Cron Job Manager: Attempting to add job with argument: ${argument} (Placeholder).`;
-            
-        case 'help':
-            return `Available commands:
-- exec-python <code_string>: Executes Python code via the 'python-executor' function.
-- cron-list: Lists all scheduled cron jobs (Placeholder).
-- cron-add <job_details>: Adds a new cron job (Placeholder).
-- help: Shows this message.
-Any other input will be processed by the AI chat.`;
-            
-        default:
-            return null; // Not a CLI command, proceed to AI chat logic
-    }
-}
-
-// --- AI Chat Logic (Modified for Agent Routing) ---
+// --- AI Chat Logic with Tool Use ---
 
 // Helper function to determine content type and extract text/url
 function extractContent(body) {
@@ -137,30 +137,65 @@ async function getAIResponse(userContent, contentType) {
       return "AI service is unavailable. OPENAI_API_KEY is missing in the environment.";
   }
   
-  let prompt = `You are the intelligent agent "Eliza". You have access to a suite of tools. The user has provided the following content of type "${contentType}". Analyze it and provide a helpful, concise response. 
-  
-  If the content is a code snippet (Python, Solidity, etc.), explain what it does and suggest a potential improvement or use case.
-  If the content is a URL, and you successfully fetched its content, analyze the fetched content. If fetching failed, explain the error.
-  If the content is simple text, respond to the user's message.
-  
-  --- CONTENT ---
-  ${userContent}
-  ---
-  
-  Your response:`;
+  let messages = [
+    {
+      role: "system",
+      content: "You are the intelligent agent 'Eliza'. You have access to a suite of tools to execute code and manage tasks. Your primary goal is to assist the user by intelligently deciding whether to use a tool or provide a direct answer. If the user asks to run code, use the `exec_python` tool. If the user provides content (code, URL), analyze it and respond directly. Do not use tools for analysis."
+    },
+    {
+      role: "user",
+      content: userContent
+    }
+  ];
 
-  try {
-    const chatCompletion = await client.chat.completions.create({
-      model: "gpt-4o-mini", // A capable and cost-effective model
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 512,
+  let toolCalls = [];
+  let finalResponse = null;
+  let toolOutput = null;
+
+  // First call to the model
+  const firstResponse = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: messages,
+    tools: tools,
+    tool_choice: "auto",
+  });
+
+  if (firstResponse.choices[0].message.tool_calls) {
+    toolCalls = firstResponse.choices[0].message.tool_calls;
+    messages.push(firstResponse.choices[0].message);
+
+    for (const toolCall of toolCalls) {
+      const functionName = toolCall.function.name;
+      const functionArgs = JSON.parse(toolCall.function.arguments);
+      
+      if (functionName === 'exec_python') {
+        // Execute the function
+        toolOutput = await callEdgeFunction('python-executor', { code: functionArgs.code });
+        
+        // Add the function response to the messages for the next turn
+        messages.push({
+          tool_call_id: toolCall.id,
+          role: "tool",
+          name: functionName,
+          content: JSON.stringify(toolOutput),
+        });
+      }
+    }
+
+    // Second call to the model to summarize the tool output
+    const secondResponse = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
     });
     
-    return chatCompletion.choices[0].message.content.trim();
-  } catch (error) {
-    console.error("OpenAI API Error:", error);
-    return "I encountered an error while processing your request with the AI model. Please check the logs.";
+    finalResponse = secondResponse.choices[0].message.content.trim();
+
+  } else {
+    // No tool call, just a direct text response
+    finalResponse = firstResponse.choices[0].message.content.trim();
   }
+
+  return finalResponse;
 }
 
 // --- Main Deno Serve Handler ---
@@ -172,7 +207,7 @@ Deno.serve(async (req) => {
   if (req.method === 'GET' && (url.pathname === '/ai-chat' || url.pathname === '/')) {
     return new Response(JSON.stringify({
       status: 'ok',
-      version: 'agent-router'
+      version: 'agent-tool-use'
     }), {
       status: 200,
       headers: {
@@ -219,16 +254,14 @@ Deno.serve(async (req) => {
     const { content: userContent, contentType: detectedType } = extractContent(body);
     let finalResponse = null;
     
-    // 1. Check for CLI command
-    if (detectedType === 'text') {
-        const parts = userContent.trim().split(/\s+/);
-        const command = parts[0].toLowerCase();
-        const argument = parts.slice(1).join(' ');
-        
-        finalResponse = await handleCliCommand(command, argument);
+    // Check for CLI command (Manual override for direct commands, for testing/debugging)
+    if (detectedType === 'text' && userContent.toLowerCase().startsWith('exec-python ')) {
+        const code = userContent.substring('exec-python '.length).trim();
+        const toolOutput = await callEdgeFunction('python-executor', { code: code });
+        finalResponse = `Manual Python Execution Result: ${JSON.stringify(toolOutput, null, 2)}`;
     }
     
-    // 2. If not a CLI command, proceed with AI chat logic
+    // If not a manual CLI command, proceed with AI Tool Use logic
     if (finalResponse === null) {
         let aiInputContent = userContent;
         let aiContentType = detectedType;
@@ -240,9 +273,8 @@ Deno.serve(async (req) => {
           aiContentType = 'ingested-' + detectedType;
         }
         
-        // Get AI response
-        const aiResponse = await getAIResponse(aiInputContent, aiContentType);
-        finalResponse = aiResponse;
+        // Get AI response (which might involve tool calls)
+        finalResponse = await getAIResponse(aiInputContent, aiContentType);
     }
 
     return new Response(JSON.stringify({
