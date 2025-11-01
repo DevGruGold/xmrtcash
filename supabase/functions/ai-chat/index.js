@@ -1,12 +1,19 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.0'
 import { OpenAI } from 'https://esm.sh/openai@4.49.1'
 
-console.info('ai-chat started - OpenMemory Agent');
+console.info('ai-chat started - Final OpenMemory Agent');
 
 // --- Configuration ---
 const SUPABASE_URL = Deno.env.get('NEXT_PUBLIC_SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY');
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); // Should be set for secure internal calls
+
+// --- CORS Headers ---
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*', // Open public to anon
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 // --- Tool Definitions for OpenAI (Reflecting OpenMemory API) ---
 const tools = [
@@ -98,8 +105,7 @@ async function callEdgeFunction(functionName, payload) {
       return { error: "Supabase URL or Service Role Key is missing for internal function calls." };
   }
   
-  // NOTE: Assuming OpenMemory API is exposed via a separate Edge Function or a dedicated API endpoint.
-  // For this implementation, we will assume a generic 'openmemory-api' Edge Function handles the memory operations.
+  // NOTE: Assuming 'openmemory-api' is the name of the function that handles memory logic
   const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
   
   try {
@@ -175,7 +181,7 @@ async function getAIResponse(userContent, contentType) {
   let messages = [
     {
       role: "system",
-      content: "You are the intelligent agent 'Eliza', powered by the OpenMemory architecture. You have access to tools for code execution and memory management. Your primary goal is to assist the user by intelligently deciding whether to use a tool or provide a direct answer. Use the `add_memory` tool when the user provides a fact or insight to be stored. Use the `query_memory` tool when the user asks a question that requires retrieving past information. Use the `exec_python` tool when the user asks to run or execute Python code. If the user provides content (code, URL), analyze it and respond directly. Do not use tools for analysis."
+      content: "You are the intelligent agent 'Eliza', powered by the OpenMemory architecture. You have access to a suite of tools for code execution and memory management. Your primary goal is to assist the user by intelligently deciding whether to use a tool or provide a direct answer. Use the `add_memory` tool when the user provides a fact or insight to be stored. Use the `query_memory` tool when the user asks a question that requires retrieving past information. Use the `exec_python` tool when the user asks to run or execute Python code. If the user provides content (code, URL), analyze it and respond directly. Do not use tools for analysis."
     },
     {
       role: "user",
@@ -254,20 +260,29 @@ async function getAIResponse(userContent, contentType) {
 Deno.serve(async (req) => {
   const url = new URL(req.url);
 
-  // Health check: GET returns 200
+  // 1. Handle OPTIONS request for CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: CORS_HEADERS,
+    });
+  }
+
+  // 2. Handle GET request for Health Check
   if (req.method === 'GET' && (url.pathname === '/ai-chat' || url.pathname === '/')) {
     return new Response(JSON.stringify({
       status: 'ok',
-      version: 'openmemory-agent'
+      version: 'final-openmemory-agent'
     }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Connection': 'keep-alive'
+        ...CORS_HEADERS,
       }
     });
   }
 
+  // 3. Handle POST request for main logic
   if (req.method === 'POST') {
     let body = {};
     const contentType = req.headers.get('content-type');
@@ -297,7 +312,7 @@ Deno.serve(async (req) => {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Connection': 'keep-alive'
+          ...CORS_HEADERS,
         }
       });
     }
@@ -305,28 +320,19 @@ Deno.serve(async (req) => {
     const { content: userContent, contentType: detectedType } = extractContent(body);
     let finalResponse = null;
     
-    // Check for manual CLI command (for testing/debugging)
-    if (detectedType === 'text' && userContent.toLowerCase().startsWith('exec-python ')) {
-        const code = userContent.substring('exec-python '.length).trim();
-        const toolOutput = await callEdgeFunction('python-executor', { code: code });
-        finalResponse = `Manual Python Execution Result: ${JSON.stringify(toolOutput, null, 2)}`;
+    // If not a manual CLI command, proceed with AI Tool Use logic
+    let aiInputContent = userContent;
+    let aiContentType = detectedType;
+    
+    // Ingest content if it's a URL
+    if (detectedType === 'url') {
+      console.info(`Attempting to ingest content from URL: ${userContent}`);
+      aiInputContent = await fetchUrlContent(userContent);
+      aiContentType = 'ingested-' + detectedType;
     }
     
-    // If not a manual CLI command, proceed with AI Tool Use logic
-    if (finalResponse === null) {
-        let aiInputContent = userContent;
-        let aiContentType = detectedType;
-        
-        // Ingest content if it's a URL
-        if (detectedType === 'url') {
-          console.info(`Attempting to ingest content from URL: ${userContent}`);
-          aiInputContent = await fetchUrlContent(userContent);
-          aiContentType = 'ingested-' + detectedType;
-        }
-        
-        // Get AI response (which might involve tool calls)
-        finalResponse = await getAIResponse(aiInputContent, aiContentType);
-    }
+    // Get AI response (which might involve tool calls)
+    finalResponse = await getAIResponse(aiInputContent, aiContentType);
 
     return new Response(JSON.stringify({
       ok: true,
@@ -337,19 +343,20 @@ Deno.serve(async (req) => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Connection': 'keep-alive'
+        ...CORS_HEADERS,
       }
     });
   }
 
+  // 4. Handle all other methods
   return new Response(JSON.stringify({
     error: 'Method not allowed'
   }), {
     status: 405,
     headers: {
       'Content-Type': 'application/json',
-      'Allow': 'GET, POST',
-      'Connection': 'keep-alive'
+      'Allow': 'GET, POST, OPTIONS',
+      ...CORS_HEADERS,
     }
   });
 });
