@@ -3,6 +3,15 @@ project_id = "vawouugtzwmejxqkeqqj"
 [functions.ai-chat]
 verify_jwt = false
 
+[functions.query-memory]
+verify_jwt = false
+
+[functions.add-memory]
+verify_jwt = false
+
+[functions.execute-task]
+verify_jwt = false
+
 [functions.wan-ai-chat]
 verify_jwt = false
 

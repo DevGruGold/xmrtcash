@@ -204,6 +204,31 @@ class ElizaTools:
             "eventType": event_type,
             "payload": payload
         })
+    
+    async def query_memory(self, query: str, limit: int = 10, threshold: float = 0.7, context_type: Optional[str] = None) -> Dict[str, Any]:
+        """Search long-term memory using semantic search"""
+        return await self.invoke_function("query-memory", {
+            "query": query,
+            "limit": limit,
+            "threshold": threshold,
+            "context_type": context_type
+        })
+    
+    async def add_memory(self, content: str, context_type: str, importance_score: int = 5, metadata: Optional[Dict] = None) -> Dict[str, Any]:
+        """Store new memory with automatic vectorization"""
+        return await self.invoke_function("add-memory", {
+            "content": content,
+            "context_type": context_type,
+            "importance_score": importance_score,
+            "metadata": metadata or {}
+        })
+    
+    async def execute_task(self, task_id: Optional[str] = None, auto_claim: bool = False) -> Dict[str, Any]:
+        """Execute a task from the tasks table"""
+        return await self.invoke_function("execute-task", {
+            "task_id": task_id,
+            "auto_claim": auto_claim
+        })
 
 # Create global instance
 tools = ElizaTools()
