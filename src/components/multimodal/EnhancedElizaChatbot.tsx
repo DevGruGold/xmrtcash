@@ -122,14 +122,23 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
       const language = detectLanguage(text);
       const isSpanish = language === 'es-CR';
       
-      // Use Sarah for multilingual (Spanish), or user preference for English
-      const voice = isSpanish ? 'Sarah' : (settings.voiceSettings.voice || 'Aria');
+      // Map to OpenAI voices (alloy, echo, fable, onyx, nova, shimmer)
+      const voiceMapping: Record<string, string> = {
+        'Sarah': 'nova',
+        'Aria': 'alloy',
+        'Roger': 'onyx',
+        'Laura': 'shimmer',
+        'Charlie': 'echo',
+        'Alice': 'nova'
+      };
       
-      // Call text-to-speech edge function
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+      const selectedVoice = isSpanish ? 'nova' : (voiceMapping[settings.voiceSettings.voice || 'Aria'] || 'alloy');
+      
+      // Call OpenAI TTS edge function
+      const { data, error } = await supabase.functions.invoke('openai-tts', {
         body: { 
           text,
-          voice
+          voice: selectedVoice
         }
       });
 

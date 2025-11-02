@@ -30,6 +30,9 @@ verify_jwt = false
 [functions.text-to-speech]
 verify_jwt = false
 
+[functions.openai-tts]
+verify_jwt = false
+
 [functions.supportxmr-proxy]
 verify_jwt = false
 

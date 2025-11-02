@@ -136,7 +136,10 @@ function extractContent(body) {
   let content = '';
   let contentType = 'text';
   
-  if (body && body.text) {
+  // Handle new frontend format with userMessage
+  if (body && body.userMessage) {
+    content = body.userMessage;
+  } else if (body && body.text) {
     content = body.text;
   } else if (body && body.url) {
     content = body.url;
@@ -335,10 +338,7 @@ Deno.serve(async (req) => {
     finalResponse = await getAIResponse(aiInputContent, aiContentType);
 
     return new Response(JSON.stringify({
-      ok: true,
-      query_content: userContent,
-      query_type: detectedType,
-      ai_response: finalResponse,
+      response: finalResponse || "I apologize, but I encountered an issue processing your request.",
     }), {
       status: 200,
       headers: {
