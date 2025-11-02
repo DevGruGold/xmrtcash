@@ -111,61 +111,48 @@ const EnhancedElizaChatbot: React.FC<EnhancedElizaChatbotProps> = ({
     return spanishScore >= 2 ? 'es-CR' : 'en-US';
   };
 
-  // Play audio using OpenAI TTS edge function
+  // Play audio using Web Speech API
   const playAudio = async (text: string) => {
     if (!text || isPlayingAudio || !settings.voiceSettings.enabled) return;
     
     try {
       setIsPlayingAudio(true);
       
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
       // Detect language for appropriate voice selection
       const language = detectLanguage(text);
       const isSpanish = language === 'es-CR';
       
-      // Map to OpenAI voices (alloy, echo, fable, onyx, nova, shimmer)
-      const voiceMapping: Record<string, string> = {
-        'Sarah': 'nova',
-        'Aria': 'alloy',
-        'Roger': 'onyx',
-        'Laura': 'shimmer',
-        'Charlie': 'echo',
-        'Alice': 'nova'
-      };
+      // Create speech utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = isSpanish ? 'es-CR' : 'en-US';
+      utterance.rate = settings.voiceSettings.speed || 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
       
-      const selectedVoice = isSpanish ? 'nova' : (voiceMapping[settings.voiceSettings.voice || 'Aria'] || 'alloy');
+      // Try to find a voice that matches the language preference
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.lang.startsWith(isSpanish ? 'es' : 'en') && 
+        (voice.name.includes('Google') || voice.name.includes('Microsoft'))
+      ) || voices.find(voice => voice.lang.startsWith(isSpanish ? 'es' : 'en'));
       
-      // Call OpenAI TTS edge function
-      const { data, error } = await supabase.functions.invoke('openai-tts', {
-        body: { 
-          text,
-          voice: selectedVoice
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.audioContent) {
-        // Convert base64 to audio blob
-        const binaryString = atob(data.audioContent);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: 'audio/mpeg' });
-        const audioUrl = URL.createObjectURL(blob);
-        
-        // Play the audio
-        const audio = new Audio(audioUrl);
-        audio.onended = () => {
-          setIsPlayingAudio(false);
-          URL.revokeObjectURL(audioUrl);
-        };
-        audio.onerror = () => {
-          setIsPlayingAudio(false);
-          URL.revokeObjectURL(audioUrl);
-        };
-        await audio.play();
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
       }
+
+      utterance.onend = () => {
+        setIsPlayingAudio(false);
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setIsPlayingAudio(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
       
     } catch (error) {
       console.error('TTS error:', error);
