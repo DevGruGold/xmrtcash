@@ -163,8 +163,10 @@ result
       // Handle both success and autonomous recovery responses
       if (error && !data) throw error;
 
-      // Parse response - handle both standard and recovery responses
-      let responseContent = data.response || 'I apologize, but I encountered an issue processing your request.';
+      // Parse response - handle both OLD and NEW formats from ai-chat
+      // Old format: { ok: true, ai_response: "..." }
+      // New format: { response: "..." }
+      let responseContent = data.response || data.ai_response || 'I apologize, but I encountered an issue processing your request.';
       let metadata: any = { confidence_score: 0.9 };
       
       // Check for autonomous recovery indicators
